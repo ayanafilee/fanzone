@@ -8,11 +8,20 @@ interface MultilingualText {
 
 interface CreateContentRequest {
     title: MultilingualText;
-    description: MultilingualText;
-    club_id?: string | 'ALL'; // "ALL" means no specific club
-    // Add other content fields as necessary, assuming a generic structure for now
-    type: string;
-    url?: string;
+    body: MultilingualText;
+    image_url: string;
+    category: string;
+    club_id: string;
+}
+
+export interface Content {
+    id: string;
+    title: MultilingualText;
+    body: MultilingualText;
+    image_url: string;
+    category: string;
+    club_id: string;
+    created_at: string;
 }
 
 interface AdminStats {
@@ -46,17 +55,19 @@ export const adminApi = apiSlice.injectEndpoints({
             invalidatesTags: ['Clubs'],
         }),
         createContent: builder.mutation({
-            query: (data: CreateContentRequest) => {
-                // Validation logic can also be done here or in the component.
-                // RTK Query doesn't stop the request here unless we throw, but types enforce structure.
-                // We will rely on TypeScript to enforce the shape of `data` which includes all 3 languages.
-
-                return {
-                    url: '/admin/content',
-                    method: 'POST',
-                    body: data,
-                };
-            },
+            query: (data: CreateContentRequest) => ({
+                url: '/admin/content',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Content'],
+        }),
+        updateContent: builder.mutation({
+            query: ({ id, ...data }: Partial<Content> & { id: string }) => ({
+                url: `/admin/content/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
             invalidatesTags: ['Content'],
         }),
         deleteContent: builder.mutation({
@@ -100,6 +111,7 @@ export const adminApi = apiSlice.injectEndpoints({
 export const {
     useCreateClubMutation,
     useCreateContentMutation,
+    useUpdateContentMutation,
     useDeleteContentMutation,
     useCreateHighlightMutation,
     useCreateWatchLinkMutation,
