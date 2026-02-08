@@ -23,6 +23,18 @@ interface AdminStats {
     watch_links: number;
 }
 
+export interface UserInfo {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    language?: string;
+    fav_club_id?: string;
+    created_at: string;
+    profileImage?: string; // Kept for potential future use or if present in other responses
+    is_active?: boolean;
+}
+
 export const adminApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         createClub: builder.mutation({
@@ -73,6 +85,14 @@ export const adminApi = apiSlice.injectEndpoints({
         getStats: builder.query<AdminStats, void>({
             query: () => '/admin/stats',
         }),
+        getAllUsers: builder.query<UserInfo[], void>({
+            query: () => '/admin/users',
+            providesTags: ['User'],
+        }),
+        getAllAdmins: builder.query<UserInfo[], void>({
+            query: () => '/super-admin/admins',
+            providesTags: ['User'],
+        }),
     }),
     overrideExisting: true,
 });
@@ -84,4 +104,6 @@ export const {
     useCreateHighlightMutation,
     useCreateWatchLinkMutation,
     useGetStatsQuery,
+    useGetAllUsersQuery,
+    useGetAllAdminsQuery,
 } = adminApi;

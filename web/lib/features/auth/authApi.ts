@@ -19,7 +19,7 @@ export const authApi = apiSlice.injectEndpoints({
                         user: { role: data.role }
                     }));
                 } catch (err) {
-                    console.error("Login mutation error:", err);
+                    console.log("Login mutation error:", err);
                 }
             },
         }),

@@ -29,7 +29,7 @@ const SideBarNavigation = () => {
 
     const navigation = [
         { name: "Dashboard", icon: MdAutoGraph, link: "/" },
-        { name: "User Management", icon: MdPeopleAlt, link: "/users" },
+        ...(user?.role === 'super_admin' ? [{ name: "User Management", icon: MdPeopleAlt, link: "/users" }] : []),
         { name: "Clubs", icon: MdGroups, link: "/clubs" },
         { name: "Content", icon: MdPlayCircleOutline, link: "/content" },
         { name: "Watch Links", icon: MdPlayCircleOutline, link: "/watch-links" },

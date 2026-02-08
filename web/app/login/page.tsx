@@ -28,7 +28,6 @@ export default function LoginPage() {
     const router = useRouter();
     const [login, { isLoading, isSuccess, error }] = useLoginMutation();
 
-    // ✅ Success Toast (Welcome Message)
     useEffect(() => {
         if (isSuccess) {
             toast.custom((t) => (
@@ -44,20 +43,16 @@ export default function LoginPage() {
                     </div>
                 </div>
             ), { duration: 2500 });
-
             setTimeout(() => router.push('/'), 1200);
         }
     }, [isSuccess, router]);
 
-    // ❌ Error Toast (More understandable text)
     useEffect(() => {
         if (error) {
             let message = 'Please check your email and password and try again.';
             if ('data' in error) {
-                // If the server provides a specific message, use it, otherwise use our friendly default
                 message = (error.data as { message?: string })?.message || message;
             }
-
             toast.custom((t) => (
                 <div className={`${t.visible ? 'animate-in fade-in slide-in-from-top-4' : 'animate-out fade-out slide-out-to-top-2'} max-w-sm w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex border-l-4 border-red-500`}>
                     <div className="flex-1 p-4">
@@ -83,36 +78,46 @@ export default function LoginPage() {
         toast.dismiss();
         try {
             await login({ email, password }).unwrap();
-        } catch {
-            // Error is handled by the useEffect watching the "error" state from RTK Query
-            // Console error removed as requested.
-        }
+        } catch { }
     };
 
     return (
-        <div className="flex min-h-screen w-full bg-[#EAECED] items-center justify-center p-4 md:p-6 font-sans antialiased">
+        <div className="relative min-h-screen w-full bg-[#EAECED] flex items-center justify-center p-4 md:p-12 font-sans antialiased">
             <Toaster position="top-right" />
 
-            <div className="flex w-full max-w-5xl h-[700px] bg-white rounded-[3rem] shadow-[0_40px_80px_-15px_rgba(20,45,100,0.15)] overflow-hidden border border-white/50 relative">
+            {/* --- Background Image --- */}
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="/oltraford.jpg"
+                    alt="Old Trafford"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
 
-                {/* --- Left Side --- */}
-                <div className="hidden lg:flex w-1/2 relative bg-[#132A5B] overflow-hidden">
-                    {/* Image layer */}
-                    <div className="absolute inset-0">
+            {/* --- Main Container Card --- */}
+            {/* Professional Fix: Max-width keeps the card from stretching too wide on ultra-wide screens */}
+            <div className="relative z-10 flex w-full max-w-[1100px] min-h-[650px] rounded-[3rem] shadow-[0_40px_80px_-15px_rgba(20,45,100,0.2)] overflow-hidden border border-white/50">
+
+                {/* --- Left Side (Visual) --- */}
+                <div className="hidden lg:flex w-1/2 relative overflow-hidden">
+                    {/* Dark Tint */}
+                    <div className="absolute inset-0 bg-[#132A5B]/70 z-10" />
+
+                    {/* Player Image */}
+                    <div className="absolute inset-0 z-10">
                         <Image
                             src="/loginimage.png"
-                            alt="Football"
+                            alt="Football Player"
                             fill
-                            className="object-contain opacity-100"
+                            className="object-contain object-bottom" // Aligns player to bottom of card
                             priority
                         />
                     </div>
 
-                    {/* Glow effect (kept separate from image) */}
-                    <div className="absolute -top-24 -left-24 w-96 h-96 bg-white rounded-full blur-[120px] opacity-20" />
-
-                    {/* Content */}
-                    <div className="relative z-10 p-16 flex flex-col justify-between h-full text-white">
+                    {/* Content Alignment: Uses justify-between to anchor logo at top and text at bottom */}
+                    <div className="relative z-20 p-16 flex flex-col justify-between w-full text-white">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-[#00A3E0] rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30 rotate-3">
                                 <span className="font-black text-white text-2xl italic">FZ</span>
@@ -121,7 +126,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-6">
-                            <h2 className="text-6xl font-black leading-[1] tracking-tighter">
+                            <h2 className="text-6xl font-black leading-[1] tracking-tighter drop-shadow-lg">
                                 THE <br /> PITCH <br /> IS YOURS.
                             </h2>
                             <p className="text-white/60 text-lg font-medium max-w-xs border-l-2 border-[#00A3E0] pl-4">
@@ -131,31 +136,33 @@ export default function LoginPage() {
                     </div>
                 </div>
 
+                {/* --- Right Side (Form) --- */}
+                <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 relative bg-white">
+                    {/* Overlay for glass effect - adjusted opacity for professionalism */}
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm lg:bg-white/90" />
 
-                {/* --- Right Side --- */}
-                <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 bg-white relative">
-                    <div className="w-full max-w-sm">
+                    {/* Form Container: Max-width 380px is the industry standard for login forms */}
+                    <div className="w-full max-w-[380px] relative z-20">
                         <header className="mb-12">
                             <h1 className="text-4xl font-black text-[#132A5B] tracking-tight">Sign In</h1>
-                            <p className="text-gray-400 mt-2 font-bold text-[10px] uppercase tracking-[0.2em]">Dashboard Access Only</p>
+                            <p className="text-gray-500 mt-2 font-bold text-[10px] uppercase tracking-[0.2em]">Dashboard Access Only</p>
                         </header>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                                <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="e.g. admin@fanzone.et"
-                                    className="w-full px-6 py-4 rounded-2xl bg-[#EAECED]/50 border-2 border-transparent focus:border-[#00A3E0]/30 focus:bg-white transition-all outline-none text-[#132A5B] font-bold 
-                                    placeholder:text-gray-400/50 placeholder:italic placeholder:font-medium shadow-sm"
+                                    className="w-full px-6 py-4 rounded-2xl bg-[#EAECED]/50 border-2 border-transparent focus:border-[#00A3E0]/30 focus:bg-white transition-all outline-none text-[#132A5B] font-bold shadow-sm"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Password</label>
+                                <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest ml-1">Password</label>
                                 <div className="relative group">
                                     <input
                                         type={showPassword ? 'text' : 'password'}
@@ -163,8 +170,7 @@ export default function LoginPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••••••"
-                                        className="w-full px-6 py-4 rounded-2xl bg-[#EAECED]/50 border-2 border-transparent focus:border-[#00A3E0]/30 focus:bg-white transition-all outline-none text-[#132A5B] font-bold 
-                                        placeholder:text-gray-400/50 shadow-sm"
+                                        className="w-full px-6 py-4 rounded-2xl bg-[#EAECED]/50 border-2 border-transparent focus:border-[#00A3E0]/30 focus:bg-white transition-all outline-none text-[#132A5B] font-bold shadow-sm"
                                     />
                                     <button
                                         type="button"
@@ -189,9 +195,6 @@ export default function LoginPage() {
                                 ) : 'Sign In'}
                             </button>
                         </form>
-
-                        <div className="mt-16 text-center">
-                        </div>
                     </div>
                 </div>
             </div>
