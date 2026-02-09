@@ -6,8 +6,12 @@ export const watchLinksApi = apiSlice.injectEndpoints({
             query: () => '/watch-links',
             providesTags: ['WatchLinks'],
         }),
+        getSpecificWatchLink: builder.query({
+            query: (id: string) => `/watch-links/${id}`,
+            providesTags: (_result, _error, id) => [{ type: 'WatchLinks', id }],
+        }),
     }),
     overrideExisting: true,
 });
 
-export const { useGetWatchLinksQuery } = watchLinksApi;
+export const { useGetWatchLinksQuery, useGetSpecificWatchLinkQuery } = watchLinksApi;

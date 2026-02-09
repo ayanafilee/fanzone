@@ -18,6 +18,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 return { title: 'Clubs', subtitle: 'Manage football clubs and associations' };
             case '/content':
                 return { title: 'Content Management', subtitle: 'Manage videos, news and other content' };
+            case '/highlights':
+                return { title: 'Match Highlights', subtitle: 'Manage YouTube highlights for matches' };
             case '/watch-links':
                 return { title: 'Watch Links', subtitle: 'Manage live stream and match links' };
             case '/settings':

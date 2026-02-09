@@ -13,8 +13,12 @@ export const highlightsApi = apiSlice.injectEndpoints({
             }),
             providesTags: ['Highlights'],
         }),
+        getSpecificHighlight: builder.query({
+            query: (id: string) => `/highlights/${id}`,
+            providesTags: (_result, _error, id) => [{ type: 'Highlights', id }],
+        }),
     }),
     overrideExisting: true,
 });
 
-export const { useGetHighlightsQuery } = highlightsApi;
+export const { useGetHighlightsQuery, useGetSpecificHighlightQuery } = highlightsApi;

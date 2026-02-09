@@ -32,6 +32,21 @@ interface AdminStats {
     watch_links: number;
 }
 
+export interface Highlight {
+    id: string;
+    match_title: string;
+    youtube_url: string;
+    club_ids: string[];
+}
+
+export interface WatchLink {
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    logo_url: string;
+}
+
 export interface UserInfo {
     id: string;
     name: string;
@@ -78,18 +93,48 @@ export const adminApi = apiSlice.injectEndpoints({
             invalidatesTags: ['Content'],
         }),
         createHighlight: builder.mutation({
-            query: (data) => ({
+            query: (data: Omit<Highlight, 'id'>) => ({
                 url: '/admin/highlights',
                 method: 'POST',
                 body: data,
             }),
             invalidatesTags: ['Highlights'],
         }),
+        updateHighlight: builder.mutation({
+            query: ({ id, ...data }: Partial<Highlight> & { id: string }) => ({
+                url: `/admin/highlights/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['Highlights'],
+        }),
+        deleteHighlight: builder.mutation({
+            query: (id: string) => ({
+                url: `/admin/highlights/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Highlights'],
+        }),
         createWatchLink: builder.mutation({
-            query: (data) => ({
+            query: (data: Omit<WatchLink, 'id'>) => ({
                 url: '/admin/watch-links',
                 method: 'POST',
                 body: data,
+            }),
+            invalidatesTags: ['WatchLinks'],
+        }),
+        updateWatchLink: builder.mutation({
+            query: ({ id, ...data }: Partial<WatchLink> & { id: string }) => ({
+                url: `/admin/watch-links/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['WatchLinks'],
+        }),
+        deleteWatchLink: builder.mutation({
+            query: (id: string) => ({
+                url: `/admin/watch-links/${id}`,
+                method: 'DELETE',
             }),
             invalidatesTags: ['WatchLinks'],
         }),
@@ -114,7 +159,11 @@ export const {
     useUpdateContentMutation,
     useDeleteContentMutation,
     useCreateHighlightMutation,
+    useUpdateHighlightMutation,
+    useDeleteHighlightMutation,
     useCreateWatchLinkMutation,
+    useUpdateWatchLinkMutation,
+    useDeleteWatchLinkMutation,
     useGetStatsQuery,
     useGetAllUsersQuery,
     useGetAllAdminsQuery,

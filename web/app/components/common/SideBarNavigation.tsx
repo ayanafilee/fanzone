@@ -15,7 +15,9 @@ import {
     MdMenuOpen,
     MdMenu,
     MdGroups,
-    MdPeopleAlt
+    MdPeopleAlt,
+    MdVideoLibrary,
+    MdLiveTv
 } from "react-icons/md";
 import { RiGroupLine } from "react-icons/ri";
 
@@ -32,7 +34,8 @@ const SideBarNavigation = () => {
         ...(user?.role === 'super_admin' ? [{ name: "User Management", icon: MdPeopleAlt, link: "/users" }] : []),
         { name: "Clubs", icon: MdGroups, link: "/clubs" },
         { name: "Content", icon: MdPlayCircleOutline, link: "/content" },
-        { name: "Watch Links", icon: MdPlayCircleOutline, link: "/watch-links" },
+        { name: "Highlights", icon: MdVideoLibrary, link: "/highlights" },
+        { name: "Watch Links", icon: MdLiveTv, link: "/watch-links" },
         { name: "Settings", icon: MdSettings, link: "/settings" },
     ];
 
