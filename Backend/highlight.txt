@@ -1,0 +1,93 @@
+# Highlights API Documentation
+
+This document outlines the endpoints for managing and retrieving match highlights.
+
+## Base URL
+`{{host}}/api`
+
+## Authentication
+All endpoints require a Bearer Token in the headers:
+`Authorization: Bearer <JWT_TOKEN>`
+
+---
+
+## 1. User Endpoints (Mobile/Frontend)
+
+### Get All Highlights
+Retrieves a list of highlights, optionally filtered by club.
+- **URL:** `/highlights`
+- **Method:** `GET`
+- **Query Params:**
+  - `club_id` (optional): Filter highlights that belong to this specific club ID.
+- **Response (200 OK):**
+```json
+[
+  {
+    "id": "67a8848d6139366e85575510",
+    "match_title": "Man United vs Arsenal",
+    "youtube_url": "https://www.youtube.com/watch?v=...",
+    "club_ids": [
+      "67a8770b7762615450893096",
+      "67a877147762615450893097"
+    ]
+  }
+]
+```
+
+### Get Specific Highlight
+Retrieves details for a single highlight.
+- **URL:** `/highlights/:id`
+- **Method:** `GET`
+- **Response (200 OK):**
+```json
+{
+  "id": "67a8848d6139366e85575510",
+  "match_title": "Man United vs Arsenal",
+  "youtube_url": "https://www.youtube.com/watch?v=...",
+  "club_ids": ["67a8770b...", "67a87714..."]
+}
+```
+
+---
+
+## 2. Admin Endpoints (CMS/Management)
+
+### Create Highlight
+Adds a new highlight to the system.
+- **URL:** `/admin/highlights`
+- **Method:** `POST`
+- **Body (JSON):**
+```json
+{
+  "match_title": "Real Madrid vs Barcelona",
+  "youtube_url": "https://youtube.com/...",
+  "club_ids": ["ID1", "ID2"]
+}
+```
+- **Response (201 Created)**
+
+### Update Highlight
+Updates an existing highlight. You can send only the fields you wish to change.
+- **URL:** `/admin/highlights/:id`
+- **Method:** `PUT`
+- **Body (JSON):**
+```json
+{
+  "match_title": "Real Madrid vs Barcelona (Updated)",
+  "youtube_url": "https://new-url.com",
+  "club_ids": ["ID1", "ID2", "ID3"]
+}
+```
+- **Response (200 OK):** `{"message": "Highlight updated successfully"}`
+
+### Delete Highlight
+Deletes a highlight from the database.
+- **URL:** `/admin/highlights/:id`
+- **Method:** `DELETE`
+- **Response (200 OK):** `{"message": "Highlight deleted successfully"}`
+
+---
+
+## Data Model Note
+- **club_ids**: This is an array of MongoDB ObjectIDs. Frontend should ensure that highlights are "owned" by both clubs involved in a match so they appear in both club fan feeds.
+- **youtube_url**: Only the link is stored. The frontend is responsible for embedding or opening the link.

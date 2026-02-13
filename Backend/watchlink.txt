@@ -1,0 +1,84 @@
+# Watch Links API Documentation
+
+This document outlines the endpoints for managing and retrieving watch links (Streaming, TV, etc.).
+
+## Base URL
+`{{host}}/api`
+
+## Authentication
+All endpoints require a Bearer Token in the headers:
+`Authorization: Bearer <JWT_TOKEN>`
+
+---
+
+## 1. User Endpoints (Mobile/Frontend)
+
+### Get All Watch Links
+Retrieves a list of all available watch links.
+- **URL:** `/watch-links`
+- **Method:** `GET`
+- **Response (200 OK):**
+```json
+[
+  {
+    "id": "67a8848d6139366abcd75510",
+    "name": "SuperSport Premier League",
+    "url": "https://supersport.com/live",
+    "type": "TV Channel",
+    "logo_url": "https://logo.com/ss.png"
+  }
+]
+```
+
+### Get Specific Watch Link
+Retrieves details for a single watch link.
+- **URL:** `/watch-links/:id`
+- **Method:** `GET`
+- **Response (200 OK):**
+```json
+{
+  "id": "67a8848d6139366abcd75510",
+  "name": "SuperSport Premier League",
+  "url": "https://supersport.com/live",
+  "type": "TV Channel",
+  "logo_url": "https://logo.com/ss.png"
+}
+```
+
+---
+
+## 2. Admin Endpoints (CMS/Management)
+
+### Create Watch Link
+Adds a new watch link to the system.
+- **URL:** `/admin/watch-links`
+- **Method:** `POST`
+- **Body (JSON):**
+```json
+{
+  "name": "BeIN Sports 1",
+  "url": "https://beinsports.com/live",
+  "type": "Streaming",
+  "logo_url": "https://logo.com/bein.png"
+}
+```
+- **Response (201 Created)**
+
+### Update Watch Link
+Updates an existing watch link. You can send only the fields you wish to change.
+- **URL:** `/admin/watch-links/:id`
+- **Method:** `PUT`
+- **Body (JSON):**
+```json
+{
+  "name": "BeIN Sports HD",
+  "type": "HD Streaming"
+}
+```
+- **Response (200 OK):** `{"message": "Watch link updated successfully"}`
+
+### Delete Watch Link
+Deletes a watch link from the database.
+- **URL:** `/admin/watch-links/:id`
+- **Method:** `DELETE`
+- **Response (200 OK):** `{"message": "Watch link deleted successfully"}`
