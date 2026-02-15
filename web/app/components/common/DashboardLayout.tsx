@@ -40,7 +40,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SideBarNav />
             <div className="flex-1 flex flex-col transition-all duration-300 ml-20 lg:ml-64">
                 <main className="p-4 md:p-8 flex-1">
-                    <DashboardHeader title={title} subtitle={subtitle} />
                     {children}
                 </main>
             </div>

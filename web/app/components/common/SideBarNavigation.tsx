@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { logOut } from '@/lib/features/auth/authSlice';
 import { useLogoutMutation } from '@/lib/features/auth/authApi';
+import { useGetProfileQuery } from '@/lib/features/user/userApi';
 import {
     MdAutoGraph,
     MdPlayCircleOutline,
@@ -29,6 +30,10 @@ const SideBarNavigation = () => {
     const [logout] = useLogoutMutation();
     const { user } = useSelector((state: RootState) => state.auth);
     const [isNavOpen, setIsNavOpen] = useState(true);
+
+    // Fetch profile data
+    const { data: profile } = useGetProfileQuery(undefined);
+    const currentUser = profile || user;
 
     const navigation = [
         { name: "Dashboard", icon: MdAutoGraph, link: "/" },
@@ -123,20 +128,70 @@ const SideBarNavigation = () => {
             </nav>
 
             {/* User Section / Logout */}
-            <div className="p-3 mt-auto border-t border-white/5 bg-[#0A1B3D]/30">
-                <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all group relative"
-                >
-                    <MdLogout size={22} className="group-hover:rotate-12 transition-transform" />
-                    {isNavOpen && <span className="font-bold text-[13px] tracking-wide uppercase">Logout</span>}
+            <div className="mt-auto border-t border-white/5 bg-[#0A1B3D]/30 p-4">
+                {/* User Profile Hookup */}
+                <div className={`flex items-center ${isNavOpen ? 'gap-3 mb-4' : 'justify-center mb-0'} relative group`}>
+                    <Link href="/settings" className="relative shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shadow-sm overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer hover:border-[#00A3E0]/50 hover:bg-white/15">
+                            {currentUser?.profile_image_url ? (
+                                <Image
+                                    src={currentUser.profile_image_url}
+                                    alt="Profile"
+                                    width={40}
+                                    height={40}
+                                    className="object-cover w-full h-full"
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center w-full h-full bg-[#EAECED] text-[#132A5B]">
+                                    <span className="text-sm font-black">
+                                        {currentUser?.name?.[0]?.toUpperCase() || 'U'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#132A5B] rounded-full shadow-sm" />
+                    </Link>
+
+                    {isNavOpen && (
+                        <div className="flex-1 min-w-0 pr-2">
+                            <p className="text-[13px] font-black text-white tracking-tight truncate">
+                                {currentUser?.name || 'User'}
+                            </p>
+                            <p className="text-[10px] font-bold text-[#00A3E0] uppercase tracking-widest truncate">
+                                {currentUser?.role?.replace('_', ' ') || 'Admin'}
+                            </p>
+                        </div>
+                    )}
 
                     {!isNavOpen && (
+                        <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl border border-white/10 z-[100]">
+                            {currentUser?.name || 'User'}
+                        </div>
+                    )}
+                </div>
+
+                <div className={isNavOpen ? '' : 'hidden'}>
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all group relative border border-white/5"
+                    >
+                        <MdLogout size={18} className="group-hover:rotate-12 transition-transform" />
+                        <span className="font-bold text-[11px] tracking-[0.1em] uppercase">Logout</span>
+                    </button>
+                </div>
+
+                {/* Slim Logout for closed state */}
+                {!isNavOpen && (
+                    <button
+                        onClick={handleLogout}
+                        className="mt-4 w-10 h-10 flex items-center justify-center rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all group relative mx-auto"
+                    >
+                        <MdLogout size={20} />
                         <div className="absolute left-full ml-6 px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl">
                             Logout
                         </div>
-                    )}
-                </button>
+                    </button>
+                )}
             </div>
         </aside>
     );
