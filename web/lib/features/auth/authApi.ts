@@ -16,7 +16,7 @@ export const authApi = apiSlice.injectEndpoints({
                     dispatch(setCredentials({
                         token: data.access_token,
                         refreshToken: data.refresh_token,
-                        user: { role: data.role }
+                        user: data.user
                     }));
                 } catch (err) {
                     console.log("Login mutation error:", err);

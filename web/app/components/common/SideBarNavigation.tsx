@@ -33,11 +33,12 @@ const SideBarNavigation = () => {
 
     // Fetch profile data
     const { data: profile } = useGetProfileQuery(undefined);
-    const currentUser = profile || user;
+    // Be defensive: check both profile.user and direct profile object
+    const currentUser = profile?.user || profile || user;
 
     const navigation = [
         { name: "Dashboard", icon: MdAutoGraph, link: "/" },
-        ...(user?.role === 'super_admin' ? [{ name: "User Management", icon: MdPeopleAlt, link: "/users" }] : []),
+        ...(currentUser?.role === 'super_admin' ? [{ name: "User Management", icon: MdPeopleAlt, link: "/users" }] : []),
         { name: "Leagues", icon: MdPublic, link: "/leagues" },
         { name: "Clubs", icon: MdGroups, link: "/clubs" },
         { name: "Content", icon: MdPlayCircleOutline, link: "/content" },
@@ -72,17 +73,9 @@ const SideBarNavigation = () => {
     }, []);
 
     return (
-        <aside className={`${isNavOpen ? 'w-64' : 'w-20'} fixed top-0 left-0 bg-[#132A5B] h-screen transition-all duration-300 flex flex-col z-[60] shadow-2xl`}>
-            {/* Toggle Button */}
-            <button
-                onClick={() => setIsNavOpen(!isNavOpen)}
-                className="absolute -right-4 top-10 bg-[#00A3E0] text-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-all z-[70] border-2 border-[#132A5B]"
-            >
-                {isNavOpen ? <MdMenuOpen size={18} /> : <MdMenu size={18} />}
-            </button>
-
-            {/* Logo Section */}
-            <div className="p-6 mb-8 flex items-center gap-4 overflow-hidden">
+        <aside className={`${isNavOpen ? 'w-64' : 'w-20'} fixed top-0 left-0 bg-white h-screen transition-all duration-300 flex flex-col z-[60] shadow-[0_0_40px_rgba(0,0,0,0.03)] border-r border-gray-100`}>
+            {/* Logo Section - Keep Dark Navy */}
+            <div className={`transition-all duration-300 bg-[#132A5B] ${isNavOpen ? 'p-6 mb-8' : 'p-4 mb-4'} flex items-center gap-4 overflow-hidden shadow-lg shadow-blue-900/10`}>
                 <div className="min-w-[44px] h-11 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
                     <Image
                         src="/fanzonelogo.jpg"
@@ -100,7 +93,15 @@ const SideBarNavigation = () => {
                 )}
             </div>
 
-            {/* Navigation Links */}
+            {/* Toggle Button - Modified to match new palette */}
+            <button
+                onClick={() => setIsNavOpen(!isNavOpen)}
+                className="absolute -right-4 top-12 bg-white text-[#132A5B] p-1.5 rounded-full shadow-xl hover:scale-110 transition-all z-[70] border-2 border-gray-50 flex items-center justify-center"
+            >
+                {isNavOpen ? <MdMenuOpen size={18} /> : <MdMenu size={18} />}
+            </button>
+
+            {/* Navigation Links - Updated for White Background */}
             <nav className="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
                 {navigation.map((item) => {
                     const isActive = pathname === item.link;
@@ -109,16 +110,15 @@ const SideBarNavigation = () => {
                             key={item.name}
                             href={item.link}
                             className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${isActive
-                                ? 'bg-[#00A3E0] text-white shadow-[0_10px_20px_-5px_rgba(0,163,224,0.4)]'
-                                : 'text-white/50 hover:text-white hover:bg-white/5'
+                                ? 'bg-[#132A5B] text-white shadow-xl shadow-blue-900/20'
+                                : 'text-gray-500 hover:text-[#132A5B] hover:bg-gray-50/80'
                                 }`}
                         >
-                            <item.icon size={22} className={`${isActive ? 'text-white' : 'group-hover:text-[#00A3E0]'} transition-colors duration-300`} />
+                            <item.icon size={22} className={`${isActive ? 'text-white' : 'text-gray-400 group-hover:text-[#132A5B]'} transition-colors duration-300`} />
                             {isNavOpen && <span className="font-bold text-[13px] tracking-wide uppercase">{item.name}</span>}
 
-                            {/* Tooltip for closed state */}
                             {!isNavOpen && (
-                                <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl border border-white/10 z-[100]">
+                                <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl z-[100]">
                                     {item.name}
                                 </div>
                             )}
@@ -127,12 +127,12 @@ const SideBarNavigation = () => {
                 })}
             </nav>
 
-            {/* User Section / Logout */}
-            <div className="mt-auto border-t border-white/5 bg-[#0A1B3D]/30 p-4">
+            {/* User Section / Logout - Updated for White Background */}
+            <div className="mt-auto border-t border-gray-100 bg-gray-50/50 p-4">
                 {/* User Profile Hookup */}
                 <div className={`flex items-center ${isNavOpen ? 'gap-3 mb-4' : 'justify-center mb-0'} relative group`}>
                     <Link href="/settings" className="relative shrink-0">
-                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10 shadow-sm overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer hover:border-[#00A3E0]/50 hover:bg-white/15">
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer hover:border-[#132A5B]/20">
                             {currentUser?.profile_image_url ? (
                                 <Image
                                     src={currentUser.profile_image_url}
@@ -149,22 +149,22 @@ const SideBarNavigation = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-[#132A5B] rounded-full shadow-sm" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm" />
                     </Link>
 
                     {isNavOpen && (
                         <div className="flex-1 min-w-0 pr-2">
-                            <p className="text-[13px] font-black text-white tracking-tight truncate">
+                            <p className="text-[13px] font-black text-[#132A5B] tracking-tight truncate">
                                 {currentUser?.name || 'User'}
                             </p>
-                            <p className="text-[10px] font-bold text-[#00A3E0] uppercase tracking-widest truncate">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">
                                 {currentUser?.role?.replace('_', ' ') || 'Admin'}
                             </p>
                         </div>
                     )}
 
                     {!isNavOpen && (
-                        <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl border border-white/10 z-[100]">
+                        <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl z-[100]">
                             {currentUser?.name || 'User'}
                         </div>
                     )}
@@ -173,7 +173,7 @@ const SideBarNavigation = () => {
                 <div className={isNavOpen ? '' : 'hidden'}>
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all group relative border border-white/5"
+                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group relative border border-gray-100"
                     >
                         <MdLogout size={18} className="group-hover:rotate-12 transition-transform" />
                         <span className="font-bold text-[11px] tracking-[0.1em] uppercase">Logout</span>
@@ -184,7 +184,7 @@ const SideBarNavigation = () => {
                 {!isNavOpen && (
                     <button
                         onClick={handleLogout}
-                        className="mt-4 w-10 h-10 flex items-center justify-center rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all group relative mx-auto"
+                        className="mt-4 w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group relative mx-auto"
                     >
                         <MdLogout size={20} />
                         <div className="absolute left-full ml-6 px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl">
