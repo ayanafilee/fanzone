@@ -38,8 +38,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="flex bg-[#EAECED] min-h-screen">
             <SideBarNav />
-            <div className="flex-1 flex flex-col transition-all duration-300 ml-20 lg:ml-64">
-                <main className="p-4 md:p-8 flex-1">
+            <div className="flex-1 flex flex-col transition-all duration-300 ml-[130px] lg:ml-[306px]">
+                <main className="p-4 md:p-8 flex-1 mt-20">
                     {children}
                 </main>
             </div>

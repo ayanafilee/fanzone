@@ -73,24 +73,18 @@ const SideBarNavigation = () => {
     }, []);
 
     return (
-        <aside className={`${isNavOpen ? 'w-64' : 'w-20'} fixed top-0 left-0 bg-white h-screen transition-all duration-300 flex flex-col z-[60] shadow-[0_0_40px_rgba(0,0,0,0.03)] border-r border-gray-100`}>
-            {/* Logo Section - Keep Dark Navy */}
-            <div className={`transition-all duration-300 bg-[#132A5B] ${isNavOpen ? 'p-6 mb-8' : 'p-4 mb-4'} flex items-center gap-4 overflow-hidden shadow-lg shadow-blue-900/10`}>
-                <div className="min-w-[44px] h-11 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
-                    <Image
-                        src="/fanzonelogo.jpg"
-                        alt="Fanzone Logo"
-                        width={44}
-                        height={44}
-                        className="object-contain"
-                    />
-                </div>
-                {isNavOpen && (
-                    <div className="flex flex-col">
-                        <span className="font-black tracking-[0.15em] text-white text-base leading-none">FANZONE</span>
-                        <span className="text-[10px] text-[#00A3E0] font-black uppercase tracking-[0.2em] mt-1">Management</span>
-                    </div>
-                )}
+        <aside className={`${isNavOpen ? 'w-[306px]' : 'w-[130px]'} fixed top-0 left-0 bg-white h-screen transition-all duration-300 flex flex-col z-[60] shadow-[0_0_40px_rgba(0,0,0,0.03)] border-r border-gray-100`}>
+            {/* Logo Section - Full Brand Image */}
+            <div className={`transition-all duration-300 relative bg-[#132A5B] ${isNavOpen ? 'h-[137px] mb-8' : 'h-[125px] mb-4'} overflow-hidden shadow-xl shadow-blue-900/20 flex items-center justify-center`}>
+                <Image
+                    src="/fanzonelogo.jpg"
+                    alt="Fanzone Logo"
+                    fill
+                    className="object-cover" // Changed from object-contain to object-cover to fill space
+                    priority
+                />
+                {/* Optional: Add a slight overlay if the logo image is too bright for the nav text */}
+                <div className="absolute inset-0 bg-[#132A5B]/10" />
             </div>
 
             {/* Toggle Button - Modified to match new palette */}
