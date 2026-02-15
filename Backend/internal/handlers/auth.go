@@ -127,6 +127,12 @@ func (h *Handler) Login(c *gin.Context) {
 	var userRole string
 	var userEmail string
 	var passwordHash string
+	var userName string
+	var profileImageURL string
+	var language string
+	var favClubID bson.ObjectID
+	var createdAt time.Time
+	var isAdmin bool
 
 	user, err := h.Repo.FindUserByEmail(ctx, input.Email)
 	if err == nil {
@@ -134,6 +140,12 @@ func (h *Handler) Login(c *gin.Context) {
 		userRole = user.Role
 		userEmail = user.Email
 		passwordHash = user.Password
+		userName = user.Name
+		profileImageURL = user.ProfileImageURL
+		language = user.Language
+		favClubID = user.FavClubID
+		createdAt = user.CreatedAt
+		isAdmin = false
 	} else {
 		admin, err := h.Repo.FindAdminByEmail(ctx, input.Email)
 		if err == nil {
@@ -141,6 +153,10 @@ func (h *Handler) Login(c *gin.Context) {
 			userRole = admin.Role
 			userEmail = admin.Email
 			passwordHash = admin.Password
+			userName = admin.Name
+			profileImageURL = admin.ProfileImageURL
+			createdAt = admin.CreatedAt
+			isAdmin = true
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 			return
@@ -174,11 +190,28 @@ func (h *Handler) Login(c *gin.Context) {
 		Payload: "User logged in: " + userEmail,
 	})
 
-	c.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
-		"role":          userRole,
-	})
+		"user": gin.H{
+			"id":                userID.Hex(),
+			"name":              userName,
+			"email":             userEmail,
+			"role":              userRole,
+			"profile_image_url": profileImageURL,
+			"created_at":        createdAt,
+		},
+	}
+
+	// Add user-specific fields if not admin
+	if !isAdmin {
+		response["user"].(gin.H)["language"] = language
+		if !favClubID.IsZero() {
+			response["user"].(gin.H)["fav_club_id"] = favClubID.Hex()
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) RefreshToken(c *gin.Context) {

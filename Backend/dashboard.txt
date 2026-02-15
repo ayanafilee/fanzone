@@ -1,0 +1,76 @@
+# FANZONE DASHBOARD API DOCUMENTATION
+# Target: Frontend Team (Dashboard Metrics & charts)
+
+---------------------------------------------------------
+1. OVERVIEW STATS (KEY METRICS)
+---------------------------------------------------------
+- URL: /api/admin/stats
+- Method: GET
+- Access: Admin / SuperAdmin
+- Description: Returns total counts for the summary cards.
+
+RESPONSE:
+{
+  "users": 1540,
+  "leagues": 5,
+  "clubs": 24,
+  "content": 89,
+  "highlights": 32,
+  "watch_links": 12
+}
+
+---------------------------------------------------------
+2. ANALYTICS (CHARTS & DISTRIBUTION)
+---------------------------------------------------------
+- URL: /api/admin/analytics
+- Method: GET
+- Access: Admin / SuperAdmin
+- Description: Combined data for User Growth charts, Fan Distribution, and Language stats.
+
+RESPONSE:
+{
+  "user_growth": [                     
+    { "month": "Jan", "count": 450 },
+    { "month": "Feb", "count": 1200 }
+  ],
+  "club_popularity": [                 
+    { "club_name": "Arba Minch City FC", "fan_count": 850 },
+    { "club_name": "Ethiopian Coffee", "fan_count": 720 },
+    { "club_name": "Unknown Club", "fan_count": 40 }
+  ],
+  "languages": {                       
+    "en": 400,
+    "am": 850,
+    "om": 320
+  }
+}
+
+---------------------------------------------------------
+3. RECENT ACTIVITY FEED (AUDIT LOG)
+---------------------------------------------------------
+- URL: /api/admin/activities
+- Method: GET
+- Access: Admin / SuperAdmin
+- Description: Returns the last 20 actions performed by admins.
+
+RESPONSE:
+[
+  {
+    "id": "65ccc123...",
+    "user_id": "65caa...",
+    "user_name": "Abebe Kebede",        
+    "action": "Added Club",            // Actions: Added, Updated, Deleted
+    "entity": "club",                  // Entities: club, league, content, highlight, watch_link
+    "detail": "Arba Minch City FC",    // Name or ID of the item
+    "timestamp": "2026-02-15T21:20:00Z"
+  }
+]
+
+---------------------------------------------------------
+4. IMPLEMENTATION MAPPING (DUMMY TO REAL)
+---------------------------------------------------------
+- Line Chart (User Growth)    --> Use 'user_growth' array.
+- Bar Chart (Club Popularity) --> Use 'club_popularity' array.
+- Pie Chart (Languages)       --> Use 'languages' object keys/values.
+- Activity List               --> Use 'activities' array.
+- Top Cards                   --> Use 'stats' endpoint.

@@ -7,23 +7,25 @@ import (
 )
 
 type User struct {
-	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
-	Name      string        `bson:"name" json:"name"`
-	Email     string        `bson:"email" json:"email"`
-	Password  string        `bson:"password" json:"-"`
-	Language  string        `bson:"language" json:"language"`
-	FavClubID bson.ObjectID `bson:"fav_club_id,omitempty" json:"fav_club_id"`
-	Role      string        `bson:"role" json:"role"`
-	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
+	ID              bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name            string        `bson:"name" json:"name"`
+	Email           string        `bson:"email" json:"email"`
+	Password        string        `bson:"password" json:"-"`
+	ProfileImageURL string        `bson:"profile_image_url,omitempty" json:"profile_image_url,omitempty"`
+	Language        string        `bson:"language" json:"language"`
+	FavClubID       bson.ObjectID `bson:"fav_club_id,omitempty" json:"fav_club_id"`
+	Role            string        `bson:"role" json:"role"`
+	CreatedAt       time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type Admin struct {
-	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
-	Name      string        `bson:"name" json:"name"`
-	Email     string        `bson:"email" json:"email"`
-	Password  string        `bson:"password" json:"-"`
-	Role      string        `bson:"role" json:"role"` // admin or super_admin
-	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
+	ID              bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name            string        `bson:"name" json:"name"`
+	Email           string        `bson:"email" json:"email"`
+	Password        string        `bson:"password" json:"-"`
+	ProfileImageURL string        `bson:"profile_image_url,omitempty" json:"profile_image_url,omitempty"`
+	Role            string        `bson:"role" json:"role"` // admin or super_admin
+	CreatedAt       time.Time     `bson:"created_at" json:"created_at"`
 }
 
 // New Model for storing Refresh Tokens in DB
@@ -34,11 +36,18 @@ type RefreshTokenSession struct {
 	ExpiresAt time.Time     `bson:"expires_at"`
 }
 
-type Club struct {
+type League struct {
 	ID      bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name    string        `bson:"name" json:"name"`
 	LogoURL string        `bson:"logo_url" json:"logo_url"`
-	League  string        `bson:"league" json:"league"`
+	Country string        `bson:"country" json:"country"`
+}
+
+type Club struct {
+	ID       bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name     string        `bson:"name" json:"name"`
+	LogoURL  string        `bson:"logo_url" json:"logo_url"`
+	LeagueID bson.ObjectID `bson:"league_id" json:"league_id"`
 }
 
 type MultiLangString struct {
@@ -70,4 +79,16 @@ type WatchLink struct {
 	URL     string        `bson:"url" json:"url"`
 	Type    string        `bson:"type" json:"type"`
 	LogoURL string        `bson:"logo_url" json:"logo_url"`
+}
+
+type Activity struct {
+	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID    bson.ObjectID `bson:"user_id" json:"user_id"`
+	Action    string        `bson:"action" json:"action"`
+	Entity    string        `bson:"entity" json:"entity"`
+	Detail    string        `bson:"detail" json:"detail"`
+	Timestamp time.Time     `bson:"timestamp" json:"timestamp"`
+
+	// Virtual field for display
+	UserName string `bson:"-" json:"user_name,omitempty"`
 }

@@ -60,6 +60,9 @@ func main() {
 	api.Use(middleware.AuthMiddleware(cfg.AccessSecret))
 	{
 		api.GET("/clubs", h.GetClubs)
+		api.GET("/clubs/:id", h.GetClubByID)
+		api.GET("/leagues", h.GetLeagues)
+		api.GET("/leagues/:id", h.GetLeagueByID)
 		api.GET("/content", h.GetContent)
 		api.GET("/content/:id", h.GetContentByID)
 		api.GET("/highlights", h.GetHighlights)
@@ -73,6 +76,7 @@ func main() {
 	{
 		userGroup.GET("/profile", h.GetProfile)
 		userGroup.PUT("/profile", h.UpdateProfile)
+		userGroup.PUT("/password", h.UpdatePassword)
 	}
 
 	adminGroup := r.Group("/api/admin")
@@ -80,6 +84,11 @@ func main() {
 	adminGroup.Use(middleware.AdminMiddleware()) // Allows both 'admin' and 'super_admin'
 	{
 		adminGroup.POST("/clubs", h.AdminAddClub)
+		adminGroup.PUT("/clubs/:id", h.AdminUpdateClub)
+		adminGroup.DELETE("/clubs/:id", h.AdminDeleteClub)
+		adminGroup.POST("/leagues", h.AdminAddLeague)
+		adminGroup.PUT("/leagues/:id", h.AdminUpdateLeague)
+		adminGroup.DELETE("/leagues/:id", h.AdminDeleteLeague)
 		adminGroup.POST("/content", h.AdminAddContent)
 		adminGroup.PUT("/content/:id", h.AdminUpdateContent)
 		adminGroup.DELETE("/content/:id", h.AdminDeleteContent)
@@ -90,6 +99,8 @@ func main() {
 		adminGroup.PUT("/watch-links/:id", h.AdminUpdateWatchLink)
 		adminGroup.DELETE("/watch-links/:id", h.AdminDeleteWatchLink)
 		adminGroup.GET("/stats", h.GetStats)
+		adminGroup.GET("/analytics", h.GetAnalytics)
+		adminGroup.GET("/activities", h.GetActivityFeed)
 		adminGroup.GET("/users", h.GetAllUsers)
 	}
 

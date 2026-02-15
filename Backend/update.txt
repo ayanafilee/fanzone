@@ -1,0 +1,106 @@
+# FANZONE API UPDATE DOCUMENTATION
+# Date: 2026-02-15
+# Target: Frontend Team
+
+---------------------------------------------------------
+1. LEAGUE MANAGEMENT (NEW MODULE)
+---------------------------------------------------------
+Leagues are now a separate entity. Create the League first, then assign Clubs to it.
+
+PUBLIC ENDPOINTS (Requires Login JWT):
+- GET /api/leagues         : Get list of all leagues
+- GET /api/leagues/:id     : Get specific league details
+
+ADMIN ENDPOINTS (Requires Admin/SuperAdmin Role):
+- POST /api/admin/leagues  : Create new league
+- PUT /api/admin/leagues/:id : Update league details
+- DELETE /api/admin/leagues/:id : Delete a league
+
+LEAGUE MODEL:
+{
+  "name": "English Premier League",
+  "logo_url": "https://path/to/image.png",
+  "country": "England"
+}
+
+---------------------------------------------------------
+2. CLUB MANAGEMENT (UPDATED)
+---------------------------------------------------------
+CRITICAL: The "league" (string) field is DEPRECATED. Clubs now use "league_id" (ObjectID).
+
+ADMIN ENDPOINTS:
+- POST /api/admin/clubs    : Create new club (league_id is MANDATORY)
+- PUT /api/admin/clubs/:id : Update club
+- DELETE /api/admin/clubs/:id : Delete club
+
+NEW CLUB REQUEST BODY:
+{
+  "name": "Arsenal",
+  "logo_url": "https://path/to/image.png",
+  "league_id": "65cb..." // Use the "id" returned from the Leagues API
+}
+
+Note: When adding a club, the backend now verifies if the league_id exists. If it doesn't, it returns a 400 Bad Request.
+
+---------------------------------------------------------
+3. DASHBOARD STATS (UPDATED)
+---------------------------------------------------------
+- GET /api/admin/stats
+The counts object now includes "leagues":
+{
+  "users": 100,
+  "leagues": 5,   <-- NEW
+  "clubs": 20,
+  "content": 50,
+  ...
+}
+
+---------------------------------------------------------
+4. DASHBOARD ANALYTICS (NEW)
+---------------------------------------------------------
+- GET /api/admin/analytics
+Returns aggregated data for the dashboard charts.
+Response:
+{
+  "user_growth": [                     // Grouped by month
+    { "month": "Jan", "count": 10 },
+    { "month": "Feb", "count": 25 }
+  ],
+  "club_popularity": [                 // Grouped by favorite club
+    { "club_name": "Arsenal", "fan_count": 850 },
+    { "club_name": "Real Madrid", "fan_count": 720 }
+  ],
+  "languages": {                       // Language distribution
+    "en": 400,
+    "am": 800,
+    "om": 300
+  }
+}
+
+---------------------------------------------------------
+5. RECENT ACTIVITY FEED (NEW)
+---------------------------------------------------------
+- GET /api/admin/activities
+Returns the last 20 administrative actions performed in the system.
+Response:
+[
+  {
+    "id": "...",
+    "user_id": "...",
+    "user_name": "Admin Name",        // Joined from Admin/User collection
+    "action": "Added Club",
+    "entity": "club",
+    "detail": "Arba Minch City FC",
+    "timestamp": "2026-02-15T..."
+  },
+  ...
+]
+
+Note: Every time an admin Adds/Edits/Deletes a club, league, content, or watch link, an entry is automatically logged.
+
+---------------------------------------------------------
+IMPLEMENTATION ADVICE:
+1. Implement a "Leagues" management page (DataTable with Add/Edit/Delete).
+2. On the "Add/Edit Club" form, replace the league text input with a Select Dropdown populated from /api/leagues.
+3. Replace dummy chart data in the dashboard with real data from /api/admin/analytics.
+4. Replace the static activity feed with real-time data from /api/admin/activities.
