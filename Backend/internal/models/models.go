@@ -90,5 +90,5 @@ type Activity struct {
 	Timestamp time.Time     `bson:"timestamp" json:"timestamp"`
 
 	// Virtual field for display
-	UserName string `bson:"-" json:"user_name,omitempty"`
+	UserName string `bson:"user_name" json:"user_name,omitempty"`
 }
