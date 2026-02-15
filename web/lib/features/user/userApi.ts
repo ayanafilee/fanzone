@@ -14,8 +14,29 @@ export const userApi = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['User'],
         }),
+        changePassword: builder.mutation({
+            query: (data: { current_password: string; new_password: string }) => ({
+                url: '/user/password',
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['User'],
+        }),
+        uploadProfileImage: builder.mutation({
+            query: (formData: FormData) => ({
+                url: '/user/profile/image',
+                method: 'POST',
+                body: formData,
+            }),
+            invalidatesTags: ['User'],
+        }),
     }),
     overrideExisting: true,
 });
 
-export const { useGetProfileQuery, useUpdateProfileMutation } = userApi;
+export const { 
+    useGetProfileQuery, 
+    useUpdateProfileMutation,
+    useChangePasswordMutation,
+    useUploadProfileImageMutation,
+} = userApi;

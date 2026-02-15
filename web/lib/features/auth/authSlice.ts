@@ -5,6 +5,8 @@ interface User {
     email?: string;
     name?: string;
     role?: string;
+    profile_image_url?: string;
+    created_at?: string;
 }
 
 interface AuthState {

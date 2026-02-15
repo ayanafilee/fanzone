@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
@@ -17,9 +18,9 @@ import {
     MdGroups,
     MdPeopleAlt,
     MdVideoLibrary,
-    MdLiveTv
+    MdLiveTv,
+    MdPublic
 } from "react-icons/md";
-import { RiGroupLine } from "react-icons/ri";
 
 const SideBarNavigation = () => {
     const pathname = usePathname();
@@ -32,6 +33,7 @@ const SideBarNavigation = () => {
     const navigation = [
         { name: "Dashboard", icon: MdAutoGraph, link: "/" },
         ...(user?.role === 'super_admin' ? [{ name: "User Management", icon: MdPeopleAlt, link: "/users" }] : []),
+        { name: "Leagues", icon: MdPublic, link: "/leagues" },
         { name: "Clubs", icon: MdGroups, link: "/clubs" },
         { name: "Content", icon: MdPlayCircleOutline, link: "/content" },
         { name: "Highlights", icon: MdVideoLibrary, link: "/highlights" },
@@ -76,8 +78,14 @@ const SideBarNavigation = () => {
 
             {/* Logo Section */}
             <div className="p-6 mb-8 flex items-center gap-4 overflow-hidden">
-                <div className="min-w-[44px] h-11 bg-[#00A3E0] rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 rotate-3 shrink-0">
-                    <span className="font-black text-white text-xl italic">FZ</span>
+                <div className="min-w-[44px] h-11 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                    <Image
+                        src="/fanzonelogo.jpg"
+                        alt="Fanzone Logo"
+                        width={44}
+                        height={44}
+                        className="object-contain"
+                    />
                 </div>
                 {isNavOpen && (
                     <div className="flex flex-col">

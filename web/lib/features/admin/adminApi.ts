@@ -29,6 +29,8 @@ interface AdminStats {
     content: number;
     highlights: number;
     users: number;
+    leagues: number;
+    clubs: number;
     watch_links: number;
 }
 
@@ -59,16 +61,28 @@ export interface UserInfo {
     is_active?: boolean;
 }
 
+export interface AdminAnalytics {
+    user_growth: { month: string; count: number }[];
+    club_popularity: { club_name: string; fan_count: number }[];
+    languages: {
+        en: number;
+        am: number;
+        om: number;
+    };
+}
+
+export interface AdminActivity {
+    id: string;
+    user_id: string;
+    user_name: string;
+    action: string;
+    entity: string;
+    detail: string;
+    timestamp: string;
+}
+
 export const adminApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        createClub: builder.mutation({
-            query: (data) => ({
-                url: '/admin/clubs',
-                method: 'POST',
-                body: data,
-            }),
-            invalidatesTags: ['Clubs'],
-        }),
         createContent: builder.mutation({
             query: (data: CreateContentRequest) => ({
                 url: '/admin/content',
@@ -149,12 +163,19 @@ export const adminApi = apiSlice.injectEndpoints({
             query: () => '/super-admin/admins',
             providesTags: ['User'],
         }),
+        getAnalytics: builder.query<AdminAnalytics, void>({
+            query: () => '/admin/analytics',
+            providesTags: ['Analytics'],
+        }),
+        getActivities: builder.query<AdminActivity[], void>({
+            query: () => '/admin/activities',
+            providesTags: ['Activities'],
+        }),
     }),
     overrideExisting: true,
 });
 
 export const {
-    useCreateClubMutation,
     useCreateContentMutation,
     useUpdateContentMutation,
     useDeleteContentMutation,
@@ -165,6 +186,8 @@ export const {
     useUpdateWatchLinkMutation,
     useDeleteWatchLinkMutation,
     useGetStatsQuery,
+    useGetAnalyticsQuery,
+    useGetActivitiesQuery,
     useGetAllUsersQuery,
     useGetAllAdminsQuery,
 } = adminApi;

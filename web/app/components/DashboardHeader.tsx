@@ -11,8 +11,10 @@ interface HeaderProps {
 
 const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
     // Fetch profile data
-    const { data: userData, isLoading } = useGetProfileQuery(undefined);
-    const user = userData?.user || (userData as any)?.data?.user; // Handling potential variations in response structure
+    const { data: profileData, isLoading } = useGetProfileQuery(undefined);
+    
+    // Get user from profile API or fallback to auth state
+    const user = profileData || null;
 
     return (
         <header className="flex items-center justify-between mb-10 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-[0_20px_40px_-15px_rgba(20,45,100,0.05)]">
@@ -41,11 +43,11 @@ const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
                         </div>
                     ) : (
                         <>
-                            <p className="text-sm font-black text-[#132A5B] tracking-tight italic">
-                                {user?.firstName} {user?.lastName}
+                            <p className="text-sm font-black text-[#132A5B] tracking-tight">
+                                {user?.name || 'User'}
                             </p>
                             <p className="text-[10px] font-black text-[#00A3E0] uppercase tracking-widest mt-0.5">
-                                {user?.role || 'Administrator'}
+                                {user?.role?.replace('_', ' ') || 'User'}
                             </p>
                         </>
                     )}
@@ -53,18 +55,18 @@ const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
 
                 <div className="relative group">
                     <div className="w-14 h-14 rounded-2xl bg-[#EAECED] flex items-center justify-center border-4 border-white shadow-md overflow-hidden transition-transform duration-300 group-hover:scale-105">
-                        {user?.profileImage ? (
+                        {user?.profile_image_url ? (
                             <Image
-                                src={user.profileImage}
+                                src={user.profile_image_url}
                                 alt="Profile"
                                 width={56}
                                 height={56}
-                                className="object-cover"
+                                className="object-cover w-full h-full"
                             />
                         ) : (
-                            <div className="flex items-center justify-center w-full h-full bg-[#132A5B] text-white">
-                                <span className="text-xl font-black italic">
-                                    {user?.firstName?.[0] || 'F'}{user?.lastName?.[0] || 'Z'}
+                            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#132A5B] to-[#0f1f42] text-white">
+                                <span className="text-xl font-black">
+                                    {user?.name?.[0]?.toUpperCase() || 'U'}
                                 </span>
                             </div>
                         )}
