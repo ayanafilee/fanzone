@@ -85,7 +85,7 @@ export default function Dashboard() {
   if (statsError) return <ErrorState />;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] font-sans text-[#132A5B] p-2 md:p-6 space-y-6">
+    <div className="flex flex-col min-h-screen font-sans text-[#132A5B] p-2 md:p-6 space-y-6">
 
       {/* 1. Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

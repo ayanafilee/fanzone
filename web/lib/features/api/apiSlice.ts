@@ -60,9 +60,15 @@ const baseQueryWithReauth: BaseQueryFn<
             result = await baseQuery(args, api, extraOptions);
           } else {
             api.dispatch(logOut());
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
           }
         } else {
           api.dispatch(logOut());
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
         }
       } finally {
         // release must be called once the mutex should be released again.

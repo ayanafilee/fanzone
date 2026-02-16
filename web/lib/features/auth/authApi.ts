@@ -39,9 +39,15 @@ export const authApi = apiSlice.injectEndpoints({
             async onQueryStarted(arg, { dispatch, queryFulfilled }) {
                 dispatch(logOut());
                 try {
-                    await queryFulfilled
+                    await queryFulfilled;
+                    if (typeof window !== 'undefined') {
+                        window.location.href = '/login';
+                    }
                 } catch (err) {
-                    console.error(err)
+                    console.error('Logout error:', err);
+                    if (typeof window !== 'undefined') {
+                        window.location.href = '/login';
+                    }
                 }
             }
         })

@@ -36,10 +36,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     return (
-        <div className="flex bg-[#EAECED] min-h-screen">
+        <div className="flex bg-[#F8F9FA] min-h-screen">
             <SideBarNav />
             <div className="flex-1 flex flex-col transition-all duration-300 ml-[130px] lg:ml-[306px]">
-                <main className="p-4 md:p-8 flex-1 mt-20">
+                {/* Static top gap that stays fixed even on scroll */}
+                <div className="fixed top-0 right-0 left-[130px] lg:left-[306px] h-[95px] bg-[#F8F9FA] z-40 transition-all duration-300" />
+
+                <main className="p-4 md:p-8 flex-1 mt-[95px]">
                     {children}
                 </main>
             </div>
