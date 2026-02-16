@@ -7,6 +7,7 @@ import DashboardHeader from "../DashboardHeader";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isLoginPage = pathname === '/login';
+    const isFullScreenPage = isLoginPage;
 
     const getPageDetails = () => {
         switch (pathname) {
@@ -31,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const { title, subtitle } = getPageDetails();
 
-    if (isLoginPage) {
+    if (isFullScreenPage) {
         return <main className="w-full">{children}</main>;
     }
 
