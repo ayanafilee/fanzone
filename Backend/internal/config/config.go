@@ -1,7 +1,10 @@
 package config
 
 import (
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -13,24 +16,29 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
+	// Load .env.local if it exists
+	if err := godotenv.Load(".env.local"); err != nil {
+		log.Println("No .env.local file found, falling back to system environment variables")
+	}
+
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb+srv://ayanafiledugasa:mobileapplicationayu10upme@cluster0.8wl5iqd.mongodb.net/?appName=Cluster0"
+		log.Fatal("MONGO_URI is not set in environment")
 	}
 
 	dbName := os.Getenv("DB_NAME")
 	if dbName == "" {
-		dbName = "ayanafiledugasa"
+		dbName = "ayanafiledugasa" // Default if not critical
 	}
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	if accessSecret == "" {
-		accessSecret = "short_lived_access_secret_123"
+		log.Fatal("ACCESS_SECRET is not set in environment")
 	}
 
 	refreshSecret := os.Getenv("REFRESH_SECRET")
 	if refreshSecret == "" {
-		refreshSecret = "long_lived_refresh_secret_456"
+		log.Fatal("REFRESH_SECRET is not set in environment")
 	}
 
 	port := os.Getenv("PORT")

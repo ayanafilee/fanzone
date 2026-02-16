@@ -18,10 +18,11 @@ func ConnectDB(uri string, dbName string) (*mongo.Client, *mongo.Database) {
 		log.Fatal("Error creating MongoDB client: ", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := client.Ping(ctx, nil); err != nil {
+		log.Printf("MongoDB URI used: %s", uri)
 		log.Fatal("Could not ping MongoDB: ", err)
 	}
 
