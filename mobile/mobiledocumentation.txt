@@ -1,0 +1,1052 @@
+================================================================================
+                    FANZONE MOBILE APP - BACKEND API DOCUMENTATION
+================================================================================
+
+BASE URL: http://your-server:8080/api
+
+================================================================================
+                              AUTHENTICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+1. REGISTER NEW USER
+--------------------------------------------------------------------------------
+Endpoint: POST /api/auth/register
+Authentication: Not Required
+
+Description:
+Creates a new user account with language preference and favorite club.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body:
+{
+  "name": "John Doe",                           // Required, string
+  "email": "john@example.com",                  // Required, valid email
+  "password": "password123",                    // Required, min 6 characters
+  "language": "en",                             // Optional, string (en/am/om)
+  "fav_club_id": "507f1f77bcf86cd799439011"    // Optional, valid club ID
+}
+
+Success Response (201 Created):
+{
+  "message": "User registered successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Email already exists"
+}
+OR
+{
+  "error": "Key: 'name' Error:Field validation for 'name' failed"
+}
+
+--------------------------------------------------------------------------------
+2. LOGIN
+--------------------------------------------------------------------------------
+Endpoint: POST /api/auth/login
+Authentication: Not Required
+
+Description:
+Authenticates user credentials and returns JWT access and refresh tokens.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body:
+{
+  "email": "john@example.com",      // Required, valid email
+  "password": "password123"         // Required
+}
+
+Success Response (200 OK):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "user",
+    "language": "en",
+    "fav_club_id": "507f1f77bcf86cd799439012",
+    "profile_image_url": "https://example.com/profile.jpg",
+    "created_at": "2024-01-01T00:00:00Z"
+  }
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "Invalid email or password"
+}
+
+Notes:
+- Store access_token for API requests (expires in 15 minutes)
+- Store refresh_token securely for token refresh (expires in 7 days)
+- Use access_token in Authorization header for all protected endpoints
+
+--------------------------------------------------------------------------------
+3. REFRESH TOKEN
+--------------------------------------------------------------------------------
+Endpoint: POST /api/auth/refresh
+Authentication: Not Required
+
+Description:
+Issues a new access token using a valid refresh token.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body:
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Success Response (200 OK):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "Session revoked or expired"
+}
+OR
+{
+  "error": "Refresh token expired"
+}
+
+Notes:
+- Call this endpoint when access_token expires
+- Update stored access_token with new one
+- If refresh fails, redirect user to login
+
+--------------------------------------------------------------------------------
+4. LOGOUT
+--------------------------------------------------------------------------------
+Endpoint: POST /api/auth/logout
+Authentication: Not Required
+
+Description:
+Invalidates the refresh token session on the server.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body:
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Success Response (200 OK):
+{
+  "message": "Logged out successfully"
+}
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Logout failed"
+}
+
+Notes:
+- Clear all stored tokens from device after logout
+- Redirect user to login screen
+
+
+================================================================================
+                              USER PROFILE
+================================================================================
+
+--------------------------------------------------------------------------------
+5. GET MY PROFILE
+--------------------------------------------------------------------------------
+Endpoint: GET /api/users/me
+Authentication: Required
+
+Description:
+Returns the authenticated user's profile information.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "language": "en",
+  "fav_club_id": "507f1f77bcf86cd799439012",
+  "role": "user",
+  "profile_image_url": "https://example.com/profile.jpg",
+  "created_at": "2024-01-01T00:00:00Z"
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "User ID not found in context"
+}
+
+404 Not Found:
+{
+  "error": "User not found"
+}
+
+Notes:
+- Use this on app startup to load user preferences
+- fav_club_id may be empty if user hasn't selected a club
+
+--------------------------------------------------------------------------------
+6. UPDATE PROFILE (FULL UPDATE)
+--------------------------------------------------------------------------------
+Endpoint: PUT /api/users/me
+Authentication: Required
+
+Description:
+Updates user profile information. All fields are optional.
+
+Request Headers:
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+Request Body (all fields optional):
+{
+  "name": "John Updated",                       // Optional, string
+  "language": "am",                             // Optional, string (en/am/om)
+  "fav_club_id": "507f1f77bcf86cd799439013",   // Optional, valid club ID
+  "profile_image_url": "https://example.com/new.jpg"  // Optional, string URL
+}
+
+Success Response (200 OK):
+{
+  "message": "Profile updated successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "No fields to update"
+}
+OR
+{
+  "error": "Invalid club ID"
+}
+
+401 Unauthorized:
+{
+  "error": "User ID not found in context"
+}
+
+Notes:
+- Send only the fields you want to update
+- Email cannot be updated through this endpoint
+
+--------------------------------------------------------------------------------
+7. UPDATE FAVORITE CLUB
+--------------------------------------------------------------------------------
+Endpoint: PATCH /api/users/me/favorite-club
+Authentication: Required
+
+Description:
+Updates only the user's favorite club. Triggers personalized feed update.
+
+Request Headers:
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+Request Body:
+{
+  "fav_club_id": "507f1f77bcf86cd799439013"    // Required, valid club ID
+}
+
+Success Response (200 OK):
+{
+  "message": "Favorite club updated successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid club ID"
+}
+
+404 Not Found:
+{
+  "error": "Club not found"
+}
+
+401 Unauthorized:
+{
+  "error": "User ID not found in context"
+}
+
+Notes:
+- Validates that club exists before updating
+- After update, call GET /api/feed/my-club to refresh feed
+
+--------------------------------------------------------------------------------
+8. UPDATE LANGUAGE
+--------------------------------------------------------------------------------
+Endpoint: PATCH /api/users/me/language
+Authentication: Required
+
+Description:
+Updates only the user's preferred language setting.
+
+Request Headers:
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+Request Body:
+{
+  "language": "om"    // Required, string (en/am/om)
+}
+
+Success Response (200 OK):
+{
+  "message": "Language updated successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Unsupported language. Supported: en, am, om"
+}
+
+401 Unauthorized:
+{
+  "error": "User ID not found in context"
+}
+
+Notes:
+- Only accepts: "en" (English), "am" (Amharic), "om" (Oromo)
+- After update, refresh UI to display content in new language
+
+
+================================================================================
+                         FEED (MAIN APP SCREENS)
+================================================================================
+
+--------------------------------------------------------------------------------
+9. GET MY CLUB FEED
+--------------------------------------------------------------------------------
+Endpoint: GET /api/feed/my-club
+Authentication: Required
+
+Description:
+Returns personalized feed with news and highlights for user's favorite club,
+sorted by newest first. This powers the "My Club" home timeline.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "feed": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "type": "news",
+      "title": {
+        "en": "Big Win Today",
+        "am": "ዛሬ ትልቅ ድል",
+        "om": "Injifannoo Guddaa Har'a"
+      },
+      "body": {
+        "en": "The team won 3-0 against their rivals...",
+        "am": "ቡድኑ በ3-0 ተቀናቃኞቻቸውን አሸንፏል...",
+        "om": "Gareen 3-0 mormituu isaanii injifate..."
+      },
+      "image_url": "https://example.com/news-image.jpg",
+      "category": "match_report",
+      "club_id": "507f1f77bcf86cd799439012",
+      "created_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "507f1f77bcf86cd799439014",
+      "type": "highlight",
+      "title": "Arsenal vs Chelsea - Full Match Highlights",
+      "video_url": "https://youtube.com/watch?v=abc123",
+      "club_ids": [
+        "507f1f77bcf86cd799439012",
+        "507f1f77bcf86cd799439015"
+      ],
+      "created_at": "2024-01-14T18:00:00Z"
+    },
+    {
+      "id": "507f1f77bcf86cd799439016",
+      "type": "news",
+      "title": {
+        "en": "Transfer Update",
+        "am": "የዝውውር ዝመና",
+        "om": "Fooyya'iinsa Jijjiirraa"
+      },
+      "body": {
+        "en": "Club signs new midfielder...",
+        "am": "ክለቡ አዲስ መካከለኛ ተጫዋች ፈረመ...",
+        "om": "Kilabiin taphataa giddugaleessaa haaraa mallattoo itti godhe..."
+      },
+      "image_url": "https://example.com/transfer.jpg",
+      "category": "transfer_news",
+      "club_id": "507f1f77bcf86cd799439012",
+      "created_at": "2024-01-13T14:30:00Z"
+    }
+  ],
+  "club_id": "507f1f77bcf86cd799439012",
+  "total_items": 3
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "User has no favorite club set"
+}
+
+401 Unauthorized:
+{
+  "error": "User ID not found in context"
+}
+
+404 Not Found:
+{
+  "error": "User not found"
+}
+
+Notes:
+- Feed items are sorted by created_at DESC (newest first)
+- Each item has a "type" field: "news" or "highlight"
+- News items have multilingual title/body
+- Highlight items have video_url and multiple club_ids
+- Display title/body based on user's language preference
+- Empty feed array if no content available for club
+
+Feed Item Types:
+
+NEWS ITEM:
+{
+  "id": "string",
+  "type": "news",
+  "title": { "en": "string", "am": "string", "om": "string" },
+  "body": { "en": "string", "am": "string", "om": "string" },
+  "image_url": "string",
+  "category": "string",
+  "club_id": "string",
+  "created_at": "ISO 8601 datetime"
+}
+
+HIGHLIGHT ITEM:
+{
+  "id": "string",
+  "type": "highlight",
+  "title": "string",
+  "video_url": "string",
+  "club_ids": ["string", "string"],
+  "created_at": "ISO 8601 datetime"
+}
+
+--------------------------------------------------------------------------------
+10. GET ALL FEED
+--------------------------------------------------------------------------------
+Endpoint: GET /api/feed/all
+Authentication: Required
+
+Description:
+Returns global feed with all news and highlights from all clubs,
+sorted by newest first. This powers the "All News" timeline.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "feed": [
+    {
+      "id": "507f1f77bcf86cd799439020",
+      "type": "news",
+      "title": {
+        "en": "Premier League Update",
+        "am": "የፕሪሚየር ሊግ ዝመና",
+        "om": "Fooyya'iinsa Liigii Duraa"
+      },
+      "body": {
+        "en": "Latest standings and results...",
+        "am": "የቅርብ ጊዜ ደረጃዎች እና ውጤቶች...",
+        "om": "Sadarkaa fi bu'aa dhiyoo..."
+      },
+      "image_url": "https://example.com/league.jpg",
+      "category": "league_news",
+      "club_id": "507f1f77bcf86cd799439021",
+      "created_at": "2024-01-16T09:00:00Z"
+    },
+    {
+      "id": "507f1f77bcf86cd799439022",
+      "type": "highlight",
+      "title": "Manchester United vs Liverpool - Goals & Highlights",
+      "video_url": "https://youtube.com/watch?v=xyz789",
+      "club_ids": [
+        "507f1f77bcf86cd799439023",
+        "507f1f77bcf86cd799439024"
+      ],
+      "created_at": "2024-01-15T20:00:00Z"
+    }
+  ],
+  "total_items": 2
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "User ID not found in context"
+}
+
+500 Internal Server Error:
+{
+  "error": "Error fetching news"
+}
+OR
+{
+  "error": "Error fetching highlights"
+}
+
+Notes:
+- Same feed structure as /api/feed/my-club
+- Includes content from all clubs
+- Sorted by created_at DESC (newest first)
+- Use for "Explore" or "All News" tab
+
+
+================================================================================
+                                  CLUBS
+================================================================================
+
+--------------------------------------------------------------------------------
+11. GET ALL CLUBS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/clubs
+Authentication: Required
+
+Description:
+Returns list of all available clubs. Used during onboarding and club selection.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "Arsenal FC",
+    "logo_url": "https://example.com/logos/arsenal.png",
+    "league_id": "507f1f77bcf86cd799439020"
+  },
+  {
+    "id": "507f1f77bcf86cd799439012",
+    "name": "Chelsea FC",
+    "logo_url": "https://example.com/logos/chelsea.png",
+    "league_id": "507f1f77bcf86cd799439020"
+  },
+  {
+    "id": "507f1f77bcf86cd799439013",
+    "name": "Manchester United",
+    "logo_url": "https://example.com/logos/manutd.png",
+    "league_id": "507f1f77bcf86cd799439020"
+  }
+]
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+500 Internal Server Error:
+{
+  "error": "Error fetching clubs"
+}
+
+Notes:
+- Returns array of club objects
+- Empty array if no clubs in database
+- Group by league_id for better UI organization
+- Use GET /api/leagues to get league information
+
+--------------------------------------------------------------------------------
+12. GET CLUB BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/clubs/:id
+Authentication: Required
+
+Description:
+Returns detailed information for a specific club.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+URL Parameters:
+:id - Club ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "Arsenal FC",
+  "logo_url": "https://example.com/logos/arsenal.png",
+  "league_id": "507f1f77bcf86cd799439020"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid ID"
+}
+
+404 Not Found:
+{
+  "error": "Club not found"
+}
+
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+Notes:
+- Use for club profile/detail view
+- Can fetch league details using league_id
+
+
+================================================================================
+                                  NEWS
+================================================================================
+
+--------------------------------------------------------------------------------
+13. GET NEWS BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/news/:id
+Authentication: Required
+
+Description:
+Returns full details of a single news article with multilingual content.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+URL Parameters:
+:id - News/Content ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "title": {
+    "en": "Transfer News: New Signing Announced",
+    "am": "የዝውውር ዜና፡ አዲስ ፊርማ ተገለጸ",
+    "om": "Oduu Jijjiirraa: Mallattoon Haaraa Beeksifame"
+  },
+  "body": {
+    "en": "The club is delighted to announce the signing of a new midfielder from Spain. The 25-year-old has signed a four-year contract and will join the squad immediately. Manager says: 'We are very happy to welcome him to our club. He is a talented player who will strengthen our midfield.'",
+    "am": "ክለቡ ከስፔን አዲስ መካከለኛ ተጫዋች መፈረሙን በማስታወቅ ደስተኛ ነው። የ25 ዓመቱ ለአራት ዓመት ውል ፈርሞ ወዲያውኑ ቡድኑን ይቀላቀላል። አሰልጣኙ እንዲህ ይላል፡ 'ወደ ክለባችን እንኳን በደህና መጣህ ለማለት በጣም ደስተኞች ነን። እሱ መካከለኛችንን የሚያጠናክር ጎበዝ ተጫዋች ነው።'",
+    "om": "Kilabiin taphataa giddugaleessaa haaraa Ispeen irraa mallattoo itti gochuu beeksisuun gammachuu guddaa qaba. Umuriin isaa waggaa 25 ta'e waliigaltee waggaa afuriif mallattoo godhatee battaluma garee waliin makama. Leenjisaan akkana jedha: 'Gara kilaaba keenyaatti isa simatuu baay'ee gammadneerra. Inni taphataa dandeettii qabu kan giddugaleessa keenya cimsuu dha.'"
+  },
+  "image_url": "https://example.com/news/transfer-2024.jpg",
+  "category": "transfer_news",
+  "club_id": "507f1f77bcf86cd799439012",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid content ID"
+}
+
+404 Not Found:
+{
+  "error": "Content not found"
+}
+
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+Notes:
+- Display title and body based on user's language preference
+- category can be: "match_report", "transfer_news", "injury_update", etc.
+- image_url may be empty string
+- club_id may be empty if news is general/league-wide
+
+
+================================================================================
+                               HIGHLIGHTS
+================================================================================
+
+--------------------------------------------------------------------------------
+14. GET HIGHLIGHT BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/highlights/:id
+Authentication: Required
+
+Description:
+Returns detailed highlight information including video URL.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+URL Parameters:
+:id - Highlight ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439014",
+  "match_title": "Arsenal vs Chelsea - Full Match Highlights",
+  "youtube_url": "https://youtube.com/watch?v=abc123xyz",
+  "club_ids": [
+    "507f1f77bcf86cd799439012",
+    "507f1f77bcf86cd799439015"
+  ]
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid highlight ID"
+}
+
+404 Not Found:
+{
+  "error": "Highlight not found"
+}
+
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+Notes:
+- youtube_url can be embedded in video player
+- club_ids contains both teams in the match
+- match_title is single language (not multilingual)
+- Use YouTube API or embed player to display video
+
+
+================================================================================
+                        WATCH (STREAMING PLATFORMS)
+================================================================================
+
+--------------------------------------------------------------------------------
+15. GET WATCH PLATFORMS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/watch-platforms
+Authentication: Required
+
+Description:
+Returns list of recommended streaming platforms/apps where users can watch
+matches. Supports optional filtering by club.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+Query Parameters (optional):
+club_id - Filter platforms by club (not yet fully implemented)
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439030",
+    "name": "ESPN+",
+    "url": "https://plus.espn.com",
+    "type": "streaming",
+    "logo_url": "https://example.com/logos/espn.png"
+  },
+  {
+    "id": "507f1f77bcf86cd799439031",
+    "name": "DAZN",
+    "url": "https://www.dazn.com",
+    "type": "streaming",
+    "logo_url": "https://example.com/logos/dazn.png"
+  },
+  {
+    "id": "507f1f77bcf86cd799439032",
+    "name": "NBC Sports",
+    "url": "https://www.nbcsports.com",
+    "type": "tv_channel",
+    "logo_url": "https://example.com/logos/nbc.png"
+  }
+]
+
+With club_id parameter:
+GET /api/watch-platforms?club_id=507f1f77bcf86cd799439012
+
+Response (200 OK):
+{
+  "links": [
+    {
+      "id": "507f1f77bcf86cd799439030",
+      "name": "ESPN+",
+      "url": "https://plus.espn.com",
+      "type": "streaming",
+      "logo_url": "https://example.com/logos/espn.png"
+    }
+  ],
+  "message": "Club-specific filtering not yet implemented in data model"
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+500 Internal Server Error:
+{
+  "error": "Error fetching links"
+}
+
+Notes:
+- type can be: "streaming", "tv_channel", "website"
+- url can be opened in browser or in-app webview
+- Club filtering will be fully implemented when WatchLink model is updated
+- Display as grid of platform cards with logos
+
+
+================================================================================
+                            LOCALIZATION
+================================================================================
+
+--------------------------------------------------------------------------------
+16. GET SUPPORTED LANGUAGES
+--------------------------------------------------------------------------------
+Endpoint: GET /api/languages
+Authentication: Required
+
+Description:
+Returns list of supported languages for the app.
+
+Request Headers:
+Authorization: Bearer <access_token>
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "languages": [
+    {
+      "code": "en",
+      "name": "English"
+    },
+    {
+      "code": "am",
+      "name": "Amharic"
+    },
+    {
+      "code": "om",
+      "name": "Oromo"
+    }
+  ],
+  "total": 3
+}
+
+Error Responses:
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+Notes:
+- Use during onboarding to show language selector
+- Use in settings to allow language switching
+- code is used in API requests (PATCH /api/users/me/language)
+- name is displayed to user
+
+
+================================================================================
+                          ERROR HANDLING
+================================================================================
+
+Common HTTP Status Codes:
+
+200 OK - Request succeeded
+201 Created - Resource created successfully
+400 Bad Request - Invalid input data or parameters
+401 Unauthorized - Missing or invalid authentication token
+404 Not Found - Resource not found
+500 Internal Server Error - Server-side error
+
+All error responses follow this format:
+{
+  "error": "Error message description"
+}
+
+Token Expiration:
+- Access tokens expire after 15 minutes
+- When you receive 401 Unauthorized, try refreshing the token
+- If refresh fails, redirect user to login screen
+
+
+================================================================================
+                        MOBILE APP INTEGRATION GUIDE
+================================================================================
+
+RECOMMENDED FLOW:
+
+1. APP LAUNCH
+   - Check if user has valid tokens stored
+   - If yes: Call GET /api/users/me to verify and load profile
+   - If no: Show onboarding/login screen
+
+2. ONBOARDING
+   Step 1: GET /api/languages → Show language selector
+   Step 2: GET /api/clubs → Show club selector (grouped by league)
+   Step 3: POST /api/auth/register → Create account
+   Step 4: Automatically login or redirect to login
+
+3. LOGIN
+   - POST /api/auth/login
+   - Store access_token and refresh_token securely
+   - Navigate to home screen
+
+4. HOME SCREEN (MY CLUB TAB)
+   - GET /api/feed/my-club
+   - Display feed items in list/card view
+   - Pull-to-refresh to reload feed
+   - Tap news item → GET /api/news/:id → Show detail view
+   - Tap highlight → GET /api/highlights/:id → Play video
+
+5. ALL NEWS TAB
+   - GET /api/feed/all
+   - Same display logic as My Club tab
+
+6. WATCH TAB
+   - GET /api/watch-platforms
+   - Display as grid of platform cards
+   - Tap platform → Open URL in browser/webview
+
+7. PROFILE/SETTINGS
+   - GET /api/users/me → Display profile info
+   - Edit profile → PUT /api/users/me
+   - Change club → PATCH /api/users/me/favorite-club
+   - Change language → PATCH /api/users/me/language
+   - Logout → POST /api/auth/logout
+
+8. TOKEN MANAGEMENT
+   - Store tokens in secure storage (Keychain/KeyStore)
+   - Intercept 401 responses
+   - Automatically call POST /api/auth/refresh
+   - Retry original request with new token
+   - If refresh fails, logout and redirect to login
+
+9. MULTILINGUAL CONTENT
+   - News articles have title/body in en, am, om
+   - Display based on user's language preference
+   - Example: user.language = "am" → show title.am, body.am
+   - Fallback to English if translation missing
+
+
+================================================================================
+                          TESTING ENDPOINTS
+================================================================================
+
+You can test endpoints using tools like Postman, Insomnia, or curl.
+
+Example curl commands:
+
+# Register
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"password123","language":"en"}'
+
+# Login
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+
+# Get Profile (replace TOKEN with actual access_token)
+curl -X GET http://localhost:8080/api/users/me \
+  -H "Authorization: Bearer TOKEN"
+
+# Get My Club Feed
+curl -X GET http://localhost:8080/api/feed/my-club \
+  -H "Authorization: Bearer TOKEN"
+
+# Update Favorite Club
+curl -X PATCH http://localhost:8080/api/users/me/favorite-club \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"fav_club_id":"507f1f77bcf86cd799439012"}'
+
+
+================================================================================
+                          ADDITIONAL NOTES
+================================================================================
+
+1. All timestamps are in ISO 8601 format (UTC)
+   Example: "2024-01-15T10:30:00Z"
+
+2. MongoDB ObjectIDs are 24-character hexadecimal strings
+   Example: "507f1f77bcf86cd799439011"
+
+3. JWT tokens are long strings starting with "eyJ"
+   Store securely and never log or expose them
+
+4. Image URLs and video URLs are full URLs
+   Load them directly in image views or video players
+
+5. Empty/null values:
+   - Empty strings: ""
+   - Missing fields may not be present in response
+   - Check for null/undefined before accessing nested properties
+
+6. Rate limiting: Not currently implemented
+   Consider implementing on client side to avoid excessive requests
+
+7. Pagination: Not currently implemented
+   All feeds return complete results
+   Consider implementing if performance issues arise
+
+8. Caching recommendations:
+   - Cache club list (rarely changes)
+   - Cache language list (static)
+   - Cache user profile (refresh on app launch)
+   - Don't cache feeds (always fetch fresh)
+
+9. Network error handling:
+   - Implement retry logic for failed requests
+   - Show user-friendly error messages
+   - Provide offline mode if possible
+
+10. Security best practices:
+    - Always use HTTPS in production
+    - Store tokens in secure storage
+    - Clear tokens on logout
+    - Implement certificate pinning if possible
+    - Validate all user inputs before sending
+
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================
+
+For questions or issues, contact the backend development team.
+
+Last Updated: 2024
+Version: 1.0
