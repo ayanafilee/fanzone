@@ -281,6 +281,7 @@ func (h *Handler) AdminAddHighlight(c *gin.Context) {
 		MatchTitle: input.MatchTitle,
 		YoutubeURL: input.YoutubeURL,
 		ClubIDs:    clubObjIDs,
+		CreatedAt:  time.Now(),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

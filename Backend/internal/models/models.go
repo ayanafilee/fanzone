@@ -71,6 +71,7 @@ type Highlight struct {
 	MatchTitle string          `bson:"match_title" json:"match_title"`
 	YoutubeURL string          `bson:"youtube_url" json:"youtube_url"`
 	ClubIDs    []bson.ObjectID `bson:"club_ids" json:"club_ids"`
+	CreatedAt  time.Time       `bson:"created_at" json:"created_at"`
 }
 
 type WatchLink struct {

@@ -92,6 +92,8 @@ func (h *Handler) GetHighlightByID(c *gin.Context) {
 }
 
 func (h *Handler) GetWatchLinks(c *gin.Context) {
+	clubID := c.Query("club_id")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -100,6 +102,20 @@ func (h *Handler) GetWatchLinks(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching links"})
 		return
 	}
+
+	// If clubId is provided, filter by club or return all general platforms
+	// Note: Current WatchLink model doesn't have club_id field
+	// This is a placeholder for future enhancement when WatchLink model is updated
+	if clubID != "" {
+		// For now, return all links as the model doesn't support club filtering yet
+		// TODO: Add club_id field to WatchLink model for club-specific filtering
+		c.JSON(http.StatusOK, gin.H{
+			"links":   links,
+			"message": "Club-specific filtering not yet implemented in data model",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, links)
 }
 

@@ -239,7 +239,7 @@ func (r *Repository) DeleteContent(ctx context.Context, id bson.ObjectID) error 
 // --- Highlight ---
 
 func (r *Repository) GetHighlights(ctx context.Context, filter bson.M) ([]models.Highlight, error) {
-	opts := options.Find().SetSort(bson.D{{Key: "_id", Value: -1}})
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cursor, err := r.DB.Collection("highlights").Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err

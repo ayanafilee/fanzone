@@ -56,27 +56,63 @@ func main() {
 		authGroup.POST("/logout", h.Logout)
 	}
 
+	// Public endpoints (no authentication required for mobile users)
+	publicGroup := r.Group("/api")
+	{
+		// Clubs
+		publicGroup.GET("/clubs", h.GetClubs)
+		publicGroup.GET("/clubs/:id", h.GetClubByID)
+		
+		// Leagues
+		publicGroup.GET("/leagues", h.GetLeagues)
+		publicGroup.GET("/leagues/:id", h.GetLeagueByID)
+		
+		// Languages
+		publicGroup.GET("/languages", h.GetLanguages)
+		
+		// Content/News
+		publicGroup.GET("/content", h.GetContent)
+		publicGroup.GET("/content/:id", h.GetContentByID)
+		publicGroup.GET("/news/:id", h.GetContentByID) // Alias for content
+		
+		// Highlights
+		publicGroup.GET("/highlights", h.GetHighlights)
+		publicGroup.GET("/highlights/:id", h.GetHighlightByID)
+		
+		// Watch Platforms
+		publicGroup.GET("/watch-links", h.GetWatchLinks)
+		publicGroup.GET("/watch-platforms", h.GetWatchLinks) // Alias for watch-links
+		publicGroup.GET("/watch-links/:id", h.GetWatchLinkByID)
+		
+		// Feed endpoints (public - no authentication needed)
+		publicGroup.GET("/feed/all", h.GetAllFeed)
+		publicGroup.GET("/feed/club/:id", h.GetClubFeed)
+	}
+
+	// Protected API endpoints (require authentication - for web dashboard)
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware(cfg.AccessSecret))
 	{
-		api.GET("/clubs", h.GetClubs)
-		api.GET("/clubs/:id", h.GetClubByID)
-		api.GET("/leagues", h.GetLeagues)
-		api.GET("/leagues/:id", h.GetLeagueByID)
-		api.GET("/content", h.GetContent)
-		api.GET("/content/:id", h.GetContentByID)
-		api.GET("/highlights", h.GetHighlights)
-		api.GET("/highlights/:id", h.GetHighlightByID)
-		api.GET("/watch-links", h.GetWatchLinks)
-		api.GET("/watch-links/:id", h.GetWatchLinkByID)
+		// Feed endpoint that requires user authentication
+		api.GET("/feed/my-club", h.GetMyClubFeed)
 	}
 
-	userGroup := r.Group("/api/user")
+	userGroup := r.Group("/api/users")
 	userGroup.Use(middleware.AuthMiddleware(cfg.AccessSecret))
 	{
-		userGroup.GET("/profile", h.GetProfile)
-		userGroup.PUT("/profile", h.UpdateProfile)
-		userGroup.PUT("/password", h.UpdatePassword)
+		userGroup.GET("/me", h.GetProfile)
+		userGroup.PUT("/me", h.UpdateProfile)
+		userGroup.PATCH("/me/favorite-club", h.UpdateFavoriteClub)
+		userGroup.PATCH("/me/language", h.UpdateLanguage)
+	}
+
+	// Legacy user routes for backward compatibility
+	legacyUserGroup := r.Group("/api/user")
+	legacyUserGroup.Use(middleware.AuthMiddleware(cfg.AccessSecret))
+	{
+		legacyUserGroup.GET("/profile", h.GetProfile)
+		legacyUserGroup.PUT("/profile", h.UpdateProfile)
+		legacyUserGroup.PUT("/password", h.UpdatePassword)
 	}
 
 	adminGroup := r.Group("/api/admin")

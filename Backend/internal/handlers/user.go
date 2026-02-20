@@ -210,3 +210,114 @@ func (h *Handler) UpdatePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
+
+func (h *Handler) UpdateFavoriteClub(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+		return
+	}
+	
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+	
+	objID, err := bson.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var input struct {
+		FavClubID string `json:"fav_club_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	clubObjID, err := bson.ObjectIDFromHex(input.FavClubID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid club ID"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Verify club exists
+	_, err = h.Repo.FindClubByID(ctx, clubObjID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Club not found"})
+		return
+	}
+
+	// Update user's favorite club
+	updateFields := bson.M{"fav_club_id": clubObjID}
+	err = h.Repo.UpdateUser(ctx, objID, updateFields)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update favorite club"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Favorite club updated successfully"})
+}
+
+func (h *Handler) UpdateLanguage(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+		return
+	}
+	
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+	
+	objID, err := bson.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var input struct {
+		Language string `json:"language" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate language is supported
+	supportedLanguages := []string{"en", "am", "om"}
+	isValid := false
+	for _, lang := range supportedLanguages {
+		if input.Language == lang {
+			isValid = true
+			break
+		}
+	}
+	if !isValid {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported language. Supported: en, am, om"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Update user's language
+	updateFields := bson.M{"language": input.Language}
+	err = h.Repo.UpdateUser(ctx, objID, updateFields)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update language"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Language updated successfully"})
+}

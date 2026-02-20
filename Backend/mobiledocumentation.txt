@@ -1,0 +1,899 @@
+================================================================================
+                    FANZONE MOBILE APP - BACKEND API DOCUMENTATION
+================================================================================
+
+BASE URL: http://your-server:8080/api
+
+🔓 IMPORTANT: ALL MOBILE ENDPOINTS ARE PUBLIC (NO AUTHENTICATION REQUIRED)
+The mobile app is designed to be used without login/signup functionality.
+All content is freely accessible to all users.
+
+================================================================================
+                              PUBLIC ENDPOINTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. GET ALL CLUBS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/clubs
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of all available clubs. Used during onboarding and club selection.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "Arsenal FC",
+    "logo_url": "https://example.com/logos/arsenal.png",
+    "league_id": "507f1f77bcf86cd799439020"
+  },
+  {
+    "id": "507f1f77bcf86cd799439012",
+    "name": "Chelsea FC",
+    "logo_url": "https://example.com/logos/chelsea.png",
+    "league_id": "507f1f77bcf86cd799439020"
+  },
+  {
+    "id": "507f1f77bcf86cd799439013",
+    "name": "Manchester United",
+    "logo_url": "https://example.com/logos/manutd.png",
+    "league_id": "507f1f77bcf86cd799439020"
+  }
+]
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching clubs"
+}
+
+Notes:
+- Returns array of club objects
+- Empty array if no clubs in database
+- Group by league_id for better UI organization
+- Use GET /api/leagues to get league information
+
+--------------------------------------------------------------------------------
+2. GET CLUB BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/clubs/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns detailed information for a specific club.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - Club ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "Arsenal FC",
+  "logo_url": "https://example.com/logos/arsenal.png",
+  "league_id": "507f1f77bcf86cd799439020"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid ID"
+}
+
+404 Not Found:
+{
+  "error": "Club not found"
+}
+
+Notes:
+- Use for club profile/detail view
+- Can fetch league details using league_id
+
+--------------------------------------------------------------------------------
+3. GET ALL LEAGUES
+--------------------------------------------------------------------------------
+Endpoint: GET /api/leagues
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of all leagues.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439020",
+    "name": "Premier League",
+    "logo_url": "https://example.com/logos/premier-league.png",
+    "country": "England"
+  },
+  {
+    "id": "507f1f77bcf86cd799439021",
+    "name": "La Liga",
+    "logo_url": "https://example.com/logos/laliga.png",
+    "country": "Spain"
+  }
+]
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching leagues"
+}
+
+Notes:
+- Use to group clubs by league
+- Display league logos and names
+
+--------------------------------------------------------------------------------
+4. GET LEAGUE BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/leagues/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns detailed information for a specific league.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - League ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439020",
+  "name": "Premier League",
+  "logo_url": "https://example.com/logos/premier-league.png",
+  "country": "England"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid ID"
+}
+
+404 Not Found:
+{
+  "error": "League not found"
+}
+
+--------------------------------------------------------------------------------
+5. GET SUPPORTED LANGUAGES
+--------------------------------------------------------------------------------
+Endpoint: GET /api/languages
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of supported languages for the app.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "languages": [
+    {
+      "code": "en",
+      "name": "English"
+    },
+    {
+      "code": "am",
+      "name": "Amharic"
+    },
+    {
+      "code": "om",
+      "name": "Oromo"
+    }
+  ],
+  "total": 3
+}
+
+Error Responses: None (always returns static list)
+
+Notes:
+- Use during onboarding to show language selector
+- Use in settings to allow language switching
+- code is used to filter content display
+- name is displayed to user
+
+--------------------------------------------------------------------------------
+6. GET ALL CONTENT/NEWS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/content
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of news articles. Supports filtering by club and category.
+
+Request Headers:
+Content-Type: application/json
+
+Query Parameters (optional):
+- club_id: Filter by specific club ID
+- category: Filter by category (e.g., "match_report", "transfer_news")
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439011",
+    "title": {
+      "en": "Big Win Today",
+      "am": "ዛሬ ትልቅ ድል",
+      "om": "Injifannoo Guddaa Har'a"
+    },
+    "body": {
+      "en": "The team won 3-0...",
+      "am": "ቡድኑ በ3-0 አሸንፏል...",
+      "om": "Gareen 3-0 injifate..."
+    },
+    "image_url": "https://example.com/news.jpg",
+    "category": "match_report",
+    "club_id": "507f1f77bcf86cd799439012",
+    "created_at": "2024-01-15T10:00:00Z"
+  }
+]
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching content"
+}
+
+Notes:
+- Sorted by created_at DESC (newest first)
+- Filter by club_id to get club-specific news
+- Display title/body based on user's language preference
+
+Example with filters:
+GET /api/content?club_id=507f1f77bcf86cd799439012
+GET /api/content?category=transfer_news
+GET /api/content?club_id=507f1f77bcf86cd799439012&category=match_report
+
+--------------------------------------------------------------------------------
+7. GET NEWS BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/news/:id
+Alias: GET /api/content/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns full details of a single news article with multilingual content.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - News/Content ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "title": {
+    "en": "Transfer News: New Signing Announced",
+    "am": "የዝውውር ዜና፡ አዲስ ፊርማ ተገለጸ",
+    "om": "Oduu Jijjiirraa: Mallattoon Haaraa Beeksifame"
+  },
+  "body": {
+    "en": "The club is delighted to announce the signing of a new midfielder from Spain. The 25-year-old has signed a four-year contract and will join the squad immediately. Manager says: 'We are very happy to welcome him to our club. He is a talented player who will strengthen our midfield.'",
+    "am": "ክለቡ ከስፔን አዲስ መካከለኛ ተጫዋች መፈረሙን በማስታወቅ ደስተኛ ነው። የ25 ዓመቱ ለአራት ዓመት ውል ፈርሞ ወዲያውኑ ቡድኑን ይቀላቀላል። አሰልጣኙ እንዲህ ይላል፡ 'ወደ ክለባችን እንኳን በደህና መጣህ ለማለት በጣም ደስተኞች ነን። እሱ መካከለኛችንን የሚያጠናክር ጎበዝ ተጫዋች ነው።'",
+    "om": "Kilabiin taphataa giddugaleessaa haaraa Ispeen irraa mallattoo itti gochuu beeksisuun gammachuu guddaa qaba. Umuriin isaa waggaa 25 ta'e waliigaltee waggaa afuriif mallattoo godhatee battaluma garee waliin makama. Leenjisaan akkana jedha: 'Gara kilaaba keenyaatti isa simatuu baay'ee gammadneerra. Inni taphataa dandeettii qabu kan giddugaleessa keenya cimsuu dha.'"
+  },
+  "image_url": "https://example.com/news/transfer-2024.jpg",
+  "category": "transfer_news",
+  "club_id": "507f1f77bcf86cd799439012",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid content ID"
+}
+
+404 Not Found:
+{
+  "error": "Content not found"
+}
+
+Notes:
+- Display title and body based on user's language preference
+- category can be: "match_report", "transfer_news", "injury_update", etc.
+- image_url may be empty string
+- club_id may be empty if news is general/league-wide
+
+--------------------------------------------------------------------------------
+8. GET ALL HIGHLIGHTS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/highlights
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of match highlights. Supports filtering by club.
+
+Request Headers:
+Content-Type: application/json
+
+Query Parameters (optional):
+- club_id: Filter by specific club ID
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439014",
+    "match_title": "Arsenal vs Chelsea - Full Highlights",
+    "youtube_url": "https://youtube.com/watch?v=abc123",
+    "club_ids": [
+      "507f1f77bcf86cd799439012",
+      "507f1f77bcf86cd799439015"
+    ]
+  },
+  {
+    "id": "507f1f77bcf86cd799439016",
+    "match_title": "Manchester United vs Liverpool - Goals",
+    "youtube_url": "https://youtube.com/watch?v=xyz789",
+    "club_ids": [
+      "507f1f77bcf86cd799439023",
+      "507f1f77bcf86cd799439024"
+    ]
+  }
+]
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching highlights"
+}
+
+Notes:
+- Sorted by ID DESC (newest first)
+- Filter by club_id to get club-specific highlights
+- club_ids contains both teams in the match
+
+Example with filter:
+GET /api/highlights?club_id=507f1f77bcf86cd799439012
+
+--------------------------------------------------------------------------------
+9. GET HIGHLIGHT BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/highlights/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns detailed highlight information including video URL.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - Highlight ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439014",
+  "match_title": "Arsenal vs Chelsea - Full Match Highlights",
+  "youtube_url": "https://youtube.com/watch?v=abc123xyz",
+  "club_ids": [
+    "507f1f77bcf86cd799439012",
+    "507f1f77bcf86cd799439015"
+  ]
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid highlight ID"
+}
+
+404 Not Found:
+{
+  "error": "Highlight not found"
+}
+
+Notes:
+- youtube_url can be embedded in video player
+- club_ids contains both teams in the match
+- match_title is single language (not multilingual)
+- Use YouTube API or embed player to display video
+
+--------------------------------------------------------------------------------
+10. GET WATCH PLATFORMS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/watch-platforms
+Alias: GET /api/watch-links
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of recommended streaming platforms/apps where users can watch
+matches. Supports optional filtering by club.
+
+Request Headers:
+Content-Type: application/json
+
+Query Parameters (optional):
+club_id - Filter platforms by club (not yet fully implemented)
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439030",
+    "name": "ESPN+",
+    "url": "https://plus.espn.com",
+    "type": "streaming",
+    "logo_url": "https://example.com/logos/espn.png"
+  },
+  {
+    "id": "507f1f77bcf86cd799439031",
+    "name": "DAZN",
+    "url": "https://www.dazn.com",
+    "type": "streaming",
+    "logo_url": "https://example.com/logos/dazn.png"
+  },
+  {
+    "id": "507f1f77bcf86cd799439032",
+    "name": "NBC Sports",
+    "url": "https://www.nbcsports.com",
+    "type": "tv_channel",
+    "logo_url": "https://example.com/logos/nbc.png"
+  }
+]
+
+With club_id parameter:
+GET /api/watch-platforms?club_id=507f1f77bcf86cd799439012
+
+Response (200 OK):
+{
+  "links": [
+    {
+      "id": "507f1f77bcf86cd799439030",
+      "name": "ESPN+",
+      "url": "https://plus.espn.com",
+      "type": "streaming",
+      "logo_url": "https://example.com/logos/espn.png"
+    }
+  ],
+  "message": "Club-specific filtering not yet implemented in data model"
+}
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching links"
+}
+
+Notes:
+- type can be: "streaming", "tv_channel", "website"
+- url can be opened in browser or in-app webview
+- Club filtering will be fully implemented when WatchLink model is updated
+- Display as grid of platform cards with logos
+
+--------------------------------------------------------------------------------
+11. GET WATCH PLATFORM BY ID
+--------------------------------------------------------------------------------
+Endpoint: GET /api/watch-links/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns detailed information for a specific watch platform.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - Watch Link ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439030",
+  "name": "ESPN+",
+  "url": "https://plus.espn.com",
+  "type": "streaming",
+  "logo_url": "https://example.com/logos/espn.png"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid link ID"
+}
+
+404 Not Found:
+{
+  "error": "Watch link not found"
+}
+
+--------------------------------------------------------------------------------
+12. GET ALL FEED (GLOBAL)
+--------------------------------------------------------------------------------
+Endpoint: GET /api/feed/all
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns global feed with all news and highlights from all clubs,
+sorted by newest first. This powers the main timeline/home screen.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "feed": [
+    {
+      "id": "507f1f77bcf86cd799439020",
+      "type": "news",
+      "title": {
+        "en": "Premier League Update",
+        "am": "የፕሪሚየር ሊግ ዝመና",
+        "om": "Fooyya'iinsa Liigii Duraa"
+      },
+      "body": {
+        "en": "Latest standings and results...",
+        "am": "የቅርብ ጊዜ ደረጃዎች እና ውጤቶች...",
+        "om": "Sadarkaa fi bu'aa dhiyoo..."
+      },
+      "image_url": "https://example.com/league.jpg",
+      "category": "league_news",
+      "club_id": "507f1f77bcf86cd799439021",
+      "created_at": "2024-01-16T09:00:00Z"
+    },
+    {
+      "id": "507f1f77bcf86cd799439022",
+      "type": "highlight",
+      "title": "Manchester United vs Liverpool - Goals & Highlights",
+      "video_url": "https://youtube.com/watch?v=xyz789",
+      "club_ids": [
+        "507f1f77bcf86cd799439023",
+        "507f1f77bcf86cd799439024"
+      ],
+      "created_at": "2024-01-15T20:00:00Z"
+    }
+  ],
+  "total_items": 2
+}
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching news"
+}
+OR
+{
+  "error": "Error fetching highlights"
+}
+
+Notes:
+- Feed items are sorted by created_at DESC (newest first)
+- Each item has a "type" field: "news" or "highlight"
+- News items have multilingual title/body
+- Highlight items have video_url and multiple club_ids
+- Display title/body based on user's language preference
+- Empty feed array if no content available
+
+Feed Item Types:
+
+NEWS ITEM:
+{
+  "id": "string",
+  "type": "news",
+  "title": { "en": "string", "am": "string", "om": "string" },
+  "body": { "en": "string", "am": "string", "om": "string" },
+  "image_url": "string",
+  "category": "string",
+  "club_id": "string",
+  "created_at": "ISO 8601 datetime"
+}
+
+HIGHLIGHT ITEM:
+{
+  "id": "string",
+  "type": "highlight",
+  "title": "string",
+  "video_url": "string",
+  "club_ids": ["string", "string"],
+  "created_at": "ISO 8601 datetime"
+}
+
+--------------------------------------------------------------------------------
+13. GET CLUB-SPECIFIC FEED (MIXED NEWS + HIGHLIGHTS)
+--------------------------------------------------------------------------------
+Endpoint: GET /api/feed/club/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns mixed feed with news and highlights for a specific club,
+sorted by newest first. This is the endpoint you need for club-specific
+content that combines both news and highlights.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - Club ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "feed": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "type": "news",
+      "title": {
+        "en": "Big Win Today",
+        "am": "ዛሬ ትልቅ ድል",
+        "om": "Injifannoo Guddaa Har'a"
+      },
+      "body": {
+        "en": "The team won 3-0...",
+        "am": "ቡድኑ በ3-0 አሸንፏል...",
+        "om": "Gareen 3-0 injifate..."
+      },
+      "image_url": "https://example.com/news.jpg",
+      "category": "match_report",
+      "club_id": "507f1f77bcf86cd799439012",
+      "created_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "507f1f77bcf86cd799439014",
+      "type": "highlight",
+      "title": "Arsenal vs Chelsea - Full Highlights",
+      "video_url": "https://youtube.com/watch?v=abc123",
+      "club_ids": [
+        "507f1f77bcf86cd799439012",
+        "507f1f77bcf86cd799439015"
+      ],
+      "created_at": "2024-01-14T18:00:00Z"
+    }
+  ],
+  "club_id": "507f1f77bcf86cd799439012",
+  "total_items": 2
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Club ID is required"
+}
+OR
+{
+  "error": "Invalid club ID"
+}
+
+404 Not Found:
+{
+  "error": "Club not found"
+}
+
+500 Internal Server Error:
+{
+  "error": "Error fetching news"
+}
+OR
+{
+  "error": "Error fetching highlights"
+}
+
+Notes:
+- THIS IS THE ENDPOINT FOR CLUB-SPECIFIC MIXED CONTENT
+- Returns both news and highlights for a specific club
+- Feed items are sorted by created_at DESC (newest first)
+- Same feed structure as /api/feed/all
+- Empty feed array if no content available for club
+- Validates that club exists before fetching content
+
+Example Usage:
+GET /api/feed/club/507f1f77bcf86cd799439012
+
+
+================================================================================
+                          ERROR HANDLING
+================================================================================
+
+Common HTTP Status Codes:
+
+200 OK - Request succeeded
+400 Bad Request - Invalid input data or parameters
+404 Not Found - Resource not found
+500 Internal Server Error - Server-side error
+
+All error responses follow this format:
+{
+  "error": "Error message description"
+}
+
+
+================================================================================
+                        MOBILE APP INTEGRATION GUIDE
+================================================================================
+
+RECOMMENDED FLOW FOR PUBLIC APP (NO LOGIN):
+
+1. APP LAUNCH
+   - No authentication needed
+   - Load default language (device language or English)
+   - Navigate to home screen
+
+2. ONBOARDING (OPTIONAL)
+   Step 1: GET /api/languages → Show language selector
+   Step 2: GET /api/clubs → Show club selector (optional favorite)
+   Step 3: Save preferences locally on device
+   Step 4: Navigate to home screen
+
+3. HOME SCREEN (MAIN FEED)
+   - GET /api/feed/all
+   - Display feed items in list/card view
+   - Pull-to-refresh to reload feed
+   - Tap news item → GET /api/news/:id → Show detail view
+   - Tap highlight → GET /api/highlights/:id → Play video
+
+4. CLUBS TAB
+   - GET /api/clubs
+   - Display clubs grouped by league
+   - Tap club → Filter content by club_id
+   - GET /api/content?club_id=xxx
+   - GET /api/highlights?club_id=xxx
+
+5. WATCH TAB
+   - GET /api/watch-platforms
+   - Display as grid of platform cards
+   - Tap platform → Open URL in browser/webview
+
+6. SETTINGS
+   - GET /api/languages → Show language selector
+   - Save language preference locally
+   - Reload content with new language
+
+7. MULTILINGUAL CONTENT
+   - News articles have title/body in en, am, om
+   - Display based on user's language preference (stored locally)
+   - Example: user selected "am" → show title.am, body.am
+   - Fallback to English if translation missing
+
+8. LOCAL STORAGE
+   - Store user preferences locally (language, favorite club)
+   - No server-side user accounts needed
+   - Use SharedPreferences (Android) or UserDefaults (iOS)
+
+
+================================================================================
+                          TESTING ENDPOINTS
+================================================================================
+
+You can test endpoints using tools like Postman, Insomnia, or curl.
+
+Example curl commands:
+
+# Get all clubs
+curl -X GET http://localhost:8080/api/clubs
+
+# Get club by ID
+curl -X GET http://localhost:8080/api/clubs/507f1f77bcf86cd799439011
+
+# Get all feed
+curl -X GET http://localhost:8080/api/feed/all
+
+# Get news by ID
+curl -X GET http://localhost:8080/api/news/507f1f77bcf86cd799439011
+
+# Get highlights filtered by club
+curl -X GET "http://localhost:8080/api/highlights?club_id=507f1f77bcf86cd799439012"
+
+# Get watch platforms
+curl -X GET http://localhost:8080/api/watch-platforms
+
+# Get languages
+curl -X GET http://localhost:8080/api/languages
+
+
+================================================================================
+                          ADDITIONAL NOTES
+================================================================================
+
+1. All timestamps are in ISO 8601 format (UTC)
+   Example: "2024-01-15T10:30:00Z"
+
+2. MongoDB ObjectIDs are 24-character hexadecimal strings
+   Example: "507f1f77bcf86cd799439011"
+
+3. Image URLs and video URLs are full URLs
+   Load them directly in image views or video players
+
+4. Empty/null values:
+   - Empty strings: ""
+   - Missing fields may not be present in response
+   - Check for null/undefined before accessing nested properties
+
+5. Rate limiting: Not currently implemented
+   Consider implementing on client side to avoid excessive requests
+
+6. Pagination: Not currently implemented
+   All endpoints return complete results
+   Consider implementing if performance issues arise
+
+7. Caching recommendations:
+   - Cache club list (rarely changes)
+   - Cache language list (static)
+   - Cache user preferences locally (language, favorite club)
+   - Cache feed for short duration (5-10 minutes)
+   - Implement pull-to-refresh for manual updates
+
+8. Network error handling:
+   - Implement retry logic for failed requests
+   - Show user-friendly error messages
+   - Provide offline mode with cached content if possible
+
+9. Security best practices:
+   - Always use HTTPS in production
+   - Validate all data before displaying
+   - Sanitize URLs before opening in webview
+   - Implement certificate pinning if possible
+
+10. Performance optimization:
+    - Load images lazily in feed
+    - Implement infinite scroll/pagination for long feeds
+    - Compress images before displaying
+    - Cache API responses appropriately
+
+
+================================================================================
+                    AUTHENTICATION ENDPOINTS (OPTIONAL)
+================================================================================
+
+NOTE: These endpoints are available but NOT REQUIRED for the mobile app.
+They are kept for potential future features or web dashboard integration.
+
+POST /api/auth/register - Create user account
+POST /api/auth/login - Login and get tokens
+POST /api/auth/refresh - Refresh access token
+POST /api/auth/logout - Logout and invalidate token
+
+GET /api/users/me - Get user profile (requires auth)
+PUT /api/users/me - Update user profile (requires auth)
+PATCH /api/users/me/favorite-club - Update favorite club (requires auth)
+PATCH /api/users/me/language - Update language (requires auth)
+
+GET /api/feed/my-club - Personalized feed (requires auth)
+
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================
+
+For questions or issues, contact the backend development team.
+
+Last Updated: 2024
+Version: 2.0 (Public API - No Authentication Required)
