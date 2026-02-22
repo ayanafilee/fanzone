@@ -24,7 +24,7 @@ export default function AddContentPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-8">
             <Toaster position="top-right" />
             <ContentForm
                 title="Create New Article"

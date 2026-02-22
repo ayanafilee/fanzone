@@ -33,7 +33,7 @@ export default function EditContentPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-8">
             <Toaster position="top-right" />
             <ContentForm
                 title="Edit Article"

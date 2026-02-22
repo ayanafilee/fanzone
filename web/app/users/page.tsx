@@ -75,7 +75,7 @@ export default function UserManagementPage() {
     );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-8">
             {/* Page Title */}
             <div className="mb-2">
                 <h1 className="text-3xl font-black text-[#132A5B] tracking-tight">User Management</h1>

@@ -36,6 +36,10 @@ export default function ContentManagementPage() {
     // Mutations
     const [deleteContent] = useDeleteContentMutation();
 
+    const handleEdit = (content: Content) => {
+        window.location.href = `/content/edit/${content.id}`;
+    };
+
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this content?')) {
             try {
@@ -56,7 +60,7 @@ export default function ContentManagementPage() {
     );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-8">
             <Toaster position="top-right" />
 
             {/* Header Actions */}

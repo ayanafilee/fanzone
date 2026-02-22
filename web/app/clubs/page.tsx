@@ -103,7 +103,7 @@ export default function ClubsManagementPage() {
     const isLoading = isClubsLoading || isLeaguesLoading;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-8">
             <Toaster position="top-right" />
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
