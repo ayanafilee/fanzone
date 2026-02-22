@@ -4,12 +4,7 @@ import React, { FC } from "react";
 import Image from "next/image";
 import { useGetProfileQuery } from "@/lib/features/user/userApi";
 
-interface HeaderProps {
-    title: string;
-    subtitle?: string;
-}
-
-const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
+const DashboardHeader: FC = () => {
     // Fetch profile data
     const { data: profileData, isLoading } = useGetProfileQuery(undefined);
     
@@ -17,24 +12,9 @@ const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
     const user = profileData || null;
 
     return (
-        <header className="flex items-center justify-between mb-6 md:mb-10 p-4 md:p-6 bg-white rounded-[2rem] border border-gray-100 shadow-[0_20px_40px_-15px_rgba(20,45,100,0.05)]">
-            {/* Left side: Page Info */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                    <div className="w-1.5 h-4 bg-[#00A3E0] rounded-full" />
-                    <h1 className="text-xl md:text-2xl font-black text-[#132A5B] tracking-tight truncate">
-                        {title}
-                    </h1>
-                </div>
-                {subtitle && (
-                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em] ml-3.5 truncate">
-                        {subtitle}
-                    </p>
-                )}
-            </div>
-
-            {/* Right side: User Profile */}
-            <div className="flex items-center gap-3 md:gap-5 ml-4">
+        <header className="flex items-center justify-end mb-6 md:mb-8 p-4 md:p-6 bg-white rounded-[2rem] border border-gray-100 shadow-[0_20px_40px_-15px_rgba(20,45,100,0.05)]">
+            {/* User Profile Section */}
+            <div className="flex items-center gap-3 md:gap-5">
                 <div className="text-right hidden sm:block">
                     {isLoading ? (
                         <div className="space-y-2">

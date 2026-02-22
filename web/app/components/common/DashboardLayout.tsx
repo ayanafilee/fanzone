@@ -9,29 +9,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const isLoginPage = pathname === '/login';
     const isFullScreenPage = isLoginPage;
 
-    const getPageDetails = () => {
-        switch (pathname) {
-            case '/':
-                return { title: 'Dashboard Overview', subtitle: 'Real-time statistics and management' };
-            case '/users':
-                return { title: 'User Management', subtitle: 'Manage system users and their roles' };
-            case '/clubs':
-                return { title: 'Clubs', subtitle: 'Manage football clubs and associations' };
-            case '/content':
-                return { title: 'Content Management', subtitle: 'Manage videos, news and other content' };
-            case '/highlights':
-                return { title: 'Match Highlights', subtitle: 'Manage YouTube highlights for matches' };
-            case '/watch-links':
-                return { title: 'Watch Links', subtitle: 'Manage live stream and match links' };
-            case '/settings':
-                return { title: 'Settings', subtitle: 'System configuration and preferences' };
-            default:
-                return { title: 'FanZone Admin', subtitle: 'Management Dashboard' };
-        }
-    };
-
-    const { title, subtitle } = getPageDetails();
-
     if (isFullScreenPage) {
         return <main className="w-full">{children}</main>;
     }
@@ -40,11 +17,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex bg-[#F8F9FA] min-h-screen">
             <SideBarNav />
             <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
-                {/* Header with proper spacing for mobile */}
+                {/* Header bar with user profile only */}
                 <div className="pt-24 lg:pt-6 px-4 md:px-8">
-                    <DashboardHeader title={title} subtitle={subtitle} />
+                    <DashboardHeader />
                 </div>
 
+                {/* Main content area with page titles */}
                 <main className="p-4 md:p-8 flex-1">
                     {children}
                 </main>

@@ -76,6 +76,12 @@ export default function UserManagementPage() {
 
     return (
         <div className="space-y-6">
+            {/* Page Title */}
+            <div className="mb-2">
+                <h1 className="text-3xl font-black text-[#132A5B] tracking-tight">User Management</h1>
+                <p className="text-gray-400 font-medium mt-1">Manage system users and their roles</p>
+            </div>
+
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center p-1 bg-white rounded-2xl border border-gray-100 shadow-sm w-fit">
