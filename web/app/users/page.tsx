@@ -118,7 +118,7 @@ export default function UserManagementPage() {
                 </div>
             </div>
 
-            {/* Table Section */}
+            {/* Table/Card Section */}
             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
                 {isLoading ? (
                     <div className="p-12 space-y-4">
@@ -127,68 +127,112 @@ export default function UserManagementPage() {
                         ))}
                     </div>
                 ) : filteredData && filteredData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50/50">
-                                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">User Information</th>
-                                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role & Status</th>
-                                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact Details</th>
-                                    <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {filteredData.map((item) => (
-                                    <tr key={item.id} className="group hover:bg-gray-50/80 transition-all duration-300">
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-[#EAECED] flex items-center justify-center overflow-hidden border-2 border-white shadow-sm shrink-0">
-                                                    {item.profileImage ? (
-                                                        <Image src={item.profileImage} alt={item.name} width={48} height={48} className="object-cover" />
-                                                    ) : (
-                                                        <span className="text-lg font-black text-[#132A5B]">{item.name[0]}</span>
-                                                    )}
+                    <>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-50/50">
+                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">User Information</th>
+                                        <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role & Status</th>
+                                        <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact Details</th>
+                                        <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined Date</th>
+                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {filteredData.map((item) => (
+                                        <tr key={item.id} className="group hover:bg-gray-50/80 transition-all duration-300">
+                                            <td className="px-8 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-[#EAECED] flex items-center justify-center overflow-hidden border-2 border-white shadow-sm shrink-0">
+                                                        {item.profileImage ? (
+                                                            <Image src={item.profileImage} alt={item.name} width={48} height={48} className="object-cover" />
+                                                        ) : (
+                                                            <span className="text-lg font-black text-[#132A5B]">{item.name[0]}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-black text-[#132A5B] tracking-tight">{item.name}</span>
+                                                        <span className="text-[10px] text-gray-400 font-bold">UID: {item.id.slice(-8).toUpperCase()}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-black text-[#132A5B] tracking-tight">{item.name}</span>
-                                                    <span className="text-[10px] text-gray-400 font-bold">UID: {item.id.slice(-8).toUpperCase()}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col gap-1.5">
+                                            </td>
+                                            <td className="px-6 py-5">
                                                 <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${item.role === 'super_admin' ? 'bg-purple-100 text-purple-600' :
                                                     item.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {item.role.replace('_', ' ')}
                                                 </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-2 text-gray-500 hover:text-[#00A3E0] transition-colors cursor-pointer">
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2 text-gray-500">
                                                     <MdEmail size={14} />
                                                     <span className="text-[13px] font-medium">{item.email}</span>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2 text-gray-400 font-bold">
+                                                    <MdCalendarToday size={14} />
+                                                    <span className="text-[12px]">{new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <button className="w-10 h-10 rounded-xl hover:bg-white hover:shadow-md transition-all flex items-center justify-center text-gray-400 hover:text-[#132A5B]">
+                                                    <MdMoreVert size={20} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden p-4 space-y-4">
+                            {filteredData.map((item) => (
+                                <div key={item.id} className="bg-gray-50/50 rounded-2xl p-4 space-y-3 border border-gray-100">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-sm shrink-0">
+                                                {item.profileImage ? (
+                                                    <Image src={item.profileImage} alt={item.name} width={48} height={48} className="object-cover" />
+                                                ) : (
+                                                    <span className="text-lg font-black text-[#132A5B]">{item.name[0]}</span>
+                                                )}
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2 text-gray-400 font-bold">
-                                                <MdCalendarToday size={14} />
-                                                <span className="text-[12px]">{new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                            <div>
+                                                <p className="text-sm font-black text-[#132A5B]">{item.name}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold">UID: {item.id.slice(-8).toUpperCase()}</p>
                                             </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-right">
-                                            <button className="w-10 h-10 rounded-xl hover:bg-white hover:shadow-md transition-all flex items-center justify-center text-gray-400 hover:text-[#132A5B]">
-                                                <MdMoreVert size={20} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                        <button className="w-8 h-8 rounded-lg hover:bg-white transition-all flex items-center justify-center text-gray-400">
+                                            <MdMoreVert size={18} />
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${item.role === 'super_admin' ? 'bg-purple-100 text-purple-600' :
+                                            item.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                                            }`}>
+                                            {item.role.replace('_', ' ')}
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2 pt-2 border-t border-gray-200">
+                                        <div className="flex items-center gap-2 text-gray-500">
+                                            <MdEmail size={14} />
+                                            <span className="text-xs font-medium truncate">{item.email}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-gray-400">
+                                            <MdCalendarToday size={14} />
+                                            <span className="text-xs font-bold">{new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 ) : (
                     <div className="p-20 text-center flex flex-col items-center justify-center">
                         <div className="w-16 h-16 bg-[#F8F9FA] rounded-full flex items-center justify-center mb-4 text-gray-300">

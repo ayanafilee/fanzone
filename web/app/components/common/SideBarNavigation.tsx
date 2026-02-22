@@ -20,6 +20,7 @@ import {
     MdPeopleAlt,
     MdVideoLibrary,
     MdLiveTv,
+    MdClose,
     MdPublic
 } from "react-icons/md";
 
@@ -30,11 +31,11 @@ const SideBarNavigation = () => {
     const [logout] = useLogoutMutation();
     const { user } = useSelector((state: RootState) => state.auth);
     const [isNavOpen, setIsNavOpen] = useState(true);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Fetch profile data
     const { data: profile } = useGetProfileQuery(undefined);
-    // Be defensive: check both profile.user and direct profile object
-    const currentUser = profile?.user || profile || user;
+    const currentUser = profile || user;
 
     const navigation = [
         { name: "Dashboard", icon: MdAutoGraph, link: "/" },
@@ -58,136 +59,198 @@ const SideBarNavigation = () => {
         }
     };
 
-    // Responsive behavior
+    const handleMobileNavClick = (link: string) => {
+        setIsMobileMenuOpen(false);
+        router.push(link);
+    };
+
+    // Responsive behavior for desktop
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth < 1024) {
                 setIsNavOpen(false);
             } else {
                 setIsNavOpen(true);
+                setIsMobileMenuOpen(false);
             }
         };
-        handleResize(); // Set initial state
+        handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     return (
-        <aside className={`${isNavOpen ? 'w-[306px]' : 'w-[130px]'} fixed top-0 left-0 bg-white h-screen transition-all duration-300 flex flex-col z-[60] shadow-[0_0_40px_rgba(0,0,0,0.03)] border-r border-gray-100`}>
-            {/* Logo Section - Full Brand Image */}
-            <div className={`transition-all duration-300 relative bg-[#132A5B] ${isNavOpen ? 'h-[137px] mb-8' : 'h-[125px] mb-4'} overflow-hidden shadow-xl shadow-blue-900/20 flex items-center justify-center`}>
-                <Image
-                    src="/fanzonelogo.jpg"
-                    alt="Fanzone Logo"
-                    fill
-                    className="object-cover" // Changed from object-contain to object-cover to fill space
-                    priority
-                />
-                {/* Optional: Add a slight overlay if the logo image is too bright for the nav text */}
-                <div className="absolute inset-0 bg-[#132A5B]/10" />
-            </div>
-
-            {/* Toggle Button - Modified to match new palette */}
+        <>
+            {/* Mobile Menu Button - Fixed at top */}
             <button
-                onClick={() => setIsNavOpen(!isNavOpen)}
-                className="absolute -right-4 top-12 bg-white text-[#132A5B] p-1.5 rounded-full shadow-xl hover:scale-110 transition-all z-[70] border-2 border-gray-50 flex items-center justify-center"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden fixed top-4 left-4 z-[100] bg-[#132A5B] text-white p-3 rounded-2xl shadow-2xl hover:bg-[#00A3E0] transition-all"
             >
-                {isNavOpen ? <MdMenuOpen size={18} /> : <MdMenu size={18} />}
+                {isMobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
             </button>
 
-            {/* Navigation Links - Updated for White Background */}
-            <nav className="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
-                {navigation.map((item) => {
-                    const isActive = pathname === item.link;
-                    return (
-                        <Link
-                            key={item.name}
-                            href={item.link}
-                            className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${isActive
-                                ? 'bg-[#132A5B] text-white shadow-xl shadow-blue-900/20'
-                                : 'text-gray-500 hover:text-[#132A5B] hover:bg-gray-50/80'
-                                }`}
-                        >
-                            <item.icon size={22} className={`${isActive ? 'text-white' : 'text-gray-400 group-hover:text-[#132A5B]'} transition-colors duration-300`} />
-                            {isNavOpen && <span className="font-bold text-[13px] tracking-wide uppercase">{item.name}</span>}
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[90]"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
 
-                            {!isNavOpen && (
-                                <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl z-[100]">
-                                    {item.name}
-                                </div>
-                            )}
-                        </Link>
-                    )
-                })}
-            </nav>
+            {/* Desktop Sidebar */}
+            <aside className={`${isNavOpen ? 'w-64' : 'w-20'} hidden lg:flex fixed top-0 left-0 bg-[#132A5B] h-screen transition-all duration-300 flex-col z-[60] shadow-2xl`}>
+                {/* Desktop Toggle Button */}
+                <button
+                    onClick={() => setIsNavOpen(!isNavOpen)}
+                    className="absolute -right-4 top-10 bg-[#00A3E0] text-white p-1.5 rounded-full shadow-lg hover:scale-110 transition-all z-[70] border-2 border-[#132A5B]"
+                >
+                    {isNavOpen ? <MdMenuOpen size={18} /> : <MdMenu size={18} />}
+                </button>
 
-            {/* User Section / Logout - Updated for White Background */}
-            <div className="mt-auto border-t border-gray-100 bg-gray-50/50 p-4">
-                {/* User Profile Hookup */}
-                <div className={`flex items-center ${isNavOpen ? 'gap-3 mb-4' : 'justify-center mb-0'} relative group`}>
-                    <Link href="/settings" className="relative shrink-0">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer hover:border-[#132A5B]/20">
-                            {currentUser?.profile_image_url ? (
-                                <Image
-                                    src={currentUser.profile_image_url}
-                                    alt="Profile"
-                                    width={40}
-                                    height={40}
-                                    className="object-cover w-full h-full"
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center w-full h-full bg-[#EAECED] text-[#132A5B]">
-                                    <span className="text-sm font-black">
-                                        {currentUser?.name?.[0]?.toUpperCase() || 'U'}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm" />
-                    </Link>
-
+                {/* Logo Section */}
+                <div className="p-6 mb-8 flex items-center gap-4 overflow-hidden">
+                    <div className="min-w-[44px] h-11 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                        <Image 
+                            src="/fanzonelogo.jpg" 
+                            alt="Fanzone Logo" 
+                            width={44} 
+                            height={44} 
+                            className="object-contain"
+                        />
+                    </div>
                     {isNavOpen && (
-                        <div className="flex-1 min-w-0 pr-2">
-                            <p className="text-[13px] font-black text-[#132A5B] tracking-tight truncate">
-                                {currentUser?.name || 'User'}
-                            </p>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">
-                                {currentUser?.role?.replace('_', ' ') || 'Admin'}
-                            </p>
-                        </div>
-                    )}
-
-                    {!isNavOpen && (
-                        <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl z-[100]">
-                            {currentUser?.name || 'User'}
+                        <div className="flex flex-col">
+                            <span className="font-black tracking-[0.15em] text-white text-base leading-none">FANZONE</span>
+                            <span className="text-[10px] text-[#00A3E0] font-black uppercase tracking-[0.2em] mt-1">Management</span>
                         </div>
                     )}
                 </div>
 
-                <div className={isNavOpen ? '' : 'hidden'}>
+                {/* Navigation Links */}
+                <nav className="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
+                    {navigation.map((item) => {
+                        const isActive = pathname === item.link;
+                        return (
+                            <Link
+                                key={item.name}
+                                href={item.link}
+                                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${isActive
+                                    ? 'bg-[#00A3E0] text-white shadow-[0_10px_20px_-5px_rgba(0,163,224,0.4)]'
+                                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <item.icon size={22} className={`${isActive ? 'text-white' : 'group-hover:text-[#00A3E0]'} transition-colors duration-300`} />
+                                {isNavOpen && <span className="font-bold text-[13px] tracking-wide uppercase">{item.name}</span>}
+
+                                {!isNavOpen && (
+                                    <div className="absolute left-full ml-6 px-3 py-2 bg-[#132A5B] text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl border border-white/10 z-[100]">
+                                        {item.name}
+                                    </div>
+                                )}
+                            </Link>
+                        )
+                    })}
+                </nav>
+
+                {/* Logout Button */}
+                <div className="p-3 mt-auto border-t border-white/5 bg-[#0A1B3D]/30">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group relative border border-gray-100"
+                        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all group relative"
                     >
-                        <MdLogout size={18} className="group-hover:rotate-12 transition-transform" />
-                        <span className="font-bold text-[11px] tracking-[0.1em] uppercase">Logout</span>
+                        <MdLogout size={22} className="group-hover:rotate-12 transition-transform" />
+                        {isNavOpen && <span className="font-bold text-[13px] tracking-wide uppercase">Logout</span>}
+
+                        {!isNavOpen && (
+                            <div className="absolute left-full ml-6 px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl">
+                                Logout
+                            </div>
+                        )}
                     </button>
                 </div>
+            </aside>
 
-                {/* Slim Logout for closed state */}
-                {!isNavOpen && (
-                    <button
-                        onClick={handleLogout}
-                        className="mt-4 w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all group relative mx-auto"
-                    >
-                        <MdLogout size={20} />
-                        <div className="absolute left-full ml-6 px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl">
-                            Logout
+            {/* Mobile Sidebar */}
+            <aside className={`lg:hidden fixed top-0 left-0 bg-[#132A5B] h-screen w-72 transition-transform duration-300 flex flex-col z-[95] shadow-2xl ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                {/* Logo Section */}
+                <div className="p-6 mb-6 flex items-center gap-4">
+                    <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                        <Image 
+                            src="/fanzonelogo.jpg" 
+                            alt="Fanzone Logo" 
+                            width={44} 
+                            height={44} 
+                            className="object-contain"
+                        />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-black tracking-[0.15em] text-white text-base leading-none">FANZONE</span>
+                        <span className="text-[10px] text-[#00A3E0] font-black uppercase tracking-[0.2em] mt-1">Management</span>
+                    </div>
+                </div>
+
+                {/* User Info */}
+                {currentUser && (
+                    <div className="px-6 pb-6 mb-4 border-b border-white/10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden">
+                                {currentUser.profile_image_url ? (
+                                    <Image 
+                                        src={currentUser.profile_image_url} 
+                                        alt={currentUser.name || 'User'} 
+                                        width={48} 
+                                        height={48} 
+                                        className="object-cover w-full h-full"
+                                    />
+                                ) : (
+                                    <span className="text-white font-black text-lg">
+                                        {currentUser.name?.[0]?.toUpperCase() || 'U'}
+                                    </span>
+                                )}
+                            </div>
+                            <div>
+                                <p className="text-white font-bold text-sm">{currentUser.name || 'User'}</p>
+                                <p className="text-[#00A3E0] text-xs font-bold uppercase">{currentUser.role?.replace('_', ' ') || 'User'}</p>
+                            </div>
                         </div>
-                    </button>
+                    </div>
                 )}
-            </div>
-        </aside>
+
+                {/* Navigation Links */}
+                <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+                    {navigation.map((item) => {
+                        const isActive = pathname === item.link;
+                        return (
+                            <button
+                                key={item.name}
+                                onClick={() => handleMobileNavClick(item.link)}
+                                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 ${isActive
+                                    ? 'bg-[#00A3E0] text-white shadow-lg'
+                                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <item.icon size={22} />
+                                <span className="font-bold text-[13px] tracking-wide uppercase">{item.name}</span>
+                            </button>
+                        )
+                    })}
+                </nav>
+
+                {/* Logout Button */}
+                <div className="p-3 border-t border-white/5 bg-[#0A1B3D]/30">
+                    <button
+                        onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                    >
+                        <MdLogout size={22} />
+                        <span className="font-bold text-[13px] tracking-wide uppercase">Logout</span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 };
 

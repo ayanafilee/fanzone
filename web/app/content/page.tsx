@@ -108,7 +108,7 @@ export default function ContentManagementPage() {
                 </div>
             </div>
 
-            {/* Table Section */}
+            {/* Table/Card Section */}
             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-md overflow-hidden">
                 {isLoading ? (
                     <div className="p-12 space-y-4">
@@ -117,67 +117,120 @@ export default function ContentManagementPage() {
                         ))}
                     </div>
                 ) : filteredContent && filteredContent.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50/50">
-                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Main Information</th>
-                                    <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Category</th>
-                                    <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Assigned Club</th>
-                                    <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Published</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right border-b border-gray-100">Control</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {filteredContent.map((content: Content) => (
-                                    <tr key={content.id} className="group hover:bg-gray-50/80 transition-all duration-300">
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-20 h-14 rounded-2xl bg-[#EAECED] flex items-center justify-center overflow-hidden border-4 border-white shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                                                    {content.image_url ? (
-                                                        <Image src={content.image_url} alt={content.title.en} width={80} height={56} className="object-cover h-full" />
-                                                    ) : (
-                                                        <MdImage size={24} className="text-gray-300" />
-                                                    )}
-                                                </div>
-                                                <div className="flex flex-col max-w-sm">
-                                                    <span className="text-[15px] font-black text-[#132A5B] tracking-tight">{content.title.en}</span>
-                                                    <span className="text-[12px] text-[#00A3E0] font-bold">{content.title.am}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-6">
-                                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100">
-                                                {content.category}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-6 text-sm font-bold text-[#132A5B]">
-                                            {clubs?.find((club: any) => club.id === content.club_id)?.name || 'General News'}
-                                        </td>
-                                        <td className="px-6 py-6 text-[12px] font-bold text-gray-400">
-                                            {new Date(content.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <div className="flex items-center justify-end gap-3">
-                                                <Link
-                                                    href={`/content/edit/${content.id}`}
-                                                    className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-[#132A5B] hover:text-white transition-all shadow-sm hover:shadow-lg"
-                                                >
-                                                    <MdEdit size={20} />
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(content.id)}
-                                                    className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-lg"
-                                                >
-                                                    <MdDelete size={20} />
-                                                </button>
-                                            </div>
-                                        </td>
+                    <>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-50/50">
+                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Main Information</th>
+                                        <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Category</th>
+                                        <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Assigned Club</th>
+                                        <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Published</th>
+                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right border-b border-gray-100">Control</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {filteredContent.map((content: Content) => (
+                                        <tr key={content.id} className="group hover:bg-gray-50/80 transition-all duration-300">
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="w-20 h-14 rounded-2xl bg-[#EAECED] flex items-center justify-center overflow-hidden border-4 border-white shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                                        {content.image_url ? (
+                                                            <Image src={content.image_url} alt={content.title.en} width={80} height={56} className="object-cover h-full" />
+                                                        ) : (
+                                                            <MdImage size={24} className="text-gray-300" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col max-w-sm">
+                                                        <span className="text-[15px] font-black text-[#132A5B] tracking-tight">{content.title.en}</span>
+                                                        <span className="text-[12px] text-[#00A3E0] font-bold">{content.title.am}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-6">
+                                                <span className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100">
+                                                    {content.category}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-6 text-sm font-bold text-[#132A5B]">
+                                                {clubs?.find((club: any) => club.id === content.club_id)?.name || 'General News'}
+                                            </td>
+                                            <td className="px-6 py-6 text-[12px] font-bold text-gray-400">
+                                                {new Date(content.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex items-center justify-end gap-3">
+                                                    <button
+                                                        onClick={() => handleEdit(content)}
+                                                        className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-[#132A5B] hover:text-white transition-all shadow-sm hover:shadow-lg"
+                                                    >
+                                                        <MdEdit size={20} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(content.id)}
+                                                        className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm hover:shadow-lg"
+                                                    >
+                                                        <MdDelete size={20} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden p-4 space-y-4">
+                            {filteredContent.map((content: Content) => (
+                                <div key={content.id} className="bg-gray-50/50 rounded-2xl p-4 space-y-3 border border-gray-100">
+                                    <div className="flex gap-3">
+                                        <div className="w-20 h-16 rounded-xl bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-sm shrink-0">
+                                            {content.image_url ? (
+                                                <Image src={content.image_url} alt={content.title.en} width={80} height={64} className="object-cover h-full w-full" />
+                                            ) : (
+                                                <MdImage size={24} className="text-gray-300" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-black text-[#132A5B] line-clamp-2">{content.title.en}</p>
+                                            <p className="text-xs text-[#00A3E0] font-bold mt-1">{content.title.am}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600">
+                                            {content.category}
+                                        </span>
+                                        <span className="text-xs font-bold text-gray-500">
+                                            {clubs?.find((club: any) => club.id === content.club_id)?.name || 'General'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                                        <span className="text-xs font-bold text-gray-400">
+                                            {new Date(content.created_at).toLocaleDateString()}
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleEdit(content)}
+                                                className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all"
+                                            >
+                                                <MdEdit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(content.id)}
+                                                className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all"
+                                            >
+                                                <MdDelete size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 ) : (
                     <div className="p-32 text-center flex flex-col items-center justify-center">
                         <div className="w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6 text-gray-200 shadow-inner">
@@ -185,13 +238,6 @@ export default function ContentManagementPage() {
                         </div>
                         <h3 className="text-2xl font-black text-[#132A5B] mb-2">Platform Content is Empty</h3>
                         <p className="text-gray-400 max-w-sm font-medium leading-relaxed">Your platform doesn't have any published articles yet. Start by creating your first news or transfer story.</p>
-                        <Link
-                            href="/content/add"
-                            className="mt-8 px-8 py-4 bg-[#132A5B] text-white font-bold rounded-2xl hover:bg-blue-900 transition-all flex items-center gap-2 shadow-xl shadow-blue-900/10"
-                        >
-                            <MdPostAdd size={24} />
-                            Create First Article
-                        </Link>
                     </div>
                 )}
             </div>
