@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SideBarNav />
             <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
                 {/* Header with proper spacing for mobile */}
-                <div className="pt-20 lg:pt-6 px-4 md:px-8">
+                <div className="pt-24 lg:pt-6 px-4 md:px-8">
                     <DashboardHeader title={title} subtitle={subtitle} />
                 </div>
 

@@ -81,10 +81,10 @@ const SideBarNavigation = () => {
 
     return (
         <>
-            {/* Mobile Menu Button - Fixed at top */}
+            {/* Mobile Menu Button - Fixed at top with padding */}
             <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden fixed top-4 left-4 z-[100] bg-[#132A5B] text-white p-3 rounded-2xl shadow-2xl hover:bg-[#00A3E0] transition-all"
+                className="lg:hidden fixed top-6 left-4 z-[100] bg-[#132A5B] text-white p-3 rounded-2xl shadow-2xl hover:bg-[#00A3E0] transition-all"
             >
                 {isMobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
             </button>
@@ -172,8 +172,8 @@ const SideBarNavigation = () => {
 
             {/* Mobile Sidebar */}
             <aside className={`lg:hidden fixed top-0 left-0 bg-[#132A5B] h-screen w-72 transition-transform duration-300 flex flex-col z-[95] shadow-2xl ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                {/* Logo Section */}
-                <div className="p-6 mb-6 flex items-center gap-4">
+                {/* Logo Section with top padding */}
+                <div className="p-6 pt-8 mb-6 flex items-center gap-4">
                     <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
                         <Image 
                             src="/fanzonelogo.jpg" 

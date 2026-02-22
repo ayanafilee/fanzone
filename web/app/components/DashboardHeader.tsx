@@ -17,24 +17,24 @@ const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
     const user = profileData || null;
 
     return (
-        <header className="flex items-center justify-between mb-10 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-[0_20px_40px_-15px_rgba(20,45,100,0.05)]">
+        <header className="flex items-center justify-between mb-6 md:mb-10 p-4 md:p-6 bg-white rounded-[2rem] border border-gray-100 shadow-[0_20px_40px_-15px_rgba(20,45,100,0.05)]">
             {/* Left side: Page Info */}
-            <div>
+            <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                     <div className="w-1.5 h-4 bg-[#00A3E0] rounded-full" />
-                    <h1 className="text-2xl font-black text-[#132A5B] tracking-tight truncate max-w-[200px] md:max-w-md">
+                    <h1 className="text-xl md:text-2xl font-black text-[#132A5B] tracking-tight truncate">
                         {title}
                     </h1>
                 </div>
                 {subtitle && (
-                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em] ml-3.5">
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em] ml-3.5 truncate">
                         {subtitle}
                     </p>
                 )}
             </div>
 
             {/* Right side: User Profile */}
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3 md:gap-5 ml-4">
                 <div className="text-right hidden sm:block">
                     {isLoading ? (
                         <div className="space-y-2">
@@ -54,7 +54,7 @@ const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
                 </div>
 
                 <div className="relative group">
-                    <div className="w-14 h-14 rounded-2xl bg-[#EAECED] flex items-center justify-center border-4 border-white shadow-md overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#EAECED] flex items-center justify-center border-4 border-white shadow-md overflow-hidden transition-transform duration-300 group-hover:scale-105">
                         {user?.profile_image_url ? (
                             <Image
                                 src={user.profile_image_url}
@@ -65,14 +65,14 @@ const DashboardHeader: FC<HeaderProps> = ({ title, subtitle }) => {
                             />
                         ) : (
                             <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#132A5B] to-[#0f1f42] text-white">
-                                <span className="text-xl font-black">
+                                <span className="text-lg md:text-xl font-black">
                                     {user?.name?.[0]?.toUpperCase() || 'U'}
                                 </span>
                             </div>
                         )}
                     </div>
                     {/* Active Status Indicator */}
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" />
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-white rounded-full shadow-sm" />
                 </div>
             </div>
         </header>
