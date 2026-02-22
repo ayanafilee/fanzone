@@ -163,6 +163,14 @@ export const adminApi = apiSlice.injectEndpoints({
             query: () => '/super-admin/admins',
             providesTags: ['User'],
         }),
+        registerAdmin: builder.mutation<{ message: string }, { name: string; email: string; password: string }>({
+            query: (data) => ({
+                url: '/super-admin/register-admin',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['User'],
+        }),
         getAnalytics: builder.query<AdminAnalytics, void>({
             query: () => '/admin/analytics',
             providesTags: ['Analytics'],
@@ -190,4 +198,5 @@ export const {
     useGetActivitiesQuery,
     useGetAllUsersQuery,
     useGetAllAdminsQuery,
+    useRegisterAdminMutation,
 } = adminApi;

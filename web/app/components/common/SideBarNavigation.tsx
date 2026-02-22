@@ -81,10 +81,11 @@ const SideBarNavigation = () => {
 
     return (
         <>
-            {/* Mobile Menu Button - Fixed at top with padding */}
+            {/* Mobile Menu Button - Fixed at top aligned with header */}
             <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden fixed top-6 left-4 z-[100] bg-[#132A5B] text-white p-3 rounded-2xl shadow-2xl hover:bg-[#00A3E0] transition-all"
+                className="lg:hidden fixed top-10 z-[100] bg-[#132A5B] text-white p-3 rounded-2xl shadow-2xl hover:bg-[#00A3E0] transition-all"
+                style={{ left: '50px' }}
             >
                 {isMobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
             </button>

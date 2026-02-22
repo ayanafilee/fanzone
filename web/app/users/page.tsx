@@ -7,6 +7,7 @@ import { RootState } from '@/lib/store';
 import {
     useGetAllUsersQuery,
     useGetAllAdminsQuery,
+    useRegisterAdminMutation,
     UserInfo
 } from '@/lib/features/admin/adminApi';
 import {
@@ -18,15 +19,24 @@ import {
     MdEmail,
     MdCalendarToday,
     MdCheckCircle,
-    MdError
+    MdError,
+    MdAdd,
+    MdClose
 } from 'react-icons/md';
 import Image from 'next/image';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function UserManagementPage() {
     const router = useRouter();
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
     const [activeTab, setActiveTab] = useState<'users' | 'admins'>('users');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: ''
+    });
 
     // Fetch data based on active tab
     const { data: users, isLoading: usersLoading, error: usersError } = useGetAllUsersQuery(undefined, {
@@ -35,6 +45,7 @@ export default function UserManagementPage() {
     const { data: admins, isLoading: adminsLoading, error: adminsError } = useGetAllAdminsQuery(undefined, {
         skip: activeTab !== 'admins'
     });
+    const [registerAdmin, { isLoading: isRegistering }] = useRegisterAdminMutation();
 
     // Protection logic
     const isSuperAdmin = user?.role === 'super_admin';
@@ -44,6 +55,19 @@ export default function UserManagementPage() {
             router.push('/login');
         }
     }, [isAuthenticated, router]);
+
+    const handleRegisterAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await registerAdmin(formData).unwrap();
+            toast.success('Admin registered successfully!');
+            setIsModalOpen(false);
+            setFormData({ name: '', email: '', password: '' });
+        } catch (error: any) {
+            const errorMessage = error?.data?.error || 'Failed to register admin';
+            toast.error(errorMessage);
+        }
+    };
 
     if (!isSuperAdmin) {
         return (
@@ -76,6 +100,7 @@ export default function UserManagementPage() {
 
     return (
         <div className="space-y-6 pt-8">
+            <Toaster position="top-right" />
             {/* Page Title */}
             <div className="mb-2">
                 <h1 className="text-3xl font-black text-[#132A5B] tracking-tight">User Management</h1>
@@ -108,6 +133,15 @@ export default function UserManagementPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {activeTab === 'admins' && (
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center gap-2 px-6 py-3 bg-[#132A5B] text-white font-bold rounded-2xl shadow-lg hover:shadow-blue-900/20 hover:bg-blue-900 transition-all"
+                        >
+                            <MdAdd size={24} />
+                            Add Admin
+                        </button>
+                    )}
                     <div className="relative group">
                         <MdSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#00A3E0] transition-colors" size={20} />
                         <input
@@ -249,6 +283,81 @@ export default function UserManagementPage() {
                     </div>
                 )}
             </div>
+
+            {/* Add Admin Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-[#0A1B3D]/80 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
+                    <div className="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl p-8 md:p-10 animate-in zoom-in-95 duration-300">
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute right-6 top-6 w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                        >
+                            <MdClose size={20} />
+                        </button>
+
+                        <div className="space-y-1 mb-8">
+                            <h2 className="text-2xl font-black text-[#132A5B] tracking-tight">Register New Admin</h2>
+                            <p className="text-gray-400 font-medium text-sm">Create a new administrator account</p>
+                        </div>
+
+                        <form onSubmit={handleRegisterAdmin} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full h-12 px-5 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#00A3E0]/20 focus:bg-white outline-none font-bold text-[#132A5B] transition-all"
+                                    placeholder="e.g. John Admin"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full h-12 px-5 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#00A3E0]/20 focus:bg-white outline-none font-bold text-[#132A5B] transition-all"
+                                    placeholder="admin@fanzone.com"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    minLength={6}
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full h-12 px-5 rounded-xl bg-gray-50 border-2 border-transparent focus:border-[#00A3E0]/20 focus:bg-white outline-none font-bold text-[#132A5B] transition-all"
+                                    placeholder="Minimum 6 characters"
+                                />
+                                <p className="text-xs text-gray-400 font-medium ml-1">Password must be at least 6 characters long</p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isRegistering}
+                                className="w-full h-14 rounded-xl bg-[#132A5B] text-white font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 hover:bg-blue-900 hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isRegistering ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Creating Admin...</span>
+                                    </div>
+                                ) : (
+                                    'Create Admin Account'
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
