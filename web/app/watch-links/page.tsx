@@ -30,7 +30,7 @@ export default function WatchLinksManagementPage() {
     const [editingLink, setEditingLink] = useState<WatchLink | null>(null);
 
     // Queries
-    const { data: watchLinks, isLoading } = useGetWatchLinksQuery();
+    const { data: watchLinks, isLoading } = useGetWatchLinksQuery(undefined);
 
     // Mutations
     const [createWatchLink, { isLoading: isCreating }] = useCreateWatchLinkMutation();
