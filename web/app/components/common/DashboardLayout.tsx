@@ -17,13 +17,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex bg-[#F8F9FA] min-h-screen">
             <SideBarNav />
             <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
-                {/* Header bar with user profile only */}
-                <div className="pt-24 lg:pt-6 px-4 md:px-8">
+                {/* Fixed Header bar with user profile only */}
+                <div className="fixed top-0 right-0 left-0 lg:left-64 z-50 pt-6 px-4 md:px-8 pb-4 bg-[#F8F9FA]">
                     <DashboardHeader />
                 </div>
 
-                {/* Main content area with page titles */}
-                <main className="p-4 md:p-8 flex-1">
+                {/* Main content area with page titles - add top padding to account for fixed header */}
+                <main className="p-4 md:p-8 flex-1 mt-24 md:mt-28">
                     {children}
                 </main>
             </div>
