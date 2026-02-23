@@ -66,6 +66,7 @@ func main() {
 		// Leagues
 		publicGroup.GET("/leagues", h.GetLeagues)
 		publicGroup.GET("/leagues/:id", h.GetLeagueByID)
+		publicGroup.GET("/leagues/:id/clubs", h.GetClubsByLeague) // Get clubs by league
 		
 		// Languages
 		publicGroup.GET("/languages", h.GetLanguages)
