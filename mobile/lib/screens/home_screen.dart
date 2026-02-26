@@ -116,20 +116,62 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _getCurrentLanguageFlag() {
+    if (_currentUser == null) return '🇬🇧';
+    
+    switch (_currentUser!.language) {
+      case 'am':
+      case 'om':
+        return '🇪🇹';
+      default:
+        return '🇬🇧';
+    }
+  }
+
   Widget _buildLanguageDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.inputBackground.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.inputBorder.withOpacity(0.3)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _currentUser?.language ?? 'en',
-          dropdownColor: AppColors.inputBackground,
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          dropdownColor: AppColors.darkGreen,
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
+          isDense: true,
+          menuMaxHeight: 300,
+          borderRadius: BorderRadius.circular(12),
+          selectedItemBuilder: (BuildContext context) {
+            return [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🇬🇧', style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 6),
+                  const Text('English', style: TextStyle(color: Colors.white, fontSize: 13)),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🇪🇹', style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 6),
+                  const Text('አማርኛ', style: TextStyle(color: Colors.white, fontSize: 13)),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🇪🇹', style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 6),
+                  const Text('Afaan Oromo', style: TextStyle(color: Colors.white, fontSize: 13)),
+                ],
+              ),
+            ];
+          },
           onChanged: (String? newValue) async {
             if (newValue != null && newValue != _currentUser?.language) {
               final prefs = await SharedPreferences.getInstance();
@@ -147,18 +189,66 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             }
           },
-          items: const [
+          items: [
             DropdownMenuItem(
               value: 'en',
-              child: Text('English'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: _currentUser?.language == 'en' 
+                      ? AppColors.buttonGreenEnd.withOpacity(0.2) 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text('🇬🇧', style: TextStyle(fontSize: 16)),
+                    SizedBox(width: 6),
+                    Text('English', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
             ),
             DropdownMenuItem(
               value: 'am',
-              child: Text('አማርኛ'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: _currentUser?.language == 'am' 
+                      ? AppColors.buttonGreenEnd.withOpacity(0.2) 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text('🇪🇹', style: TextStyle(fontSize: 16)),
+                    SizedBox(width: 6),
+                    Text('አማርኛ', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
             ),
             DropdownMenuItem(
               value: 'om',
-              child: Text('Afaan Oromo'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: _currentUser?.language == 'om' 
+                      ? AppColors.buttonGreenEnd.withOpacity(0.2) 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text('🇪🇹', style: TextStyle(fontSize: 16)),
+                    SizedBox(width: 6),
+                    Text('Afaan Oromo', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -199,18 +289,20 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Custom Header
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
                       const Spacer(),
                       // Language Dropdown
                       _buildLanguageDropdown(),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       // Notification Icon
                       IconButton(
-                        icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                        icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
                         onPressed: _showNotifications,
                         tooltip: 'Notifications',
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
