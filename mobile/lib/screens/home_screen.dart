@@ -28,14 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Transparent to overlay on app
+        statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light, // White icons
         statusBarBrightness: Brightness.dark, // For iOS
       ),
-    );
-    // Make status bar overlay on app content
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
     );
     _loadUserPreferences();
   }
@@ -81,50 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _changeLanguage() async {
-    final languages = [
-      {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
-      {'code': 'am', 'name': 'አማርኛ', 'flag': '🇪🇹'},
-      {'code': 'om', 'name': 'Afaan Oromo', 'flag': '🇪🇹'},
-    ];
-
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.inputBackground,
-        title: const Text('Select Language', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: languages.map((lang) {
-            final isSelected = _currentUser?.language == lang['code'];
-            return ListTile(
-              leading: Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
-              title: Text(lang['name']!, style: const TextStyle(color: Colors.white)),
-              trailing: isSelected ? const Icon(Icons.check, color: AppColors.buttonGreenEnd) : null,
-              onTap: () => Navigator.pop(context, lang['code']),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-
-    if (selected != null && selected != _currentUser?.language) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('language', selected);
-      
-      setState(() {
-        _currentUser = User(
-          id: _currentUser!.id,
-          name: _currentUser!.name,
-          email: _currentUser!.email,
-          language: selected,
-          favClubId: _currentUser!.favClubId,
-          profileImageUrl: _currentUser!.profileImageUrl,
-        );
-      });
-    }
-  }
-
   void _showNotifications() {
     Navigator.push(
       context,
@@ -151,6 +103,69 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _getCurrentLanguageName() {
+    if (_currentUser == null) return 'English';
+    
+    switch (_currentUser!.language) {
+      case 'am':
+        return 'አማርኛ';
+      case 'om':
+        return 'Afaan Oromo';
+      default:
+        return 'English';
+    }
+  }
+
+  Widget _buildLanguageDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.inputBackground.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.inputBorder.withOpacity(0.3)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _currentUser?.language ?? 'en',
+          dropdownColor: AppColors.inputBackground,
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+          onChanged: (String? newValue) async {
+            if (newValue != null && newValue != _currentUser?.language) {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('language', newValue);
+              
+              setState(() {
+                _currentUser = User(
+                  id: _currentUser!.id,
+                  name: _currentUser!.name,
+                  email: _currentUser!.email,
+                  language: newValue,
+                  favClubId: _currentUser!.favClubId,
+                  profileImageUrl: _currentUser!.profileImageUrl,
+                );
+              });
+            }
+          },
+          items: const [
+            DropdownMenuItem(
+              value: 'en',
+              child: Text('English'),
+            ),
+            DropdownMenuItem(
+              value: 'am',
+              child: Text('አማርኛ'),
+            ),
+            DropdownMenuItem(
+              value: 'om',
+              child: Text('Afaan Oromo'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -170,67 +185,68 @@ class _HomeScreenState extends State<HomeScreen> {
       HighlightsTab(user: _currentUser!),
     ];
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
-        child: SafeArea(
-          top: false, // Don't add padding at top, let content go under status bar
-          child: Column(
-            children: [
-              // Add padding for status bar manually with gradient
-              SizedBox(height: MediaQuery.of(context).padding.top),
-              // Custom Header
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    // Language Selector
-                    IconButton(
-                      icon: const Icon(Icons.language, color: Colors.white),
-                      onPressed: _changeLanguage,
-                      tooltip: 'Change Language',
-                    ),
-                    // Notification Icon
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                      onPressed: _showNotifications,
-                      tooltip: 'Notifications',
-                    ),
-                  ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // White icons for dark background
+        statusBarBrightness: Brightness.dark, // For iOS
+      ),
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Spacer(),
+                      // Language Dropdown
+                      _buildLanguageDropdown(),
+                      const SizedBox(width: 8),
+                      // Notification Icon
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                        onPressed: _showNotifications,
+                        tooltip: 'Notifications',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              // Tab Content
-              Expanded(
-                child: tabs[_currentIndex],
-              ),
-            ],
+                // Tab Content
+                Expanded(
+                  child: tabs[_currentIndex],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.darkGreen,
-        selectedItemColor: AppColors.buttonGreenEnd,
-        unselectedItemColor: AppColors.textGrey,
-        selectedFontSize: 12,
-        unselectedFontSize: 11,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.sports_soccer),
-            label: _getTabLabel(0),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.article),
-            label: _getTabLabel(1),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.play_circle),
-            label: _getTabLabel(2),
-          ),
-        ],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.darkGreen,
+          selectedItemColor: AppColors.buttonGreenEnd,
+          unselectedItemColor: AppColors.textGrey,
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+          items: [
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.sports_soccer),
+              label: _getTabLabel(0),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.article),
+              label: _getTabLabel(1),
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.play_circle),
+              label: _getTabLabel(2),
+            ),
+          ],
+        ),
       ),
     );
   }
