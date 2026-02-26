@@ -28,10 +28,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarColor: Colors.transparent, // Transparent to overlay on app
+        statusBarIconBrightness: Brightness.light, // White icons
+        statusBarBrightness: Brightness.dark, // For iOS
       ),
+    );
+    // Make status bar overlay on app content
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
     );
     _loadUserPreferences();
   }
@@ -170,27 +174,16 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
         child: SafeArea(
+          top: false, // Don't add padding at top, let content go under status bar
           child: Column(
             children: [
+              // Add padding for status bar manually with gradient
+              SizedBox(height: MediaQuery.of(context).padding.top),
               // Custom Header
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    // App Icon instead of club logo
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentGreen,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.sports_soccer,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
                     const Spacer(),
                     // Language Selector
                     IconButton(
