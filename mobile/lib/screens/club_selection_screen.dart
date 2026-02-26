@@ -198,19 +198,20 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        if (club.logoUrl.isNotEmpty)
-                                          Image.network(
-                                            club.logoUrl,
-                                            width: 60,
-                                            height: 60,
-                                            errorBuilder: (_, __, ___) => const Icon(
-                                              Icons.sports_soccer,
-                                              size: 60,
-                                              color: Colors.white54,
-                                            ),
-                                          )
-                                        else
-                                          const Icon(Icons.sports_soccer, size: 60, color: Colors.white54),
+                                        // Generic football icon instead of club logo
+                                        Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: isSelected ? AppColors.buttonGreenEnd : AppColors.accentGreen,
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                          child: Icon(
+                                            Icons.sports_soccer,
+                                            size: 36,
+                                            color: isSelected ? AppColors.darkGreen : Colors.white,
+                                          ),
+                                        ),
                                         const SizedBox(height: 12),
                                         Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 8.0),

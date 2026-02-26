@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
-import '../models/club.dart';
-import '../services/club_service.dart';
 import '../services/notification_service.dart';
 import 'my_club_tab.dart';
 import 'all_news_tab.dart';
@@ -22,9 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   User? _currentUser;
-  Club? _userClub;
   bool _isLoading = true;
-  final _clubService = ClubService();
   final _notificationService = NotificationService();
 
   @override
@@ -56,20 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
         profileImageUrl: '',
       );
 
-      // Load club details if user has a favorite club
-      Club? club;
-      if (favClubId.isNotEmpty) {
-        try {
-          final clubs = await _clubService.getClubsPublic();
-          club = clubs.firstWhere((c) => c.id == favClubId);
-        } catch (e) {
-          print('Error loading club: $e');
-        }
-      }
-
       setState(() {
         _currentUser = user;
-        _userClub = club;
         _isLoading = false;
       });
 
@@ -193,40 +177,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    // Club Logo
-                    if (_userClub != null && _userClub!.logoUrl.isNotEmpty)
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: Image.network(
-                          _userClub!.logoUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.sports_soccer,
-                            color: AppColors.accentGreen,
-                            size: 24,
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.accentGreen,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.sports_soccer,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                    // App Icon instead of club logo
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen,
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      child: const Icon(
+                        Icons.sports_soccer,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
                     const Spacer(),
                     // Language Selector
                     IconButton(
