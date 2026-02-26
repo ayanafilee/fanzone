@@ -9,7 +9,6 @@ import '../services/notification_service.dart';
 import 'my_club_tab.dart';
 import 'all_news_tab.dart';
 import 'highlights_tab.dart';
-import 'watch_tab.dart';
 import 'notifications_screen.dart';
 import 'language_selection_screen.dart';
 
@@ -159,8 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return lang == 'am' ? 'ሁሉም ዜና' : lang == 'om' ? 'Oduu Hunda' : 'All News';
       case 2:
         return lang == 'am' ? 'ማጠቃለያ ቪዲዮዎች' : lang == 'om' ? 'Cuunfaa Tapha' : 'Highlights';
-      case 3:
-        return lang == 'am' ? 'ተመልከት' : lang == 'om' ? 'Ilaali' : 'Watch';
       default:
         return '';
     }
@@ -183,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
       MyClubTab(user: _currentUser!),
       AllNewsTab(user: _currentUser!),
       HighlightsTab(user: _currentUser!),
-      WatchTab(user: _currentUser!),
     ];
 
     return Scaffold(
@@ -276,10 +272,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.play_circle),
             label: _getTabLabel(2),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.tv),
-            label: _getTabLabel(3),
           ),
         ],
       ),
