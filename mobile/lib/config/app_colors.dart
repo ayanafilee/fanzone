@@ -20,6 +20,10 @@ class AppColors {
   static const Color inputBackground = Color(0xFF1A3A2E);
   static const Color inputBorder = Color(0xFF2D5F4C);
   
+  // Card colors
+  static const Color newsCardBackground = Color(0xFF1E3D32); // Slightly lighter green for news
+  static const Color highlightCardBackground = Color(0xFF2D1F1F); // Dark red/burgundy for highlights (YouTube-like)
+  
   // Background gradient
   static LinearGradient backgroundGradient = const LinearGradient(
     begin: Alignment.topCenter,

@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/club_service.dart';
 import '../models/club.dart';
 import '../config/app_colors.dart';
-import 'my_club_screen.dart';
+import 'home_screen.dart';
 
 class ClubSelectionScreen extends StatefulWidget {
-  final String name;
-  final String email;
-  final String password;
   final String language;
 
   const ClubSelectionScreen({
     super.key,
-    required this.name,
-    required this.email,
-    required this.password,
     required this.language,
   });
 
@@ -25,12 +19,11 @@ class ClubSelectionScreen extends StatefulWidget {
 }
 
 class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
-  final _authService = AuthService();
   final _clubService = ClubService();
   List<Club> _clubs = [];
   String? _selectedClubId;
   bool _isLoading = true;
-  bool _isRegistering = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -47,97 +40,89 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
   }
 
   Future<void> _loadClubs() async {
-    print('🟢 ClubSelectionScreen: Starting to load clubs...');
     try {
-      // Try to fetch clubs without authentication first
-      // If the endpoint requires auth, this will fail and we'll handle it
-      print('🟢 ClubSelectionScreen: Calling club service...');
-      final clubs = await _clubService.getClubs();
-      print('🟢 ClubSelectionScreen: Received ${clubs.length} clubs');
+      final clubs = await _clubService.getClubsPublic();
       setState(() {
         _clubs = clubs;
         _isLoading = false;
       });
-      print('🟢 ClubSelectionScreen: State updated successfully');
     } catch (e) {
-      print('❌ ClubSelectionScreen: Error loading clubs = $e');
-      print('❌ ClubSelectionScreen: Error type = ${e.runtimeType}');
-      // If clubs endpoint requires auth, we need to register first without club
-      // then update the favorite club later, or make the endpoint public
+      print('Error loading clubs: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unable to load clubs: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
+            content: Text('Unable to load clubs. Please check your connection.'),
+            backgroundColor: AppColors.errorRed,
           ),
         );
       }
     }
   }
 
-  Future<void> _register() async {
-    if (_selectedClubId == null && _clubs.isNotEmpty) {
+  String _getTitle() {
+    final lang = widget.language;
+    if (lang == 'am') return 'የሚደግፉትን ክለብ ይምረጡ';
+    if (lang == 'om') return 'Kilaba deeggartan filadhaa';
+    return 'Select the club you support';
+  }
+
+  String _getSubtitle() {
+    final lang = widget.language;
+    if (lang == 'am') return 'የእርስዎን ተወዳጅ የእግር ኳስ ክለብ ይምረጡ';
+    if (lang == 'om') return 'Kilaba kubbaa miilaa jaallattu filadhaa';
+    return 'Choose your favorite football club';
+  }
+
+  String _getContinueButton() {
+    final lang = widget.language;
+    if (lang == 'am') return 'ቀጥል';
+    if (lang == 'om') return 'Itti fufi';
+    return 'Continue';
+  }
+
+  String _getSelectClubMessage() {
+    final lang = widget.language;
+    if (lang == 'am') return 'እባክዎ ክለብ ይምረጡ';
+    if (lang == 'om') return 'Maaloo kilaba filadhaa';
+    return 'Please select a club';
+  }
+
+  Future<void> _continue() async {
+    if (_selectedClubId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please select a favorite club'),
+          content: Text(_getSelectClubMessage()),
           backgroundColor: AppColors.warningYellow,
-          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
 
-    setState(() => _isRegistering = true);
+    setState(() => _isSaving = true);
 
     try {
-      await _authService.register(
-        name: widget.name,
-        email: widget.email,
-        password: widget.password,
-        language: widget.language,
-        favClubId: _selectedClubId ?? '',
-      );
-
-      // Auto login after registration
-      await _authService.login(widget.email, widget.password);
+      // Save preferences locally
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('language', widget.language);
+      await prefs.setString('favorite_club_id', _selectedClubId!);
+      await prefs.setBool('onboarding_complete', true);
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MyClubScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
-      
-      // Parse error message for user-friendly display
-      String errorMessage = 'Registration failed. Please try again.';
-      
-      if (e.toString().contains('Email already exists') || e.toString().contains('already registered')) {
-        errorMessage = 'This email is already registered. Please login instead.';
-      } else if (e.toString().contains('Invalid club')) {
-        errorMessage = 'Invalid club selection. Please try again.';
-      } else if (e.toString().contains('Network') || e.toString().contains('Connection')) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else if (e.toString().contains('timeout')) {
-        errorMessage = 'Connection timeout. Please try again.';
-      }
-      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage),
+          content: Text('Error saving preferences. Please try again.'),
           backgroundColor: AppColors.errorRed,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: 'Dismiss',
-            textColor: Colors.white,
-            onPressed: () {},
-          ),
         ),
       );
     } finally {
-      if (mounted) setState(() => _isRegistering = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -154,19 +139,15 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
                 const SizedBox(height: 40),
-                const Text(
-                  'Select Your Favorite Club',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                Text(
+                  _getTitle(),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Choose your favorite football club to get personalized content',
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                Text(
+                  _getSubtitle(),
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
                 ),
                 const SizedBox(height: 40),
                 Expanded(
@@ -262,15 +243,15 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                       borderRadius: BorderRadius.circular(28),
                     ),
                     child: ElevatedButton(
-                      onPressed: _isRegistering ? null : _register,
+                      onPressed: _isSaving ? null : _continue,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                       ),
-                      child: _isRegistering
+                      child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Complete Registration', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                          : Text(_getContinueButton(), style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),

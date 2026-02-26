@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'services/notification_service.dart';
 import 'screens/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  
+  // Initialize notifications
+  await NotificationService().initialize();
+  
   runApp(const FanZoneApp());
 }
 

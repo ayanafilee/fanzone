@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
-import 'login_screen.dart';
-import 'my_club_screen.dart';
+import 'language_selection_screen.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,12 +13,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final _authService = AuthService();
-
   @override
   void initState() {
     super.initState();
-    // Set status bar to light icons
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -26,22 +23,24 @@ class _SplashScreenState extends State<SplashScreen> {
         statusBarBrightness: Brightness.dark,
       ),
     );
-    _checkAuth();
+    _checkOnboarding();
   }
 
-  Future<void> _checkAuth() async {
+  Future<void> _checkOnboarding() async {
     await Future.delayed(const Duration(seconds: 2));
-    final token = await _authService.getAccessToken();
+    
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
     
     if (!mounted) return;
     
-    if (token != null) {
+    if (onboardingComplete) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MyClubScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
       );
     }
   }

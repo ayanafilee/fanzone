@@ -4,16 +4,7 @@ import '../config/app_colors.dart';
 import 'club_selection_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
-  final String name;
-  final String email;
-  final String password;
-
-  const LanguageSelectionScreen({
-    super.key,
-    required this.name,
-    required this.email,
-    required this.password,
-  });
+  const LanguageSelectionScreen({super.key});
 
   @override
   State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
@@ -41,6 +32,24 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     );
   }
 
+  String _getTitle() {
+    if (_selectedLanguage == 'am') return 'የእርስዎን ቋንቋ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Afaan keessan filadhaa';
+    return 'Select Your Language';
+  }
+
+  String _getSubtitle() {
+    if (_selectedLanguage == 'am') return 'በመተግበሪያው ውስጥ መጠቀም የሚፈልጉትን ቋንቋ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Afaan appii keessatti fayyadamuu barbaaddan filadhaa';
+    return 'Choose the language you want to use in the app';
+  }
+
+  String _getContinueButton() {
+    if (_selectedLanguage == 'am') return 'ቀጥል';
+    if (_selectedLanguage == 'om') return 'Itti fufi';
+    return 'Continue';
+  }
+
   void _continue() {
     if (_selectedLanguage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -49,15 +58,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       return;
     }
 
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => ClubSelectionScreen(
-          name: widget.name,
-          email: widget.email,
-          password: widget.password,
-          language: _selectedLanguage!,
-        ),
+        builder: (_) => ClubSelectionScreen(language: _selectedLanguage!),
       ),
     );
   }
@@ -75,19 +79,15 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
                 const SizedBox(height: 40),
-                const Text(
-                  'Select Your Preferred Language',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                Text(
+                  _getTitle(),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Choose the language you want to use in the app',
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                Text(
+                  _getSubtitle(),
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
                 ),
                 const SizedBox(height: 40),
                 Expanded(
@@ -148,7 +148,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                       ),
-                      child: const Text('Continue', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text(_getContinueButton(), style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),

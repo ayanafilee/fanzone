@@ -4,6 +4,26 @@ import '../config/constants.dart';
 import '../models/club.dart';
 
 class ClubService {
+  // Public method without authentication
+  Future<List<Club>> getClubsPublic() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/clubs'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => Club.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load clubs');
+      }
+    } catch (e) {
+      print('Error loading clubs: $e');
+      rethrow;
+    }
+  }
+
+  // Method with optional authentication
   Future<List<Club>> getClubs([String? token]) async {
     print('🔵 ClubService: Starting to fetch clubs...');
     print('🔵 ClubService: URL = ${AppConstants.baseUrl}/clubs');
