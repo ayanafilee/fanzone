@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/feed_item.dart';
@@ -18,13 +20,83 @@ class AllNewsTab extends StatefulWidget {
 class _AllNewsTabState extends State<AllNewsTab> {
   final _feedService = FeedService();
   List<FeedItem> _feedItems = [];
+  List<FeedItem> _filteredItems = [];
   bool _isLoading = true;
   String? _error;
+  String _filterType = 'all'; // 'all', 'news', 'highlight'
+  Set<String> _bookmarkedIds = {};
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _loadBookmarks();
     _loadFeed();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarks = prefs.getStringList('bookmarks') ?? [];
+    setState(() {
+      _bookmarkedIds = bookmarks.toSet();
+    });
+  }
+
+  Future<void> _toggleBookmark(String itemId) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (_bookmarkedIds.contains(itemId)) {
+        _bookmarkedIds.remove(itemId);
+      } else {
+        _bookmarkedIds.add(itemId);
+      }
+    });
+    await prefs.setStringList('bookmarks', _bookmarkedIds.toList());
+    
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _bookmarkedIds.contains(itemId)
+              ? (widget.user.language == 'am' ? 'ተቀምጧል' : widget.user.language == 'om' ? 'Kuufameera' : 'Bookmarked')
+              : (widget.user.language == 'am' ? 'ተወግዷል' : widget.user.language == 'om' ? 'Haqameera' : 'Removed'),
+        ),
+        duration: const Duration(seconds: 1),
+        backgroundColor: AppColors.accentGreen,
+      ),
+    );
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredItems = _feedItems.where((item) {
+        // Filter by type
+        if (_filterType != 'all' && item.type != _filterType) {
+          return false;
+        }
+        
+        // Filter by search query
+        if (_searchController.text.isNotEmpty) {
+          final query = _searchController.text.toLowerCase();
+          if (item.type == 'news' && item.news != null) {
+            final title = item.news!.getTitle(widget.user.language).toLowerCase();
+            final body = item.news!.getBody(widget.user.language).toLowerCase();
+            return title.contains(query) || body.contains(query);
+          } else if (item.type == 'highlight' && item.highlight != null) {
+            final title = item.highlight!.title.toLowerCase();
+            return title.contains(query);
+          }
+        }
+        
+        return true;
+      }).toList();
+    });
   }
 
   Future<void> _loadFeed() async {
@@ -37,8 +109,10 @@ class _AllNewsTabState extends State<AllNewsTab> {
       final items = await _feedService.getAllFeed();
       setState(() {
         _feedItems = items;
+        _filteredItems = items;
         _isLoading = false;
       });
+      _applyFilters();
     } catch (e) {
       print('Error loading all news: $e');
       setState(() {
@@ -93,68 +167,236 @@ class _AllNewsTabState extends State<AllNewsTab> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
-      child: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.buttonGreenEnd),
-            )
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        children: [
+          // Search and Filter Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.darkGreen.withOpacity(0.3),
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.inputBorder.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Search Bar
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.inputBorder.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                    cursorColor: Colors.white,
+                    decoration: InputDecoration(
+                      hintText: widget.user.language == 'am'
+                          ? 'ፈልግ...'
+                          : widget.user.language == 'om'
+                              ? 'Barbaadi...'
+                              : 'Search...',
+                      hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.7), fontSize: 15),
+                      prefixIcon: const Icon(Icons.search, color: Colors.white70, size: 22),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: Colors.white70, size: 20),
+                              onPressed: () {
+                                _searchController.clear();
+                                _applyFilters();
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    onChanged: (value) {
+                      _applyFilters();
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Filter Chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Failed to load news',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      _buildFilterChip(
+                        'all',
+                        widget.user.language == 'am'
+                            ? 'ሁሉም'
+                            : widget.user.language == 'om'
+                                ? 'Hunda'
+                                : 'All',
+                        Icons.grid_view,
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Please check your connection',
-                        style: TextStyle(color: AppColors.textGrey),
+                      const SizedBox(width: 10),
+                      _buildFilterChip(
+                        'news',
+                        widget.user.language == 'am'
+                            ? 'ዜና'
+                            : widget.user.language == 'om'
+                                ? 'Oduu'
+                                : 'News',
+                        Icons.article,
                       ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _loadFeed,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentGreen,
-                        ),
-                        child: const Text('Retry'),
+                      const SizedBox(width: 10),
+                      _buildFilterChip(
+                        'highlight',
+                        widget.user.language == 'am'
+                            ? 'ቪዲዮ'
+                            : widget.user.language == 'om'
+                                ? 'Viidiyoo'
+                                : 'Videos',
+                        Icons.play_circle,
                       ),
                     ],
                   ),
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonGreenEnd),
+                  )
+                : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Failed to load news',
+                              style: TextStyle(color: Colors.white, fontSize: 18),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Please check your connection',
+                              style: TextStyle(color: AppColors.textGrey),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: _loadFeed,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accentGreen,
+                              ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _filteredItems.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.search_off, size: 64, color: AppColors.textGrey),
+                                const SizedBox(height: 16),
+                                Text(
+                                  widget.user.language == 'am'
+                                      ? 'ምንም አልተገኘም'
+                                      : widget.user.language == 'om'
+                                          ? 'Homaa hin argamne'
+                                          : 'No results found',
+                                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  widget.user.language == 'am'
+                                      ? 'ሌላ ፍለጋ ይሞክሩ'
+                                      : widget.user.language == 'om'
+                                          ? 'Barbaadii biraa yaali'
+                                          : 'Try a different search',
+                                  style: const TextStyle(color: AppColors.textGrey),
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadFeed,
+                            color: AppColors.buttonGreenEnd,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _filteredItems.length,
+                              itemBuilder: (context, index) {
+                                final item = _filteredItems[index];
+                                return _buildFeedCard(item);
+                              },
+                            ),
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String type, String label, IconData icon) {
+    final isSelected = _filterType == type;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _filterType = type;
+        });
+        _applyFilters();
+      },
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [AppColors.accentGreen, AppColors.buttonGreenEnd.withOpacity(0.8)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 )
-              : _feedItems.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.article, size: 64, color: AppColors.textGrey),
-                          const SizedBox(height: 16),
-                          Text(
-                            _getEmptyMessage(),
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _getEmptySubtitle(),
-                            style: const TextStyle(color: AppColors.textGrey),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadFeed,
-                      color: AppColors.buttonGreenEnd,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _feedItems.length,
-                        itemBuilder: (context, index) {
-                          final item = _feedItems[index];
-                          return _buildFeedCard(item);
-                        },
-                      ),
-                    ),
+              : null,
+          color: isSelected ? null : AppColors.inputBackground.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppColors.buttonGreenEnd : AppColors.inputBorder.withOpacity(0.4),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.buttonGreenEnd.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : Colors.white70,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -170,6 +412,8 @@ class _AllNewsTabState extends State<AllNewsTab> {
   Widget _buildNewsCard(news) {
     final title = news.getTitle(widget.user.language);
     final body = news.getBody(widget.user.language);
+    final itemId = 'news_${news.id}';
+    final isBookmarked = _bookmarkedIds.contains(itemId);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -215,7 +459,7 @@ class _AllNewsTabState extends State<AllNewsTab> {
                         ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     const Icon(Icons.public, size: 14, color: AppColors.textGrey),
                     const SizedBox(width: 4),
                     Text(
@@ -227,6 +471,47 @@ class _AllNewsTabState extends State<AllNewsTab> {
                       style: const TextStyle(
                         color: AppColors.textGrey,
                         fontSize: 10,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Bookmark button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isBookmarked 
+                            ? AppColors.buttonGreenEnd.withOpacity(0.2) 
+                            : AppColors.inputBackground.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                          color: isBookmarked ? AppColors.buttonGreenEnd : Colors.white,
+                          size: 22,
+                        ),
+                        onPressed: () => _toggleBookmark(itemId),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                        tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Share button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.inputBackground.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.share, color: Colors.white, size: 22),
+                        onPressed: () {
+                          Share.share(
+                            '$title\n\n$body\n\nShared from FanZone',
+                            subject: title,
+                          );
+                        },
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Share',
                       ),
                     ),
                   ],
@@ -265,6 +550,8 @@ class _AllNewsTabState extends State<AllNewsTab> {
     final thumbnailUrl = videoId != null
         ? 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg'
         : '';
+    final itemId = 'highlight_${highlight.id}';
+    final isBookmarked = _bookmarkedIds.contains(itemId);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -352,21 +639,69 @@ class _AllNewsTabState extends State<AllNewsTab> {
                 ),
               ],
             ),
-            // Title and timestamp
+            // Title, actions, and timestamp
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    highlight.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          highlight.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Bookmark button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isBookmarked 
+                              ? AppColors.buttonGreenEnd.withOpacity(0.2) 
+                              : AppColors.inputBackground.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                            color: isBookmarked ? AppColors.buttonGreenEnd : Colors.white,
+                            size: 22,
+                          ),
+                          onPressed: () => _toggleBookmark(itemId),
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Share button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.share, color: Colors.white, size: 22),
+                          onPressed: () {
+                            Share.share(
+                              '${highlight.title}\n\nWatch: ${highlight.videoUrl}\n\nShared from FanZone',
+                              subject: highlight.title,
+                            );
+                          },
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Share',
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Row(
