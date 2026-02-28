@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -221,6 +222,27 @@ func (h *Handler) AdminAddContent(c *gin.Context) {
 	}
 
 	h.logActivity(c, "Added Content", "content", content.ID.Hex())
+
+	// Send push notification if club is specified
+	if !clubObjID.IsZero() && h.FCM != nil {
+		club, err := h.Repo.FindClubByID(ctx, clubObjID)
+		if err == nil {
+			// Send notification in background
+			go func() {
+				err := h.FCM.NotifyNewContent(
+					clubObjID.Hex(),
+					club.Name,
+					input.Title.EN, // Use English title for notification
+					content.ID.Hex(),
+					"news",
+				)
+				if err != nil {
+					log.Printf("Failed to send notification: %v", err)
+				}
+			}()
+		}
+	}
+
 	c.JSON(http.StatusCreated, content)
 }
 
@@ -294,6 +316,32 @@ func (h *Handler) AdminAddHighlight(c *gin.Context) {
 	}
 
 	h.logActivity(c, "Added Highlight", "highlight", highlight.MatchTitle)
+
+	// Send push notification for highlight
+	if len(clubObjIDs) > 0 && h.FCM != nil {
+		// Get club names
+		var clubNames []string
+		for _, clubID := range clubObjIDs {
+			club, err := h.Repo.FindClubByID(ctx, clubID)
+			if err == nil {
+				clubNames = append(clubNames, club.Name)
+			}
+		}
+
+		// Send notification in background
+		go func() {
+			err := h.FCM.NotifyNewHighlight(
+				input.ClubIDs,
+				clubNames,
+				input.MatchTitle,
+				highlight.ID.Hex(),
+			)
+			if err != nil {
+				log.Printf("Failed to send highlight notification: %v", err)
+			}
+		}()
+	}
+
 	c.JSON(http.StatusCreated, highlight)
 }
 

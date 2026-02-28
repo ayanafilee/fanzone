@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/feed_item.dart';
@@ -18,13 +20,72 @@ class HighlightsTab extends StatefulWidget {
 class _HighlightsTabState extends State<HighlightsTab> {
   final _feedService = FeedService();
   List<FeedItem> _highlights = [];
+  List<FeedItem> _filteredHighlights = [];
   bool _isLoading = true;
   String? _error;
+  Set<String> _bookmarkedIds = {};
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _loadBookmarks();
     _loadHighlights();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarks = prefs.getStringList('bookmarks') ?? [];
+    setState(() {
+      _bookmarkedIds = bookmarks.toSet();
+    });
+  }
+
+  Future<void> _toggleBookmark(String itemId) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (_bookmarkedIds.contains(itemId)) {
+        _bookmarkedIds.remove(itemId);
+      } else {
+        _bookmarkedIds.add(itemId);
+      }
+    });
+    await prefs.setStringList('bookmarks', _bookmarkedIds.toList());
+    
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _bookmarkedIds.contains(itemId)
+              ? (widget.user.language == 'am' ? 'ተቀምጧል' : widget.user.language == 'om' ? 'Kuufameera' : 'Bookmarked')
+              : (widget.user.language == 'am' ? 'ተወግዷል' : widget.user.language == 'om' ? 'Haqameera' : 'Removed'),
+        ),
+        duration: const Duration(seconds: 1),
+        backgroundColor: AppColors.accentGreen,
+      ),
+    );
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredHighlights = _highlights.where((item) {
+        // Filter by search query
+        if (_searchController.text.isNotEmpty) {
+          final query = _searchController.text.toLowerCase();
+          if (item.highlight != null) {
+            final title = item.highlight!.title.toLowerCase();
+            return title.contains(query);
+          }
+        }
+        return true;
+      }).toList();
+    });
   }
 
   Future<void> _loadHighlights() async {
@@ -40,8 +101,10 @@ class _HighlightsTabState extends State<HighlightsTab> {
       
       setState(() {
         _highlights = highlights;
+        _filteredHighlights = highlights;
         _isLoading = false;
       });
+      _applyFilters();
     } catch (e) {
       print('Error loading highlights: $e');
       setState(() {
@@ -96,77 +159,143 @@ class _HighlightsTabState extends State<HighlightsTab> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
-      child: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.buttonGreenEnd),
-            )
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Failed to load highlights',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Please check your connection',
-                        style: TextStyle(color: AppColors.textGrey),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _loadHighlights,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentGreen,
+      child: Column(
+        children: [
+          // Search Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.darkGreen.withOpacity(0.3),
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.inputBorder.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.inputBackground.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.inputBorder.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+                cursorColor: Colors.white,
+                decoration: InputDecoration(
+                  hintText: widget.user.language == 'am'
+                      ? 'ቪዲዮ ፈልግ...'
+                      : widget.user.language == 'om'
+                          ? 'Viidiyoo barbaadi...'
+                          : 'Search videos...',
+                  hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.7), fontSize: 15),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white70, size: 22),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.white70, size: 20),
+                          onPressed: () {
+                            _searchController.clear();
+                            _applyFilters();
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                onChanged: (value) {
+                  _applyFilters();
+                },
+              ),
+            ),
+          ),
+          // Content
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.buttonGreenEnd),
+                  )
+                : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Failed to load highlights',
+                              style: TextStyle(color: Colors.white, fontSize: 18),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Please check your connection',
+                              style: TextStyle(color: AppColors.textGrey),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: _loadHighlights,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accentGreen,
+                              ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
                         ),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : _highlights.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.play_circle_outline, size: 80, color: AppColors.textGrey),
-                          const SizedBox(height: 16),
-                          Text(
-                            _getEmptyMessage(),
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
+                      )
+                    : _filteredHighlights.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.search_off, size: 64, color: AppColors.textGrey),
+                                const SizedBox(height: 16),
+                                Text(
+                                  widget.user.language == 'am'
+                                      ? 'ምንም አልተገኘም'
+                                      : widget.user.language == 'om'
+                                          ? 'Homaa hin argamne'
+                                          : 'No results found',
+                                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  widget.user.language == 'am'
+                                      ? 'ሌላ ፍለጋ ይሞክሩ'
+                                      : widget.user.language == 'om'
+                                          ? 'Barbaadii biraa yaali'
+                                          : 'Try a different search',
+                                  style: const TextStyle(color: AppColors.textGrey),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadHighlights,
+                            color: AppColors.buttonGreenEnd,
+                            child: GridView.builder(
+                              padding: const EdgeInsets.all(16),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 1,
+                                childAspectRatio: 16 / 12,
+                                mainAxisSpacing: 16,
+                              ),
+                              itemCount: _filteredHighlights.length,
+                              itemBuilder: (context, index) {
+                                final item = _filteredHighlights[index];
+                                if (item.highlight != null) {
+                                  return _buildHighlightCard(item.highlight!);
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _getEmptySubtitle(),
-                            style: const TextStyle(color: AppColors.textGrey),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadHighlights,
-                      color: AppColors.buttonGreenEnd,
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 1,
-                          childAspectRatio: 16 / 12,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: _highlights.length,
-                        itemBuilder: (context, index) {
-                          final item = _highlights[index];
-                          if (item.highlight != null) {
-                            return _buildHighlightCard(item.highlight!);
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -175,6 +304,8 @@ class _HighlightsTabState extends State<HighlightsTab> {
     final thumbnailUrl = videoId != null
         ? 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg'
         : '';
+    final itemId = 'highlight_${highlight.id}';
+    final isBookmarked = _bookmarkedIds.contains(itemId);
 
     return Card(
       color: AppColors.highlightCardBackground,
@@ -236,7 +367,7 @@ class _HighlightsTabState extends State<HighlightsTab> {
                       ),
                     ),
                   ),
-                  // Duration badge (optional - can be added if available)
+                  // Duration badge
                   Positioned(
                     bottom: 12,
                     right: 12,
@@ -266,21 +397,69 @@ class _HighlightsTabState extends State<HighlightsTab> {
                 ],
               ),
             ),
-            // Title and info
+            // Title, actions, and info
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    highlight.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          highlight.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Bookmark button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isBookmarked 
+                              ? AppColors.buttonGreenEnd.withOpacity(0.2) 
+                              : AppColors.inputBackground.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                            color: isBookmarked ? AppColors.buttonGreenEnd : Colors.white,
+                            size: 22,
+                          ),
+                          onPressed: () => _toggleBookmark(itemId),
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Share button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.share, color: Colors.white, size: 22),
+                          onPressed: () {
+                            Share.share(
+                              '${highlight.title}\n\nWatch: ${highlight.videoUrl}\n\nShared from FanZone',
+                              subject: highlight.title,
+                            );
+                          },
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Share',
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Row(

@@ -9,6 +9,7 @@ import (
 	"fanzone/internal/db"
 	"fanzone/internal/handlers"
 	"fanzone/internal/middleware"
+	"fanzone/internal/notification"
 	"fanzone/internal/repository"
 	"fanzone/pkg/worker"
 )
@@ -30,10 +31,19 @@ func main() {
 	w.Start(3)
 	defer w.Stop()
 
-	// 5. Initialize Handlers
-	h := handlers.NewHandler(repo, cfg, w)
+	// 5. Initialize Firebase Cloud Messaging
+	fcm, err := notification.NewFCMService()
+	if err != nil {
+		log.Printf("Warning: Failed to initialize FCM: %v", err)
+		log.Println("Push notifications will be disabled")
+	} else {
+		log.Println("Push notifications enabled")
+	}
 
-	// 6. Setup Router
+	// 6. Initialize Handlers
+	h := handlers.NewHandler(repo, cfg, w, fcm)
+
+	// 7. Setup Router
 	r := gin.Default()
 
 	// CORS Middleware
@@ -149,7 +159,7 @@ func main() {
 		superAdminGroup.GET("/admins", h.GetAllAdmins)
 	}
 
-	// 7. Start Server
+	// 8. Start Server
 	log.Printf("Server starting on port %s", cfg.Port)
 	r.Run(":" + cfg.Port)
 }
