@@ -1,0 +1,588 @@
+================================================================================
+                    NOTIFICATION ACTION BUTTONS GUIDE
+================================================================================
+
+OVERVIEW:
+The backend now sends action button metadata in the notification payload.
+The mobile app needs to implement these actions to show buttons on notifications.
+
+================================================================================
+                         ACTION BUTTONS CONFIGURATION
+================================================================================
+
+HIGHLIGHT NOTIFICATIONS
+-----------------------
+Left Button: "Watch"
+Right Button: "Dismiss"
+
+When user taps "Watch":
+- Open the app
+- Navigate to highlight detail screen
+- Play the video
+
+When user taps "Dismiss":
+- Dismiss the notification
+- No further action
+
+
+NEWS NOTIFICATIONS
+------------------
+Left Button: "Read"
+Right Button: "Dismiss"
+
+When user taps "Read":
+- Open the app
+- Navigate to news detail screen
+- Show the article
+
+When user taps "Dismiss":
+- Dismiss the notification
+- No further action
+
+================================================================================
+                         NOTIFICATION PAYLOAD
+================================================================================
+
+HIGHLIGHT NOTIFICATION WITH ACTIONS
+------------------------------------
+{
+  "notification": {
+    "title": "New Match Highlight",
+    "body": "NEWCASTLE 2-3 EVERTON | Premier League highlights"
+  },
+  "android": {
+    "notification": {
+      "image_url": "https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg",
+      "click_action": "FLUTTER_NOTIFICATION_CLICK"
+    }
+  },
+  "data": {
+    "type": "highlight",
+    "highlight_id": "507f1f77bcf86cd799439013",
+    "club_id": "507f1f77bcf86cd799439011",
+    "club_name": "Newcastle United",
+    "match_title": "NEWCASTLE 2-3 EVERTON | Premier League highlights",
+    "video_url": "https://youtube.com/watch?v=VIDEO_ID",
+    "image_url": "https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg",
+    "action_left": "watch",
+    "action_left_label": "Watch",
+    "action_right": "dismiss",
+    "action_right_label": "Dismiss"
+  }
+}
+
+
+NEWS NOTIFICATION WITH ACTIONS
+-------------------------------
+{
+  "notification": {
+    "title": "New news from Arsenal FC",
+    "body": "Big Win Today"
+  },
+  "android": {
+    "notification": {
+      "image_url": "https://example.com/news-image.jpg",
+      "click_action": "FLUTTER_NOTIFICATION_CLICK"
+    }
+  },
+  "data": {
+    "type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "club_id": "507f1f77bcf86cd799439011",
+    "club_name": "Arsenal FC",
+    "title": "Big Win Today",
+    "image_url": "https://example.com/news-image.jpg",
+    "action_left": "read",
+    "action_left_label": "Read",
+    "action_right": "dismiss",
+    "action_right_label": "Dismiss"
+  }
+}
+
+================================================================================
+                         DATA PAYLOAD FIELDS
+================================================================================
+
+ACTION FIELDS
+-------------
+action_left: "watch" or "read"
+  - Identifier for the left action button
+  - Used by mobile app to determine action
+
+action_left_label: "Watch" or "Read"
+  - Display text for the left button
+  - Shown to user on notification
+
+action_right: "dismiss"
+  - Identifier for the right action button
+  - Always "dismiss" for now
+
+action_right_label: "Dismiss"
+  - Display text for the right button
+  - Shown to user on notification
+
+
+ANDROID CONFIG FIELDS
+----------------------
+click_action: "FLUTTER_NOTIFICATION_CLICK"
+  - Required for Flutter apps
+  - Tells Android to route notification to app
+  - Enables custom action handling
+
+image_url: "https://..."
+  - URL to notification image
+  - Shows large preview in notification
+
+================================================================================
+                         MOBILE APP IMPLEMENTATION
+================================================================================
+
+FLUTTER EXAMPLE (flutter_local_notifications)
+----------------------------------------------
+
+1. SETUP NOTIFICATION ACTIONS
+```dart
+// Define notification actions
+const AndroidNotificationAction watchAction = AndroidNotificationAction(
+  'watch',
+  'Watch',
+  icon: DrawableResourceAndroidBitmap('ic_play'),
+);
+
+const AndroidNotificationAction readAction = AndroidNotificationAction(
+  'read',
+  'Read',
+  icon: DrawableResourceAndroidBitmap('ic_read'),
+);
+
+const AndroidNotificationAction dismissAction = AndroidNotificationAction(
+  'dismiss',
+  'Dismiss',
+  icon: DrawableResourceAndroidBitmap('ic_close'),
+  cancelNotification: true,
+);
+
+// Create notification channel with actions
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'fanzone_notifications',
+  'FanZone Notifications',
+  description: 'Notifications for news and highlights',
+  importance: Importance.high,
+  actions: <AndroidNotificationAction>[
+    watchAction,
+    readAction,
+    dismissAction,
+  ],
+);
+```
+
+2. SHOW NOTIFICATION WITH ACTIONS
+```dart
+Future<void> showNotificationWithActions(RemoteMessage message) async {
+  final data = message.data;
+  final type = data['type'];
+  final imageUrl = data['image_url'];
+  
+  // Determine which actions to show
+  List<AndroidNotificationAction> actions = [];
+  
+  if (type == 'highlight') {
+    actions = [watchAction, dismissAction];
+  } else if (type == 'news') {
+    actions = [readAction, dismissAction];
+  }
+  
+  // Download image
+  final imagePath = await downloadImage(imageUrl);
+  
+  // Show notification
+  await flutterLocalNotificationsPlugin.show(
+    message.hashCode,
+    message.notification?.title,
+    message.notification?.body,
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        'fanzone_notifications',
+        'FanZone Notifications',
+        channelDescription: 'Notifications for news and highlights',
+        importance: Importance.high,
+        priority: Priority.high,
+        styleInformation: BigPictureStyleInformation(
+          FilePathAndroidBitmap(imagePath),
+          contentTitle: message.notification?.title,
+          summaryText: message.notification?.body,
+        ),
+        actions: actions,
+      ),
+    ),
+    payload: jsonEncode(data),
+  );
+}
+```
+
+3. HANDLE ACTION BUTTON TAPS
+```dart
+// Initialize notification plugin with action handler
+final InitializationSettings initializationSettings = InitializationSettings(
+  android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+);
+
+await flutterLocalNotificationsPlugin.initialize(
+  initializationSettings,
+  onDidReceiveNotificationResponse: (NotificationResponse response) {
+    final action = response.actionId;
+    final payload = response.payload;
+    
+    if (payload != null) {
+      final data = jsonDecode(payload);
+      
+      if (action == 'watch') {
+        // Navigate to highlight detail
+        navigateToHighlight(data['highlight_id']);
+      } else if (action == 'read') {
+        // Navigate to news detail
+        navigateToNews(data['content_id']);
+      } else if (action == 'dismiss') {
+        // Just dismiss (handled automatically)
+      } else {
+        // Notification body tapped (no action button)
+        handleNotificationTap(data);
+      }
+    }
+  },
+);
+```
+
+4. NAVIGATION HELPERS
+```dart
+void navigateToHighlight(String highlightId) {
+  // Navigate to highlight detail screen
+  Navigator.pushNamed(
+    context,
+    '/highlight-detail',
+    arguments: {'id': highlightId},
+  );
+}
+
+void navigateToNews(String contentId) {
+  // Navigate to news detail screen
+  Navigator.pushNamed(
+    context,
+    '/news-detail',
+    arguments: {'id': contentId},
+  );
+}
+
+void handleNotificationTap(Map<String, dynamic> data) {
+  final type = data['type'];
+  
+  if (type == 'highlight') {
+    navigateToHighlight(data['highlight_id']);
+  } else if (type == 'news') {
+    navigateToNews(data['content_id']);
+  }
+}
+```
+
+================================================================================
+                         REACT NATIVE EXAMPLE
+================================================================================
+
+1. SETUP NOTIFICATION ACTIONS
+```javascript
+import notifee, { AndroidImportance } from '@notifee/react-native';
+
+// Create notification channel with actions
+await notifee.createChannel({
+  id: 'fanzone_notifications',
+  name: 'FanZone Notifications',
+  importance: AndroidImportance.HIGH,
+});
+
+// Define actions
+const watchAction = {
+  title: 'Watch',
+  pressAction: { id: 'watch' },
+};
+
+const readAction = {
+  title: 'Read',
+  pressAction: { id: 'read' },
+};
+
+const dismissAction = {
+  title: 'Dismiss',
+  pressAction: { id: 'dismiss' },
+};
+```
+
+2. SHOW NOTIFICATION WITH ACTIONS
+```javascript
+async function showNotificationWithActions(remoteMessage) {
+  const { data, notification } = remoteMessage;
+  const type = data.type;
+  const imageUrl = data.image_url;
+  
+  // Determine actions based on type
+  const actions = type === 'highlight' 
+    ? [watchAction, dismissAction]
+    : [readAction, dismissAction];
+  
+  // Show notification
+  await notifee.displayNotification({
+    title: notification.title,
+    body: notification.body,
+    data: data,
+    android: {
+      channelId: 'fanzone_notifications',
+      largeIcon: imageUrl,
+      style: {
+        type: AndroidStyle.BIGPICTURE,
+        picture: imageUrl,
+      },
+      actions: actions,
+      pressAction: {
+        id: 'default',
+      },
+    },
+  });
+}
+```
+
+3. HANDLE ACTION BUTTON TAPS
+```javascript
+import { useEffect } from 'react';
+import notifee, { EventType } from '@notifee/react-native';
+
+useEffect(() => {
+  return notifee.onForegroundEvent(({ type, detail }) => {
+    if (type === EventType.ACTION_PRESS) {
+      const { pressAction, notification } = detail;
+      const data = notification.data;
+      
+      if (pressAction.id === 'watch') {
+        // Navigate to highlight
+        navigation.navigate('HighlightDetail', {
+          id: data.highlight_id,
+        });
+      } else if (pressAction.id === 'read') {
+        // Navigate to news
+        navigation.navigate('NewsDetail', {
+          id: data.content_id,
+        });
+      } else if (pressAction.id === 'dismiss') {
+        // Just dismiss
+        notifee.cancelNotification(notification.id);
+      }
+    }
+  });
+}, []);
+```
+
+================================================================================
+                         BACKEND LOGGING
+================================================================================
+
+When notification is sent, you'll see:
+
+For Highlights:
+🎬 [FCM SEND] Adding 'Watch' and 'Dismiss' actions for highlight
+📝 [FCM SEND] Data: map[action_left:watch action_left_label:Watch action_right:dismiss action_right_label:Dismiss ...]
+
+For News:
+📰 [FCM SEND] Adding 'Read' and 'Dismiss' actions for news
+📝 [FCM SEND] Data: map[action_left:read action_left_label:Read action_right:dismiss action_right_label:Dismiss ...]
+
+================================================================================
+                         TESTING
+================================================================================
+
+TEST 1: Create Highlight and Check Actions
+-------------------------------------------
+1. Create highlight via admin panel
+2. Check server logs for:
+   🎬 [FCM SEND] Adding 'Watch' and 'Dismiss' actions for highlight
+
+3. Check mobile device notification
+4. Swipe down to expand notification
+5. Should see two buttons: "Watch" (left) and "Dismiss" (right)
+6. Tap "Watch" - should open app to highlight
+7. Tap "Dismiss" - should dismiss notification
+
+
+TEST 2: Create News and Check Actions
+--------------------------------------
+1. Create news via admin panel
+2. Check server logs for:
+   📰 [FCM SEND] Adding 'Read' and 'Dismiss' actions for news
+
+3. Check mobile device notification
+4. Swipe down to expand notification
+5. Should see two buttons: "Read" (left) and "Dismiss" (right)
+6. Tap "Read" - should open app to news article
+7. Tap "Dismiss" - should dismiss notification
+
+
+TEST 3: Verify Data Payload
+----------------------------
+In mobile app, log the notification data:
+console.log('Notification data:', message.data);
+
+Should see:
+{
+  type: 'highlight',
+  action_left: 'watch',
+  action_left_label: 'Watch',
+  action_right: 'dismiss',
+  action_right_label: 'Dismiss',
+  ...
+}
+
+================================================================================
+                         TROUBLESHOOTING
+================================================================================
+
+ISSUE: Action buttons not showing
+----------------------------------
+Solutions:
+1. Ensure mobile app implements action buttons
+2. Check notification channel has actions configured
+3. Verify Android version supports actions (Android 4.1+)
+4. Check notification is expanded (swipe down)
+
+
+ISSUE: Action buttons show but don't work
+------------------------------------------
+Solutions:
+1. Verify action handler is registered
+2. Check action IDs match (watch, read, dismiss)
+3. Ensure navigation is properly configured
+4. Check logs for action press events
+
+
+ISSUE: Wrong actions showing
+-----------------------------
+Solutions:
+1. Check notification type in data payload
+2. Verify backend sends correct action_left value
+3. Check mobile app action logic
+4. Review server logs for action configuration
+
+================================================================================
+                         CUSTOMIZATION
+================================================================================
+
+CHANGE BUTTON LABELS
+---------------------
+In mobile app, you can customize button labels:
+
+```dart
+const AndroidNotificationAction watchAction = AndroidNotificationAction(
+  'watch',
+  'Ver Ahora',  // Spanish
+  icon: DrawableResourceAndroidBitmap('ic_play'),
+);
+```
+
+Or use labels from backend:
+```dart
+final leftLabel = data['action_left_label'] ?? 'Watch';
+final rightLabel = data['action_right_label'] ?? 'Dismiss';
+```
+
+
+ADD MORE ACTIONS
+----------------
+You can add a third action (middle button):
+
+Backend:
+```go
+data["action_middle"] = "save"
+data["action_middle_label"] = "Save for Later"
+```
+
+Mobile:
+```dart
+const AndroidNotificationAction saveAction = AndroidNotificationAction(
+  'save',
+  'Save for Later',
+  icon: DrawableResourceAndroidBitmap('ic_bookmark'),
+);
+```
+
+
+CHANGE BUTTON ICONS
+--------------------
+Add custom icons in mobile app:
+
+Android: Place icons in android/app/src/main/res/drawable/
+iOS: Add to Assets.xcassets
+
+```dart
+const AndroidNotificationAction watchAction = AndroidNotificationAction(
+  'watch',
+  'Watch',
+  icon: DrawableResourceAndroidBitmap('ic_play_custom'),
+);
+```
+
+================================================================================
+                         BEST PRACTICES
+================================================================================
+
+1. KEEP ACTIONS SIMPLE
+   - Maximum 3 actions per notification
+   - Use clear, concise labels
+   - Make primary action most prominent
+
+2. CONSISTENT BEHAVIOR
+   - Watch/Read should always open content
+   - Dismiss should always close notification
+   - Don't surprise users with unexpected actions
+
+3. HANDLE OFFLINE
+   - Check network before opening content
+   - Show error if content unavailable
+   - Cache content for offline viewing
+
+4. TRACK ANALYTICS
+   - Log which actions users tap
+   - Measure engagement rates
+   - Optimize based on user behavior
+
+5. TEST THOROUGHLY
+   - Test on different Android versions
+   - Test with app in foreground/background
+   - Test with different notification states
+
+================================================================================
+                         SUMMARY
+================================================================================
+
+BACKEND CHANGES
+---------------
+✅ Automatically adds action metadata to notifications
+✅ Different actions for highlights vs news
+✅ Includes action IDs and labels in data payload
+✅ Logs action configuration for debugging
+
+MOBILE APP NEEDS TO
+--------------------
+⚠️  Implement notification action buttons
+⚠️  Handle action button taps
+⚠️  Navigate to appropriate screens
+⚠️  Show buttons in notification UI
+
+ACTIONS CONFIGURED
+------------------
+Highlights: Watch (left) + Dismiss (right)
+News: Read (left) + Dismiss (right)
+
+================================================================================
+
+For more information:
+- See RICH_NOTIFICATIONS_GUIDE.txt for image configuration
+- See NOTIFICATION_DEBUG_GUIDE.txt for debugging
+- See PUSH_NOTIFICATIONS_DOCUMENTATION.txt for setup
+
+================================================================================

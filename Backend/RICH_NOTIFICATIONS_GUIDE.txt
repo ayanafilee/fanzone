@@ -1,0 +1,489 @@
+================================================================================
+                    RICH NOTIFICATIONS IMPLEMENTATION GUIDE
+================================================================================
+
+OVERVIEW:
+The backend now supports YouTube-style rich notifications with:
+- Large preview images (expandable)
+- YouTube thumbnail auto-generation
+- Android-specific image configuration
+- Enhanced data payload for mobile app
+
+================================================================================
+                         WHAT WAS IMPLEMENTED
+================================================================================
+
+1. AUTOMATIC YOUTUBE THUMBNAIL GENERATION
+   - Extracts video ID from YouTube URLs
+   - Generates high-quality thumbnail URLs
+   - Supports multiple YouTube URL formats
+
+2. ANDROID-SPECIFIC IMAGE CONFIGURATION
+   - Adds image to notification.android.image
+   - Enables system-level rich notifications
+   - Works in background/terminated states
+
+3. ENHANCED DATA PAYLOAD
+   - Includes image_url in data
+   - Includes video_url for highlights
+   - Includes title for news
+
+4. DETAILED LOGGING
+   - Logs image URLs being sent
+   - Logs thumbnail generation
+   - Helps debug notification issues
+
+================================================================================
+                         NOTIFICATION FORMATS
+================================================================================
+
+NEWS NOTIFICATION
+-----------------
+When admin creates news content, the notification includes:
+
+Notification Object:
+{
+  "title": "New news from Arsenal FC",
+  "body": "Big Win Today"
+}
+
+Android Config:
+{
+  "notification": {
+    "image_url": "https://example.com/news-image.jpg"
+  }
+}
+
+Data Payload:
+{
+  "type": "news",
+  "content_id": "507f1f77bcf86cd799439012",
+  "club_id": "507f1f77bcf86cd799439011",
+  "club_name": "Arsenal FC",
+  "title": "Big Win Today",
+  "image_url": "https://example.com/news-image.jpg"
+}
+
+
+HIGHLIGHT NOTIFICATION
+----------------------
+When admin creates highlight, the notification includes:
+
+Notification Object:
+{
+  "title": "New Match Highlight",
+  "body": "NEWCASTLE 2-3 EVERTON | Premier League highlights"
+}
+
+Android Config:
+{
+  "notification": {
+    "image_url": "https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg"
+  }
+}
+
+Data Payload:
+{
+  "type": "highlight",
+  "highlight_id": "507f1f77bcf86cd799439013",
+  "club_id": "507f1f77bcf86cd799439011",
+  "club_name": "Newcastle United",
+  "match_title": "NEWCASTLE 2-3 EVERTON | Premier League highlights",
+  "video_url": "https://youtube.com/watch?v=VIDEO_ID",
+  "image_url": "https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg"
+}
+
+================================================================================
+                         YOUTUBE THUMBNAIL GENERATION
+================================================================================
+
+SUPPORTED URL FORMATS
+---------------------
+The system automatically extracts video ID from:
+
+1. Standard watch URL:
+   https://youtube.com/watch?v=dQw4w9WgXcQ
+   → Video ID: dQw4w9WgXcQ
+
+2. Short URL:
+   https://youtu.be/dQw4w9WgXcQ
+   → Video ID: dQw4w9WgXcQ
+
+3. Embed URL:
+   https://youtube.com/embed/dQw4w9WgXcQ
+   → Video ID: dQw4w9WgXcQ
+
+4. Direct video URL:
+   https://youtube.com/v/dQw4w9WgXcQ
+   → Video ID: dQw4w9WgXcQ
+
+
+THUMBNAIL QUALITY
+-----------------
+Generated thumbnail URL format:
+https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg
+
+Quality: 1280x720 (16:9 aspect ratio)
+Format: JPG
+Size: ~100-300KB
+
+Alternative qualities available:
+- hqdefault.jpg (480x360)
+- sddefault.jpg (640x480)
+- mqdefault.jpg (320x180)
+
+================================================================================
+                         HOW IT WORKS
+================================================================================
+
+WHEN ADMIN CREATES NEWS
+------------------------
+1. Admin creates content via POST /api/admin/content
+2. Request includes:
+   - title (multilingual)
+   - body (multilingual)
+   - image_url (news image)
+   - club_id
+
+3. Backend processes:
+   - Saves content to database
+   - Logs notification trigger
+   - Finds club information
+   - Starts background goroutine
+
+4. Notification sent with:
+   - Title: "New news from {club_name}"
+   - Body: {title in English}
+   - Android image: {image_url}
+   - Data includes: image_url, title, club info
+
+5. Mobile app receives:
+   - Foreground: Custom notification with image
+   - Background: System notification with image
+   - Action buttons: Read, Read Later, Turn Off
+
+
+WHEN ADMIN CREATES HIGHLIGHT
+-----------------------------
+1. Admin creates highlight via POST /api/admin/highlights
+2. Request includes:
+   - match_title
+   - youtube_url
+   - club_ids (array)
+
+3. Backend processes:
+   - Saves highlight to database
+   - Extracts YouTube video ID
+   - Generates thumbnail URL
+   - Logs thumbnail generation
+   - Finds club information for each club
+   - Starts background goroutine
+
+4. For each club:
+   - Sends notification to club topic
+   - Title: "New Match Highlight"
+   - Body: {match_title}
+   - Android image: {youtube_thumbnail}
+   - Data includes: video_url, image_url, match_title
+
+5. Mobile app receives:
+   - Foreground: Custom notification with YouTube thumbnail
+   - Background: System notification with thumbnail
+   - Action buttons: Watch, Watch Later, Turn Off
+
+================================================================================
+                         LOGGING OUTPUT
+================================================================================
+
+WHEN NEWS IS CREATED
+--------------------
+🔔 [ADMIN] Content created, checking notification requirements...
+🏟️  [ADMIN] Club ID: 507f1f77bcf86cd799439011
+📝 [ADMIN] Content ID: 507f1f77bcf86cd799439012
+📝 [ADMIN] Title (EN): Big Win Today
+🖼️  [ADMIN] Image URL: https://example.com/news-image.jpg
+✅ [ADMIN] Club found: Arsenal FC
+🚀 [ADMIN] Triggering notification in background goroutine...
+🔔 [ADMIN GOROUTINE] Starting notification send...
+🔔 [NOTIFY CONTENT] New content notification triggered
+🏟️  [NOTIFY CONTENT] Club: Arsenal FC (ID: 507f1f77bcf86cd799439011)
+📰 [NOTIFY CONTENT] Type: news
+📝 [NOTIFY CONTENT] Title: Big Win Today
+🆔 [NOTIFY CONTENT] Content ID: 507f1f77bcf86cd799439012
+🖼️  [NOTIFY CONTENT] Image URL: https://example.com/news-image.jpg
+📡 [NOTIFY CONTENT] Sending to topic: club_507f1f77bcf86cd799439011
+📤 [FCM SEND] Preparing to send notification to topic: club_507f1f77bcf86cd799439011
+📝 [FCM SEND] Title: New news from Arsenal FC
+📝 [FCM SEND] Body: Big Win Today
+📝 [FCM SEND] Data: map[club_id:507f1f77bcf86cd799439011 club_name:Arsenal FC content_id:507f1f77bcf86cd799439012 image_url:https://example.com/news-image.jpg title:Big Win Today type:news]
+🖼️  [FCM SEND] Adding image to notification: https://example.com/news-image.jpg
+🚀 [FCM SEND] Sending message to Firebase...
+✅ [FCM SUCCESS] Message sent successfully to topic club_507f1f77bcf86cd799439011
+📬 [FCM RESPONSE] Firebase response: projects/fanzone-c7f93/messages/1234567890
+✅ [ADMIN GOROUTINE] Notification sent successfully
+
+
+WHEN HIGHLIGHT IS CREATED
+--------------------------
+🔔 [ADMIN] Highlight created, checking notification requirements...
+🎥 [ADMIN] Match: NEWCASTLE 2-3 EVERTON | Premier League highlights
+🆔 [ADMIN] Highlight ID: 507f1f77bcf86cd799439013
+🎬 [ADMIN] Video URL: https://youtube.com/watch?v=dQw4w9WgXcQ
+🏟️  [ADMIN] Number of clubs: 2
+✅ [ADMIN] Club 1 found: Newcastle United (ID: 507f1f77bcf86cd799439011)
+✅ [ADMIN] Club 2 found: Everton FC (ID: 507f1f77bcf86cd799439012)
+🚀 [ADMIN] Triggering highlight notification in background goroutine...
+🔔 [ADMIN GOROUTINE] Starting highlight notification send...
+🔔 [NOTIFY HIGHLIGHT] New highlight notification triggered
+🎥 [NOTIFY HIGHLIGHT] Match: NEWCASTLE 2-3 EVERTON | Premier League highlights
+🆔 [NOTIFY HIGHLIGHT] Highlight ID: 507f1f77bcf86cd799439013
+🎬 [NOTIFY HIGHLIGHT] Video URL: https://youtube.com/watch?v=dQw4w9WgXcQ
+🏟️  [NOTIFY HIGHLIGHT] Clubs involved: 2
+🖼️  [NOTIFY HIGHLIGHT] Generated thumbnail: https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg
+📡 [NOTIFY HIGHLIGHT] Sending to club 1: Newcastle United (ID: 507f1f77bcf86cd799439011)
+📡 [NOTIFY HIGHLIGHT] Topic: club_507f1f77bcf86cd799439011
+📤 [FCM SEND] Preparing to send notification to topic: club_507f1f77bcf86cd799439011
+📝 [FCM SEND] Title: New Match Highlight
+📝 [FCM SEND] Body: NEWCASTLE 2-3 EVERTON | Premier League highlights
+📝 [FCM SEND] Data: map[club_id:507f1f77bcf86cd799439011 club_name:Newcastle United highlight_id:507f1f77bcf86cd799439013 image_url:https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg match_title:NEWCASTLE 2-3 EVERTON | Premier League highlights type:highlight video_url:https://youtube.com/watch?v=dQw4w9WgXcQ]
+🖼️  [FCM SEND] Adding image to notification: https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg
+🚀 [FCM SEND] Sending message to Firebase...
+✅ [FCM SUCCESS] Message sent successfully to topic club_507f1f77bcf86cd799439011
+📬 [FCM RESPONSE] Firebase response: projects/fanzone-c7f93/messages/1234567891
+✅ [NOTIFY HIGHLIGHT] Successfully sent to club Newcastle United
+... (repeats for second club)
+✅ [NOTIFY HIGHLIGHT] Completed sending to all 2 clubs
+✅ [ADMIN GOROUTINE] Highlight notification sent successfully
+
+================================================================================
+                         MOBILE APP BEHAVIOR
+================================================================================
+
+FOREGROUND (APP OPEN)
+----------------------
+1. Notification received via onMessage
+2. App downloads image from image_url
+3. Shows custom local notification with:
+   - Large image preview
+   - Action buttons (Watch/Read, Watch Later/Read Later, Turn Off)
+   - Custom styling
+
+Expected logs:
+📬 Foreground message received!
+📬 Title: New Match Highlight
+📬 Body: NEWCASTLE 2-3 EVERTON
+📬 Data: {type: highlight, image_url: https://...}
+📸 Loading notification image: https://...
+✅ Image loaded successfully
+🔔 Showing local notification: New Match Highlight
+✅ Local notification displayed successfully
+
+
+BACKGROUND/TERMINATED (APP CLOSED)
+-----------------------------------
+1. Notification received by system
+2. Android uses notification.android.image
+3. Shows system notification with:
+   - Large image preview (expandable)
+   - Default system styling
+   - Tap to open app
+
+User sees:
+- Collapsed: Small icon + title + body
+- Expanded: Large image + title + body
+- Tap: Opens app to content
+
+================================================================================
+                         TESTING
+================================================================================
+
+TEST 1: Create News with Image
+-------------------------------
+curl -X POST http://localhost:8080/api/admin/content \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": {
+      "en": "Test Rich Notification",
+      "am": "የሙከራ ማሳወቂያ",
+      "om": "Beeksisa Yaalii"
+    },
+    "body": {
+      "en": "This notification should have an image",
+      "am": "ይህ ማሳወቂያ ምስል ሊኖረው ይገባል",
+      "om": "Beeksisni kun fakkii qabaachuu qaba"
+    },
+    "image_url": "https://picsum.photos/1280/720",
+    "category": "test",
+    "club_id": "YOUR_CLUB_ID"
+  }'
+
+Expected:
+- Notification sent with image
+- Mobile shows large preview
+- Logs show image URL
+
+
+TEST 2: Create Highlight with YouTube URL
+------------------------------------------
+curl -X POST http://localhost:8080/api/admin/highlights \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "match_title": "Test Match - Rich Notification",
+    "youtube_url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    "club_ids": ["YOUR_CLUB_ID"]
+  }'
+
+Expected:
+- Thumbnail auto-generated
+- Logs show: Generated thumbnail: https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg
+- Mobile shows YouTube thumbnail
+- Notification has Watch button
+
+
+TEST 3: Verify Image in Notification
+-------------------------------------
+1. Send notification
+2. Check mobile device
+3. Swipe down on notification
+4. Should see large image preview
+5. Tap to expand - image fills screen
+
+================================================================================
+                         TROUBLESHOOTING
+================================================================================
+
+ISSUE: No image in notification
+--------------------------------
+Check logs for:
+🖼️  [FCM SEND] Adding image to notification: ...
+
+If missing:
+- Verify image_url is provided in content
+- Check image URL is valid and accessible
+- Ensure image is HTTPS (not HTTP)
+
+
+ISSUE: YouTube thumbnail not generated
+---------------------------------------
+Check logs for:
+⚠️  [NOTIFY HIGHLIGHT] Could not generate thumbnail from video URL
+
+Solutions:
+- Verify YouTube URL format is correct
+- Check URL contains valid video ID
+- Test URL in browser
+
+
+ISSUE: Image loads slowly
+--------------------------
+Solutions:
+- Use smaller images (max 1MB)
+- Optimize images before uploading
+- Use CDN for faster delivery
+- Consider using YouTube's default quality (hqdefault.jpg)
+
+
+ISSUE: Image not showing on Android
+------------------------------------
+Check:
+- Image URL is HTTPS (required by Android)
+- Image is publicly accessible
+- Image format is JPG or PNG
+- Image size is reasonable (<1MB)
+- Firebase project has correct configuration
+
+================================================================================
+                         IMAGE REQUIREMENTS
+================================================================================
+
+NEWS IMAGES
+-----------
+- Format: JPG or PNG
+- Recommended size: 1280x720 (16:9 aspect ratio)
+- Max file size: 1MB
+- Must be publicly accessible (HTTPS)
+- Should be optimized for web
+
+YOUTUBE THUMBNAILS
+------------------
+- Auto-generated from video URL
+- Format: JPG
+- Size: 1280x720 (maxresdefault)
+- Hosted by YouTube (always accessible)
+- No optimization needed
+
+GENERAL GUIDELINES
+------------------
+- Use high-quality images
+- Maintain 16:9 aspect ratio
+- Compress images before uploading
+- Use CDN for better performance
+- Test images load on mobile devices
+
+================================================================================
+                         BENEFITS
+================================================================================
+
+FOR USERS
+---------
+✅ Visual preview before opening app
+✅ Better engagement with content
+✅ YouTube-style professional look
+✅ Quick content identification
+✅ Action buttons for quick actions
+
+FOR ADMINS
+----------
+✅ Automatic thumbnail generation
+✅ No manual image upload for highlights
+✅ Consistent notification appearance
+✅ Better content promotion
+✅ Detailed logging for debugging
+
+FOR DEVELOPERS
+--------------
+✅ Comprehensive logging
+✅ Easy debugging
+✅ Automatic image handling
+✅ Backward compatible
+✅ Works with existing mobile app
+
+================================================================================
+                         NEXT STEPS
+================================================================================
+
+1. DEPLOY UPDATED BACKEND
+   - Push code to production
+   - Restart server
+   - Verify FCM initialization
+
+2. TEST NOTIFICATIONS
+   - Create test news with image
+   - Create test highlight with YouTube URL
+   - Verify images appear on mobile
+
+3. MONITOR LOGS
+   - Check for image URLs in logs
+   - Verify thumbnail generation
+   - Look for any errors
+
+4. OPTIMIZE IMAGES
+   - Compress news images
+   - Use appropriate image sizes
+   - Consider CDN for hosting
+
+5. USER FEEDBACK
+   - Gather feedback on notification appearance
+   - Monitor engagement rates
+   - Adjust image quality if needed
+
+================================================================================
+
+For more information:
+- See NOTIFICATION_DEBUG_GUIDE.txt for debugging
+- See PUSH_NOTIFICATIONS_DOCUMENTATION.txt for setup
+- See FIREBASE_SETUP.md for Firebase configuration
+
+================================================================================

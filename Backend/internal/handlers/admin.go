@@ -225,21 +225,43 @@ func (h *Handler) AdminAddContent(c *gin.Context) {
 
 	// Send push notification if club is specified
 	if !clubObjID.IsZero() && h.FCM != nil {
+		log.Printf("🔔 [ADMIN] Content created, checking notification requirements...")
+		log.Printf("🏟️  [ADMIN] Club ID: %s", clubObjID.Hex())
+		log.Printf("📝 [ADMIN] Content ID: %s", content.ID.Hex())
+		log.Printf("📝 [ADMIN] Title (EN): %s", input.Title.EN)
+		log.Printf("🖼️  [ADMIN] Image URL: %s", input.ImageURL)
+		
 		club, err := h.Repo.FindClubByID(ctx, clubObjID)
 		if err == nil {
+			log.Printf("✅ [ADMIN] Club found: %s", club.Name)
+			log.Printf("🚀 [ADMIN] Triggering notification in background goroutine...")
+			
 			// Send notification in background
 			go func() {
+				log.Printf("🔔 [ADMIN GOROUTINE] Starting notification send...")
 				err := h.FCM.NotifyNewContent(
 					clubObjID.Hex(),
 					club.Name,
 					input.Title.EN, // Use English title for notification
 					content.ID.Hex(),
 					"news",
+					input.ImageURL, // Pass image URL for rich notification
 				)
 				if err != nil {
-					log.Printf("Failed to send notification: %v", err)
+					log.Printf("❌ [ADMIN GOROUTINE ERROR] Failed to send notification: %v", err)
+				} else {
+					log.Printf("✅ [ADMIN GOROUTINE] Notification sent successfully")
 				}
 			}()
+		} else {
+			log.Printf("❌ [ADMIN] Failed to find club: %v", err)
+		}
+	} else {
+		if clubObjID.IsZero() {
+			log.Printf("⚠️  [ADMIN] No club specified for content, skipping notification")
+		}
+		if h.FCM == nil {
+			log.Printf("❌ [ADMIN] FCM service is nil, cannot send notification")
 		}
 	}
 
@@ -319,27 +341,49 @@ func (h *Handler) AdminAddHighlight(c *gin.Context) {
 
 	// Send push notification for highlight
 	if len(clubObjIDs) > 0 && h.FCM != nil {
+		log.Printf("🔔 [ADMIN] Highlight created, checking notification requirements...")
+		log.Printf("🎥 [ADMIN] Match: %s", input.MatchTitle)
+		log.Printf("🆔 [ADMIN] Highlight ID: %s", highlight.ID.Hex())
+		log.Printf("🎬 [ADMIN] Video URL: %s", input.YoutubeURL)
+		log.Printf("🏟️  [ADMIN] Number of clubs: %d", len(clubObjIDs))
+		
 		// Get club names
 		var clubNames []string
-		for _, clubID := range clubObjIDs {
+		for i, clubID := range clubObjIDs {
 			club, err := h.Repo.FindClubByID(ctx, clubID)
 			if err == nil {
 				clubNames = append(clubNames, club.Name)
+				log.Printf("✅ [ADMIN] Club %d found: %s (ID: %s)", i+1, club.Name, clubID.Hex())
+			} else {
+				log.Printf("❌ [ADMIN] Failed to find club %d (ID: %s): %v", i+1, clubID.Hex(), err)
 			}
 		}
 
+		log.Printf("🚀 [ADMIN] Triggering highlight notification in background goroutine...")
+		
 		// Send notification in background
 		go func() {
+			log.Printf("🔔 [ADMIN GOROUTINE] Starting highlight notification send...")
 			err := h.FCM.NotifyNewHighlight(
 				input.ClubIDs,
 				clubNames,
 				input.MatchTitle,
 				highlight.ID.Hex(),
+				input.YoutubeURL, // Pass video URL for thumbnail generation
 			)
 			if err != nil {
-				log.Printf("Failed to send highlight notification: %v", err)
+				log.Printf("❌ [ADMIN GOROUTINE ERROR] Failed to send highlight notification: %v", err)
+			} else {
+				log.Printf("✅ [ADMIN GOROUTINE] Highlight notification sent successfully")
 			}
 		}()
+	} else {
+		if len(clubObjIDs) == 0 {
+			log.Printf("⚠️  [ADMIN] No clubs specified for highlight, skipping notification")
+		}
+		if h.FCM == nil {
+			log.Printf("❌ [ADMIN] FCM service is nil, cannot send notification")
+		}
 	}
 
 	c.JSON(http.StatusCreated, highlight)
