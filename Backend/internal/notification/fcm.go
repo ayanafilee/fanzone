@@ -21,8 +21,13 @@ func NewFCMService() (*FCMService, error) {
 	
 	log.Printf("🔧 [FCM INIT] Attempting to initialize Firebase with service account: %s", serviceAccountPath)
 
+	// Configure Firebase with project ID
+	config := &firebase.Config{
+		ProjectID: "fanzone-c7f93",
+	}
+
 	opt := option.WithCredentialsFile(serviceAccountPath)
-	app, err := firebase.NewApp(context.Background(), nil, opt)
+	app, err := firebase.NewApp(context.Background(), config, opt)
 	if err != nil {
 		log.Printf("❌ [FCM INIT ERROR] Failed to initialize Firebase app: %v", err)
 		return nil, err
