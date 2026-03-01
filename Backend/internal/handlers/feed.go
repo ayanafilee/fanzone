@@ -23,6 +23,7 @@ type FeedItem struct {
 	ClubID    string                 `json:"club_id,omitempty"`
 	ClubIDs   []string               `json:"club_ids,omitempty"`
 	CreatedAt time.Time              `json:"created_at"`
+	Reactions models.ReactionCounts  `json:"reactions"`
 	Extra     map[string]interface{} `json:"extra,omitempty"`
 }
 
@@ -180,6 +181,7 @@ func mergeFeed(news []models.Content, highlights []models.Highlight) []FeedItem 
 			ImageURL:  n.ImageURL,
 			Category:  n.Category,
 			CreatedAt: n.CreatedAt,
+			Reactions: n.Reactions,
 		}
 		if !n.ClubID.IsZero() {
 			item.ClubID = n.ClubID.Hex()
@@ -201,6 +203,7 @@ func mergeFeed(news []models.Content, highlights []models.Highlight) []FeedItem 
 			VideoURL:  h.YoutubeURL,
 			ClubIDs:   clubIDs,
 			CreatedAt: h.CreatedAt,
+			Reactions: h.Reactions,
 		}
 		feed = append(feed, item)
 	}

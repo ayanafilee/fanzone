@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -469,4 +470,135 @@ func (r *Repository) GetLanguageDistribution(ctx context.Context) (bson.M, error
 	}
 
 	return distribution, nil
+}
+
+// --- Reactions ---
+
+func (r *Repository) AddReaction(ctx context.Context, reaction models.Reaction) error {
+	_, err := r.DB.Collection("reactions").InsertOne(ctx, reaction)
+	return err
+}
+
+func (r *Repository) FindReaction(ctx context.Context, userID, contentID bson.ObjectID, contentType string) (*models.Reaction, error) {
+	var reaction models.Reaction
+	err := r.DB.Collection("reactions").FindOne(ctx, bson.M{
+		"user_id":      userID,
+		"content_id":   contentID,
+		"content_type": contentType,
+	}).Decode(&reaction)
+	return &reaction, err
+}
+
+func (r *Repository) UpdateReaction(ctx context.Context, userID, contentID bson.ObjectID, contentType, reactionType string) error {
+	_, err := r.DB.Collection("reactions").UpdateOne(
+		ctx,
+		bson.M{
+			"user_id":      userID,
+			"content_id":   contentID,
+			"content_type": contentType,
+		},
+		bson.M{
+			"$set": bson.M{
+				"reaction_type": reactionType,
+				"updated_at":    time.Now(),
+			},
+		},
+	)
+	return err
+}
+
+func (r *Repository) DeleteReaction(ctx context.Context, userID, contentID bson.ObjectID, contentType string) error {
+	_, err := r.DB.Collection("reactions").DeleteOne(ctx, bson.M{
+		"user_id":      userID,
+		"content_id":   contentID,
+		"content_type": contentType,
+	})
+	return err
+}
+
+func (r *Repository) UpdateContentReactionCount(ctx context.Context, contentID bson.ObjectID, reactionType string, delta int) error {
+	_, err := r.DB.Collection("content").UpdateOne(
+		ctx,
+		bson.M{"_id": contentID},
+		bson.M{
+			"$inc": bson.M{
+				"reactions." + reactionType: delta,
+				"reactions.total":           delta,
+			},
+		},
+	)
+	return err
+}
+
+func (r *Repository) UpdateHighlightReactionCount(ctx context.Context, highlightID bson.ObjectID, reactionType string, delta int) error {
+	_, err := r.DB.Collection("highlights").UpdateOne(
+		ctx,
+		bson.M{"_id": highlightID},
+		bson.M{
+			"$inc": bson.M{
+				"reactions." + reactionType: delta,
+				"reactions.total":           delta,
+			},
+		},
+	)
+	return err
+}
+
+func (r *Repository) GetReactionCounts(ctx context.Context, contentID bson.ObjectID, contentType string) (models.ReactionCounts, error) {
+	collection := "content"
+	if contentType == "highlight" {
+		collection = "highlights"
+	}
+
+	var result struct {
+		Reactions models.ReactionCounts `bson:"reactions"`
+	}
+
+	err := r.DB.Collection(collection).FindOne(ctx, bson.M{"_id": contentID}).Decode(&result)
+	if err != nil {
+		return models.ReactionCounts{}, err
+	}
+
+	return result.Reactions, nil
+}
+
+func (r *Repository) GetReactionUsers(ctx context.Context, contentID bson.ObjectID, contentType, reactionType string) ([]bson.M, error) {
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{
+			"content_id":   contentID,
+			"content_type": contentType,
+		}}},
+	}
+
+	if reactionType != "" {
+		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.M{"reaction_type": reactionType}}})
+	}
+
+	pipeline = append(pipeline,
+		bson.D{{Key: "$lookup", Value: bson.M{
+			"from":         "users",
+			"localField":   "user_id",
+			"foreignField": "_id",
+			"as":           "user_info",
+		}}},
+		bson.D{{Key: "$unwind", Value: "$user_info"}},
+		bson.D{{Key: "$project", Value: bson.M{
+			"user_id":       "$user_info._id",
+			"name":          "$user_info.name",
+			"profile_image": "$user_info.profile_image_url",
+			"reaction_type": 1,
+			"created_at":    1,
+		}}},
+		bson.D{{Key: "$sort", Value: bson.M{"created_at": -1}}},
+	)
+
+	cursor, err := r.DB.Collection("reactions").Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	err = cursor.All(ctx, &results)
+	return results, err
 }

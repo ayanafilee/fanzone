@@ -897,3 +897,656 @@ For questions or issues, contact the backend development team.
 
 Last Updated: 2024
 Version: 2.0 (Public API - No Authentication Required)
+
+
+================================================================================
+                          REACTION SYSTEM ENDPOINTS
+================================================================================
+
+The reaction system allows users to react to content (news) and highlights
+with 5 different reaction types: like, love, wow, sad, angry
+
+All reaction endpoints are PUBLIC (no authentication required).
+
+--------------------------------------------------------------------------------
+14. ADD OR UPDATE REACTION
+--------------------------------------------------------------------------------
+Endpoint: POST /api/reactions
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Add a new reaction or update existing reaction for a user. If the user has
+already reacted to this content, their reaction will be updated to the new type.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "507f1f77bcf86cd799439011",
+  "content_type": "news",
+  "content_id": "507f1f77bcf86cd799439012",
+  "reaction_type": "like"
+}
+
+Field Descriptions:
+- user_id: MongoDB ObjectID of the user (stored locally on device)
+- content_type: Must be "news" or "highlight"
+- content_id: MongoDB ObjectID of the content/highlight
+- reaction_type: Must be one of: "like", "love", "wow", "sad", "angry"
+
+Success Response (201 Created - New Reaction):
+{
+  "message": "Reaction added successfully",
+  "reaction": {
+    "id": "507f1f77bcf86cd799439013",
+    "user_id": "507f1f77bcf86cd799439011",
+    "content_type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "reaction_type": "like",
+    "created_at": "2026-03-01T10:30:00Z",
+    "updated_at": "2026-03-01T10:30:00Z"
+  }
+}
+
+Success Response (200 OK - Updated Reaction):
+{
+  "message": "Reaction updated successfully",
+  "reaction": {
+    "id": "507f1f77bcf86cd799439013",
+    "user_id": "507f1f77bcf86cd799439011",
+    "content_type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "reaction_type": "love",
+    "created_at": "2026-03-01T10:30:00Z",
+    "updated_at": "2026-03-01T10:35:00Z"
+  }
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid input: user_id is required"
+}
+OR
+{
+  "error": "Invalid input: content_type must be 'news' or 'highlight'"
+}
+OR
+{
+  "error": "Invalid input: reaction_type must be one of: like, love, wow, sad, angry"
+}
+
+404 Not Found:
+{
+  "error": "Content not found"
+}
+
+500 Internal Server Error:
+{
+  "error": "Failed to add reaction"
+}
+
+Notes:
+- If user has no reaction → Creates new reaction
+- If user already has a reaction → Updates to new reaction type
+- Automatically updates reaction counts on the content/highlight
+- User can only have one reaction per content item
+
+Example curl:
+curl -X POST http://localhost:8080/api/reactions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "507f1f77bcf86cd799439011",
+    "content_type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "reaction_type": "like"
+  }'
+
+--------------------------------------------------------------------------------
+15. REMOVE REACTION
+--------------------------------------------------------------------------------
+Endpoint: DELETE /api/reactions/:content_type/:content_id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Remove a user's reaction from content. Used when user taps the same reaction
+button again to "unreact".
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:content_type - Must be "news" or "highlight"
+:content_id - MongoDB ObjectID of the content/highlight
+
+Query Parameters:
+user_id - Required, MongoDB ObjectID of the user
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "message": "Reaction removed successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "user_id is required"
+}
+OR
+{
+  "error": "Invalid user_id format"
+}
+
+404 Not Found:
+{
+  "error": "Reaction not found"
+}
+
+500 Internal Server Error:
+{
+  "error": "Failed to remove reaction"
+}
+
+Notes:
+- Removes the user's reaction from the database
+- Decrements the reaction count on the content/highlight
+- Returns 404 if user hasn't reacted to this content
+
+Example:
+DELETE /api/reactions/news/507f1f77bcf86cd799439012?user_id=507f1f77bcf86cd799439011
+
+Example curl:
+curl -X DELETE "http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012?user_id=507f1f77bcf86cd799439011"
+
+--------------------------------------------------------------------------------
+16. GET USER'S REACTION
+--------------------------------------------------------------------------------
+Endpoint: GET /api/reactions/:content_type/:content_id/me
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Get the current user's reaction on specific content. Used to highlight the
+active reaction button in the UI.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:content_type - Must be "news" or "highlight"
+:content_id - MongoDB ObjectID of the content/highlight
+
+Query Parameters:
+user_id - Required, MongoDB ObjectID of the user
+
+Request Body: None
+
+Success Response (200 OK - Has Reaction):
+{
+  "reaction": {
+    "id": "507f1f77bcf86cd799439013",
+    "user_id": "507f1f77bcf86cd799439011",
+    "content_type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "reaction_type": "like",
+    "created_at": "2026-03-01T10:30:00Z",
+    "updated_at": "2026-03-01T10:30:00Z"
+  }
+}
+
+Success Response (200 OK - No Reaction):
+{
+  "reaction": null
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "user_id is required"
+}
+OR
+{
+  "error": "Invalid user_id format"
+}
+
+500 Internal Server Error:
+{
+  "error": "Failed to get user reaction"
+}
+
+Notes:
+- Returns null if user hasn't reacted to this content
+- Use to highlight the active reaction button in UI
+- Call when loading content detail view
+
+Example:
+GET /api/reactions/news/507f1f77bcf86cd799439012/me?user_id=507f1f77bcf86cd799439011
+
+Example curl:
+curl "http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012/me?user_id=507f1f77bcf86cd799439011"
+
+--------------------------------------------------------------------------------
+17. GET REACTION COUNTS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/reactions/:content_type/:content_id/counts
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Get total counts for each reaction type on specific content. Used to display
+reaction statistics below content.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:content_type - Must be "news" or "highlight"
+:content_id - MongoDB ObjectID of the content/highlight
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "content_type": "news",
+  "content_id": "507f1f77bcf86cd799439012",
+  "counts": {
+    "like": 45,
+    "love": 23,
+    "wow": 12,
+    "sad": 3,
+    "angry": 1
+  },
+  "total": 84
+}
+
+Error Responses:
+404 Not Found:
+{
+  "error": "Content not found"
+}
+
+500 Internal Server Error:
+{
+  "error": "Failed to get reaction counts"
+}
+
+Notes:
+- Returns counts for all 5 reaction types
+- total is sum of all reactions
+- Counts may be 0 if no one has reacted
+- Call when loading content detail view
+
+Example:
+GET /api/reactions/news/507f1f77bcf86cd799439012/counts
+
+Example curl:
+curl http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012/counts
+
+--------------------------------------------------------------------------------
+18. GET USERS WHO REACTED
+--------------------------------------------------------------------------------
+Endpoint: GET /api/reactions/:content_type/:content_id/users
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Get list of users who reacted with a specific reaction type. Used to show
+"John, Sarah, and 43 others reacted with ❤️" type messages.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:content_type - Must be "news" or "highlight"
+:content_id - MongoDB ObjectID of the content/highlight
+
+Query Parameters (all optional):
+- reaction_type: Filter by specific reaction ("like", "love", "wow", "sad", "angry")
+- limit: Number of users to return (default: 50, max: 100)
+- offset: Pagination offset (default: 0)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "content_type": "news",
+  "content_id": "507f1f77bcf86cd799439012",
+  "reaction_type": "like",
+  "users": [
+    {
+      "user_id": "507f1f77bcf86cd799439011",
+      "reaction_type": "like",
+      "reacted_at": "2026-03-01T10:30:00Z"
+    },
+    {
+      "user_id": "507f1f77bcf86cd799439014",
+      "reaction_type": "like",
+      "reacted_at": "2026-03-01T10:25:00Z"
+    }
+  ],
+  "total": 45,
+  "limit": 50,
+  "offset": 0
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid reaction_type"
+}
+
+500 Internal Server Error:
+{
+  "error": "Failed to get reaction users"
+}
+
+Notes:
+- If reaction_type not specified, returns all users who reacted
+- Users are sorted by reacted_at DESC (most recent first)
+- Use for social proof and engagement metrics
+- Can fetch user details using user_id if needed
+
+Examples:
+GET /api/reactions/news/507f1f77bcf86cd799439012/users?reaction_type=like
+GET /api/reactions/highlight/507f1f77bcf86cd799439012/users?limit=20&offset=0
+GET /api/reactions/news/507f1f77bcf86cd799439012/users
+
+Example curl:
+curl "http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012/users?reaction_type=like&limit=10"
+
+
+================================================================================
+                    REACTION SYSTEM - MOBILE INTEGRATION
+================================================================================
+
+REACTION TYPES AND EMOJIS:
+- like: 👍
+- love: ❤️
+- wow: 😮
+- sad: 😢
+- angry: 😠
+
+USER ID MANAGEMENT:
+Since the app has no login, generate a unique user_id on first launch:
+1. Generate UUID or use device ID
+2. Store in local storage (SharedPreferences/UserDefaults)
+3. Use this ID for all reaction API calls
+
+RECOMMENDED UI FLOW:
+
+1. DISPLAY REACTIONS ON CONTENT
+   When showing news or highlight:
+   - GET /api/reactions/:type/:id/counts → Display reaction counts
+   - GET /api/reactions/:type/:id/me?user_id=xxx → Highlight active reaction
+
+2. USER TAPS REACTION BUTTON
+   Scenario A: User has no reaction
+   - POST /api/reactions → Add new reaction
+   - Update UI to show active reaction
+   - Increment count locally (optimistic update)
+
+   Scenario B: User taps same reaction (toggle off)
+   - DELETE /api/reactions/:type/:id?user_id=xxx → Remove reaction
+   - Update UI to show no active reaction
+   - Decrement count locally
+
+   Scenario C: User taps different reaction
+   - POST /api/reactions → Update to new reaction
+   - Update UI to show new active reaction
+   - Adjust counts locally (decrement old, increment new)
+
+3. OPTIMISTIC UI UPDATES
+   Update UI immediately when user reacts, then sync with backend:
+   ```javascript
+   const handleReaction = async (reactionType) => {
+     // Optimistic update
+     if (userReaction === reactionType) {
+       setUserReaction(null);
+       decrementCount(reactionType);
+     } else {
+       if (userReaction) decrementCount(userReaction);
+       setUserReaction(reactionType);
+       incrementCount(reactionType);
+     }
+     
+     // Sync with backend
+     try {
+       if (userReaction === reactionType) {
+         await removeReaction(contentType, contentId, userId);
+       } else {
+         await addReaction(userId, contentType, contentId, reactionType);
+       }
+     } catch (error) {
+       // Revert optimistic update on error
+       revertChanges();
+       showError("Failed to update reaction");
+     }
+   };
+   ```
+
+4. REACTION BAR COMPONENT
+   Display horizontal row of reaction buttons:
+   ```
+   [👍 45] [❤️ 23] [😮 12] [😢 3] [😠 1]
+   ```
+   - Active reaction is highlighted/colored
+   - Inactive reactions are gray
+   - Show count next to each emoji
+   - Tap to add/remove/change reaction
+
+5. REACTION DETAILS VIEW (OPTIONAL)
+   Show who reacted:
+   - GET /api/reactions/:type/:id/users?reaction_type=like
+   - Display list: "John, Sarah, Mike, and 42 others liked this"
+   - Tap to see full list of users
+
+EXAMPLE IMPLEMENTATION (React Native):
+
+```javascript
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Text } from 'react-native';
+
+const ReactionBar = ({ contentType, contentId, userId }) => {
+  const [userReaction, setUserReaction] = useState(null);
+  const [counts, setCounts] = useState({
+    like: 0, love: 0, wow: 0, sad: 0, angry: 0
+  });
+
+  useEffect(() => {
+    loadReactions();
+  }, []);
+
+  const loadReactions = async () => {
+    // Get user's reaction
+    const userResp = await fetch(
+      `${API_URL}/reactions/${contentType}/${contentId}/me?user_id=${userId}`
+    );
+    const userData = await userResp.json();
+    setUserReaction(userData.reaction?.reaction_type || null);
+
+    // Get reaction counts
+    const countsResp = await fetch(
+      `${API_URL}/reactions/${contentType}/${contentId}/counts`
+    );
+    const countsData = await countsResp.json();
+    setCounts(countsData.counts);
+  };
+
+  const handleReaction = async (reactionType) => {
+    const isRemoving = userReaction === reactionType;
+
+    // Optimistic update
+    if (isRemoving) {
+      setUserReaction(null);
+      setCounts(prev => ({ ...prev, [reactionType]: prev[reactionType] - 1 }));
+    } else {
+      if (userReaction) {
+        setCounts(prev => ({ ...prev, [userReaction]: prev[userReaction] - 1 }));
+      }
+      setUserReaction(reactionType);
+      setCounts(prev => ({ ...prev, [reactionType]: prev[reactionType] + 1 }));
+    }
+
+    // Sync with backend
+    try {
+      if (isRemoving) {
+        await fetch(
+          `${API_URL}/reactions/${contentType}/${contentId}?user_id=${userId}`,
+          { method: 'DELETE' }
+        );
+      } else {
+        await fetch(`${API_URL}/reactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            content_type: contentType,
+            content_id: contentId,
+            reaction_type: reactionType
+          })
+        });
+      }
+    } catch (error) {
+      // Revert on error
+      loadReactions();
+      alert('Failed to update reaction');
+    }
+  };
+
+  const reactions = [
+    { type: 'like', emoji: '👍' },
+    { type: 'love', emoji: '❤️' },
+    { type: 'wow', emoji: '😮' },
+    { type: 'sad', emoji: '😢' },
+    { type: 'angry', emoji: '😠' }
+  ];
+
+  return (
+    <View style={{ flexDirection: 'row', gap: 10 }}>
+      {reactions.map(({ type, emoji }) => (
+        <TouchableOpacity
+          key={type}
+          onPress={() => handleReaction(type)}
+          style={{
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: userReaction === type ? '#e3f2fd' : '#f5f5f5'
+          }}
+        >
+          <Text>
+            {emoji} {counts[type]}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+export default ReactionBar;
+```
+
+CACHING RECOMMENDATIONS:
+- Cache user's reaction locally to reduce API calls
+- Cache reaction counts for 30 seconds
+- Invalidate cache when user reacts
+- Use optimistic updates for better UX
+
+ERROR HANDLING:
+- Show toast/snackbar on reaction failure
+- Revert optimistic updates on error
+- Retry failed requests automatically
+- Handle offline mode gracefully
+
+ANALYTICS (OPTIONAL):
+- Track which reactions are most popular
+- Track user engagement with reactions
+- A/B test reaction button designs
+- Monitor reaction API performance
+
+
+================================================================================
+                    UPDATED CONTENT/HIGHLIGHT MODELS
+================================================================================
+
+Content and Highlight objects now include a "reactions" field with counts:
+
+NEWS/CONTENT OBJECT:
+{
+  "id": "507f1f77bcf86cd799439011",
+  "title": { "en": "...", "am": "...", "om": "..." },
+  "body": { "en": "...", "am": "...", "om": "..." },
+  "image_url": "https://...",
+  "category": "match_report",
+  "club_id": "507f1f77bcf86cd799439012",
+  "reactions": {
+    "like": 45,
+    "love": 23,
+    "wow": 12,
+    "sad": 3,
+    "angry": 1
+  },
+  "created_at": "2026-03-01T10:00:00Z"
+}
+
+HIGHLIGHT OBJECT:
+{
+  "id": "507f1f77bcf86cd799439014",
+  "match_title": "Arsenal vs Chelsea - Full Highlights",
+  "youtube_url": "https://youtube.com/watch?v=abc123",
+  "club_ids": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439015"],
+  "reactions": {
+    "like": 120,
+    "love": 85,
+    "wow": 45,
+    "sad": 10,
+    "angry": 5
+  },
+  "created_at": "2026-03-01T18:00:00Z"
+}
+
+Note: The reactions field will be included in all content/highlight responses
+from GET /api/content, GET /api/highlights, GET /api/feed/all, etc.
+
+
+================================================================================
+                    REACTION SYSTEM - TESTING
+================================================================================
+
+Test the reaction system with these curl commands:
+
+# 1. Add a "like" reaction
+curl -X POST http://localhost:8080/api/reactions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "507f1f77bcf86cd799439011",
+    "content_type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "reaction_type": "like"
+  }'
+
+# 2. Update to "love" reaction
+curl -X POST http://localhost:8080/api/reactions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "507f1f77bcf86cd799439011",
+    "content_type": "news",
+    "content_id": "507f1f77bcf86cd799439012",
+    "reaction_type": "love"
+  }'
+
+# 3. Get user's current reaction
+curl "http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012/me?user_id=507f1f77bcf86cd799439011"
+
+# 4. Get reaction counts
+curl http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012/counts
+
+# 5. Get users who reacted with "love"
+curl "http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012/users?reaction_type=love&limit=10"
+
+# 6. Remove reaction
+curl -X DELETE "http://localhost:8080/api/reactions/news/507f1f77bcf86cd799439012?user_id=507f1f77bcf86cd799439011"
+
+
+================================================================================
+                    END OF REACTION SYSTEM DOCUMENTATION
+================================================================================

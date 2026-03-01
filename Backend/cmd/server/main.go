@@ -58,6 +58,7 @@ func main() {
 		c.Next()
 	})
 
+	// Auth endpoints (public)
 	authGroup := r.Group("/api/auth")
 	{
 		authGroup.POST("/register", h.Register)
@@ -67,38 +68,26 @@ func main() {
 	}
 
 	// Public endpoints (no authentication required for mobile users)
-	publicGroup := r.Group("/api")
-	{
-		// Clubs
-		publicGroup.GET("/clubs", h.GetClubs)
-		publicGroup.GET("/clubs/:id", h.GetClubByID)
-		
-		// Leagues
-		publicGroup.GET("/leagues", h.GetLeagues)
-		publicGroup.GET("/leagues/:id", h.GetLeagueByID)
-		publicGroup.GET("/leagues/:id/clubs", h.GetClubsByLeague) // Get clubs by league
-		
-		// Languages
-		publicGroup.GET("/languages", h.GetLanguages)
-		
-		// Content/News
-		publicGroup.GET("/content", h.GetContent)
-		publicGroup.GET("/content/:id", h.GetContentByID)
-		publicGroup.GET("/news/:id", h.GetContentByID) // Alias for content
-		
-		// Highlights
-		publicGroup.GET("/highlights", h.GetHighlights)
-		publicGroup.GET("/highlights/:id", h.GetHighlightByID)
-		
-		// Watch Platforms
-		publicGroup.GET("/watch-links", h.GetWatchLinks)
-		publicGroup.GET("/watch-platforms", h.GetWatchLinks) // Alias for watch-links
-		publicGroup.GET("/watch-links/:id", h.GetWatchLinkByID)
-		
-		// Feed endpoints (public - no authentication needed)
-		publicGroup.GET("/feed/all", h.GetAllFeed)
-		publicGroup.GET("/feed/club/:id", h.GetClubFeed)
-	}
+	r.GET("/api/clubs", h.GetClubs)
+	r.GET("/api/clubs/:id", h.GetClubByID)
+	r.GET("/api/leagues", h.GetLeagues)
+	r.GET("/api/leagues/:id", h.GetLeagueByID)
+	r.GET("/api/leagues/:id/clubs", h.GetClubsByLeague)
+	r.GET("/api/languages", h.GetLanguages)
+	r.GET("/api/content", h.GetContent)
+	r.GET("/api/content/:id", h.GetContentByID)
+	r.GET("/api/news/:id", h.GetContentByID)
+	r.GET("/api/highlights", h.GetHighlights)
+	r.GET("/api/highlights/:id", h.GetHighlightByID)
+	r.GET("/api/watch-links", h.GetWatchLinks)
+	r.GET("/api/watch-platforms", h.GetWatchLinks)
+	r.GET("/api/watch-links/:id", h.GetWatchLinkByID)
+	r.GET("/api/feed/all", h.GetAllFeed)
+	r.GET("/api/feed/club/:id", h.GetClubFeed)
+	
+	// Reactions (public endpoints - anonymous, no user tracking)
+	r.POST("/api/reactions", h.AddReaction)
+	r.GET("/api/reactions/:content_type/:content_id/counts", h.GetReactionCounts)
 
 	// Protected API endpoints (require authentication - for web dashboard)
 	api := r.Group("/api")

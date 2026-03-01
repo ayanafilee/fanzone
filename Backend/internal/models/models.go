@@ -64,6 +64,7 @@ type Content struct {
 	Category  string          `bson:"category" json:"category"`
 	ClubID    bson.ObjectID   `bson:"club_id,omitempty" json:"club_id"`
 	CreatedAt time.Time       `bson:"created_at" json:"created_at"`
+	Reactions ReactionCounts  `bson:"reactions" json:"reactions"`
 }
 
 type Highlight struct {
@@ -72,6 +73,7 @@ type Highlight struct {
 	YoutubeURL string          `bson:"youtube_url" json:"youtube_url"`
 	ClubIDs    []bson.ObjectID `bson:"club_ids" json:"club_ids"`
 	CreatedAt  time.Time       `bson:"created_at" json:"created_at"`
+	Reactions  ReactionCounts  `bson:"reactions" json:"reactions"`
 }
 
 type WatchLink struct {
@@ -92,4 +94,23 @@ type Activity struct {
 
 	// Virtual field for display
 	UserName string `bson:"user_name" json:"user_name,omitempty"`
+}
+
+type Reaction struct {
+	ID           bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID       bson.ObjectID `bson:"user_id" json:"user_id"`
+	ContentType  string        `bson:"content_type" json:"content_type"` // "news" or "highlight"
+	ContentID    bson.ObjectID `bson:"content_id" json:"content_id"`
+	ReactionType string        `bson:"reaction_type" json:"reaction_type"` // "like", "love", "wow", "sad", "angry"
+	CreatedAt    time.Time     `bson:"created_at" json:"created_at"`
+	UpdatedAt    time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+type ReactionCounts struct {
+	Like  int `bson:"like" json:"like"`
+	Love  int `bson:"love" json:"love"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
+	Total int `bson:"total" json:"total"`
 }
