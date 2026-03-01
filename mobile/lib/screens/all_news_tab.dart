@@ -827,6 +827,14 @@ class _AllNewsTabState extends State<AllNewsTab> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  // Telegram-Style Reaction Bar
+                  TelegramReactionBar(
+                    counts: highlight.reactions,
+                    userReaction: highlight.userReaction,
+                    onReactionTap: (type) => _handleReaction(highlight.id, 'highlight', type),
+                    onRemoveReaction: () => _handleRemoveReaction(highlight.id, 'highlight'),
+                  ),
                 ],
               ),
             ),

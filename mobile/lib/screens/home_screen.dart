@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return lang == 'am' ? 'የእኔ ክለብ' : lang == 'om' ? 'Kilaba Koo' : 'My Club';
       case 1:
-        return lang == 'am' ? 'ሁሉም ዜና' : lang == 'om' ? 'Oduu Hunda' : 'All News';
+        return lang == 'am' ? 'ሁሉም ክለቦች' : lang == 'om' ? 'Kilaboota Hunda' : 'All Clubs';
       case 2:
         return lang == 'am' ? 'ማጠቃለያ ቪዲዮዎች' : lang == 'om' ? 'Cuunfaa Tapha' : 'Highlights';
       default:
