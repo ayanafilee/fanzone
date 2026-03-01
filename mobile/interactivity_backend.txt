@@ -1,0 +1,599 @@
+═══════════════════════════════════════════════════════════════
+  CONTENT INTERACTIVITY - BACKEND IMPLEMENTATION GUIDE
+═══════════════════════════════════════════════════════════════
+
+This guide covers implementing reactions (like, love, etc.) for
+news content and highlights in the backend.
+
+═══════════════════════════════════════════════════════════════
+  OVERVIEW
+═══════════════════════════════════════════════════════════════
+
+FEATURES TO IMPLEMENT:
+  1. Reaction System (Like, Love, Wow, Sad, Angry)
+  2. Reaction Counts per Content/Highlight
+  3. User Reaction Tracking
+  4. Real-time Reaction Updates
+  5. Reaction Analytics
+
+═══════════════════════════════════════════════════════════════
+  DATABASE SCHEMA
+═══════════════════════════════════════════════════════════════
+
+1. REACTIONS COLLECTION
+   Collection: "reactions"
+   
+   Document Structure:
+   {
+     "_id": ObjectId,
+     "user_id": String,           // User who reacted
+     "content_type": String,      // "news" or "highlight"
+     "content_id": String,        // ID of news or highlight
+     "reaction_type": String,     // "like", "love", "wow", "sad", "angry"
+     "created_at": DateTime,
+     "updated_at": DateTime
+   }
+   
+   Indexes:
+   - user_id + content_type + content_id (unique)
+   - content_type + content_id
+   - user_id
+
+2. UPDATE CONTENT SCHEMA
+   Add to News Collection:
+   {
+     ...existing fields,
+     "reactions": {
+       "like": 0,
+       "love": 0,
+       "wow": 0,
+       "sad": 0,
+       "angry": 0,
+       "total": 0
+     }
+   }
+   
+   Add to Highlights Collection:
+   {
+     ...existing fields,
+     "reactions": {
+       "like": 0,
+       "love": 0,
+       "wow": 0,
+       "sad": 0,
+       "angry": 0,
+       "total": 0
+     }
+   }
+
+═══════════════════════════════════════════════════════════════
+  API ENDPOINTS
+═══════════════════════════════════════════════════════════════
+
+1. ADD/UPDATE REACTION
+   POST /api/reactions
+   
+   Request Body:
+   {
+     "content_type": "news",      // or "highlight"
+     "content_id": "abc123",
+     "reaction_type": "like"      // like, love, wow, sad, angry
+   }
+   
+   Response:
+   {
+     "success": true,
+     "message": "Reaction added",
+     "reaction": {
+       "user_id": "user123",
+       "content_type": "news",
+       "content_id": "abc123",
+       "reaction_type": "like",
+       "created_at": "2026-03-01T12:00:00Z"
+     },
+     "counts": {
+       "like": 15,
+       "love": 8,
+       "wow": 3,
+       "sad": 1,
+       "angry": 0,
+       "total": 27
+     }
+   }
+
+2. REMOVE REACTION
+   DELETE /api/reactions/:content_type/:content_id
+   
+   Response:
+   {
+     "success": true,
+     "message": "Reaction removed",
+     "counts": {
+       "like": 14,
+       "love": 8,
+       "wow": 3,
+       "sad": 1,
+       "angry": 0,
+       "total": 26
+     }
+   }
+
+3. GET USER'S REACTION
+   GET /api/reactions/:content_type/:content_id/me
+   
+   Response:
+   {
+     "has_reacted": true,
+     "reaction_type": "like",
+     "created_at": "2026-03-01T12:00:00Z"
+   }
+   
+   OR (if no reaction):
+   {
+     "has_reacted": false
+   }
+
+4. GET REACTION COUNTS
+   GET /api/reactions/:content_type/:content_id/counts
+   
+   Response:
+   {
+     "like": 15,
+     "love": 8,
+     "wow": 3,
+     "sad": 1,
+     "angry": 0,
+     "total": 27
+   }
+
+5. GET USERS WHO REACTED
+   GET /api/reactions/:content_type/:content_id/users?type=like
+   
+   Response:
+   {
+     "reaction_type": "like",
+     "count": 15,
+     "users": [
+       {
+         "user_id": "user1",
+         "name": "John Doe",
+         "profile_image": "url",
+         "reacted_at": "2026-03-01T12:00:00Z"
+       },
+       ...
+     ]
+   }
+
+═══════════════════════════════════════════════════════════════
+  BACKEND IMPLEMENTATION (Go Example)
+═══════════════════════════════════════════════════════════════
+
+1. MODELS
+
+// Reaction model
+type Reaction struct {
+    ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+    UserID       string             `bson:"user_id" json:"user_id"`
+    ContentType  string             `bson:"content_type" json:"content_type"`
+    ContentID    string             `bson:"content_id" json:"content_id"`
+    ReactionType string             `bson:"reaction_type" json:"reaction_type"`
+    CreatedAt    time.Time          `bson:"created_at" json:"created_at"`
+    UpdatedAt    time.Time          `bson:"updated_at" json:"updated_at"`
+}
+
+// Reaction counts
+type ReactionCounts struct {
+    Like  int `bson:"like" json:"like"`
+    Love  int `bson:"love" json:"love"`
+    Wow   int `bson:"wow" json:"wow"`
+    Sad   int `bson:"sad" json:"sad"`
+    Angry int `bson:"angry" json:"angry"`
+    Total int `bson:"total" json:"total"`
+}
+
+2. ADD/UPDATE REACTION HANDLER
+
+func (h *Handler) AddReaction(c *gin.Context) {
+    userID := c.GetString("user_id") // From auth middleware
+    
+    var req struct {
+        ContentType  string `json:"content_type" binding:"required"`
+        ContentID    string `json:"content_id" binding:"required"`
+        ReactionType string `json:"reaction_type" binding:"required"`
+    }
+    
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(400, gin.H{"error": err.Error()})
+        return
+    }
+    
+    // Validate reaction type
+    validReactions := []string{"like", "love", "wow", "sad", "angry"}
+    if !contains(validReactions, req.ReactionType) {
+        c.JSON(400, gin.H{"error": "Invalid reaction type"})
+        return
+    }
+    
+    // Check if user already reacted
+    var existingReaction Reaction
+    filter := bson.M{
+        "user_id":      userID,
+        "content_type": req.ContentType,
+        "content_id":   req.ContentID,
+    }
+    
+    err := h.db.Collection("reactions").FindOne(
+        context.Background(),
+        filter,
+    ).Decode(&existingReaction)
+    
+    if err == nil {
+        // User already reacted, update reaction
+        oldReaction := existingReaction.ReactionType
+        
+        // Update reaction
+        update := bson.M{
+            "$set": bson.M{
+                "reaction_type": req.ReactionType,
+                "updated_at":    time.Now(),
+            },
+        }
+        
+        _, err = h.db.Collection("reactions").UpdateOne(
+            context.Background(),
+            filter,
+            update,
+        )
+        
+        if err != nil {
+            c.JSON(500, gin.H{"error": "Failed to update reaction"})
+            return
+        }
+        
+        // Update counts (decrement old, increment new)
+        h.updateReactionCounts(req.ContentType, req.ContentID, oldReaction, -1)
+        h.updateReactionCounts(req.ContentType, req.ContentID, req.ReactionType, 1)
+        
+    } else {
+        // New reaction
+        reaction := Reaction{
+            UserID:       userID,
+            ContentType:  req.ContentType,
+            ContentID:    req.ContentID,
+            ReactionType: req.ReactionType,
+            CreatedAt:    time.Now(),
+            UpdatedAt:    time.Now(),
+        }
+        
+        _, err = h.db.Collection("reactions").InsertOne(
+            context.Background(),
+            reaction,
+        )
+        
+        if err != nil {
+            c.JSON(500, gin.H{"error": "Failed to add reaction"})
+            return
+        }
+        
+        // Update counts
+        h.updateReactionCounts(req.ContentType, req.ContentID, req.ReactionType, 1)
+    }
+    
+    // Get updated counts
+    counts := h.getReactionCounts(req.ContentType, req.ContentID)
+    
+    c.JSON(200, gin.H{
+        "success": true,
+        "message": "Reaction added",
+        "counts":  counts,
+    })
+}
+
+3. UPDATE REACTION COUNTS
+
+func (h *Handler) updateReactionCounts(contentType, contentID, reactionType string, delta int) error {
+    collection := "content"
+    if contentType == "highlight" {
+        collection = "highlights"
+    }
+    
+    update := bson.M{
+        "$inc": bson.M{
+            fmt.Sprintf("reactions.%s", reactionType): delta,
+            "reactions.total": delta,
+        },
+    }
+    
+    _, err := h.db.Collection(collection).UpdateOne(
+        context.Background(),
+        bson.M{"_id": contentID},
+        update,
+    )
+    
+    return err
+}
+
+4. GET REACTION COUNTS
+
+func (h *Handler) getReactionCounts(contentType, contentID string) ReactionCounts {
+    collection := "content"
+    if contentType == "highlight" {
+        collection = "highlights"
+    }
+    
+    var result struct {
+        Reactions ReactionCounts `bson:"reactions"`
+    }
+    
+    err := h.db.Collection(collection).FindOne(
+        context.Background(),
+        bson.M{"_id": contentID},
+    ).Decode(&result)
+    
+    if err != nil {
+        return ReactionCounts{}
+    }
+    
+    return result.Reactions
+}
+
+5. REMOVE REACTION HANDLER
+
+func (h *Handler) RemoveReaction(c *gin.Context) {
+    userID := c.GetString("user_id")
+    contentType := c.Param("content_type")
+    contentID := c.Param("content_id")
+    
+    // Find existing reaction
+    var reaction Reaction
+    filter := bson.M{
+        "user_id":      userID,
+        "content_type": contentType,
+        "content_id":   contentID,
+    }
+    
+    err := h.db.Collection("reactions").FindOne(
+        context.Background(),
+        filter,
+    ).Decode(&reaction)
+    
+    if err != nil {
+        c.JSON(404, gin.H{"error": "Reaction not found"})
+        return
+    }
+    
+    // Delete reaction
+    _, err = h.db.Collection("reactions").DeleteOne(
+        context.Background(),
+        filter,
+    )
+    
+    if err != nil {
+        c.JSON(500, gin.H{"error": "Failed to remove reaction"})
+        return
+    }
+    
+    // Update counts
+    h.updateReactionCounts(contentType, contentID, reaction.ReactionType, -1)
+    
+    // Get updated counts
+    counts := h.getReactionCounts(contentType, contentID)
+    
+    c.JSON(200, gin.H{
+        "success": true,
+        "message": "Reaction removed",
+        "counts":  counts,
+    })
+}
+
+6. GET USER'S REACTION
+
+func (h *Handler) GetUserReaction(c *gin.Context) {
+    userID := c.GetString("user_id")
+    contentType := c.Param("content_type")
+    contentID := c.Param("content_id")
+    
+    var reaction Reaction
+    err := h.db.Collection("reactions").FindOne(
+        context.Background(),
+        bson.M{
+            "user_id":      userID,
+            "content_type": contentType,
+            "content_id":   contentID,
+        },
+    ).Decode(&reaction)
+    
+    if err != nil {
+        c.JSON(200, gin.H{"has_reacted": false})
+        return
+    }
+    
+    c.JSON(200, gin.H{
+        "has_reacted":   true,
+        "reaction_type": reaction.ReactionType,
+        "created_at":    reaction.CreatedAt,
+    })
+}
+
+═══════════════════════════════════════════════════════════════
+  ROUTE REGISTRATION
+═══════════════════════════════════════════════════════════════
+
+// Public routes (read-only)
+public := router.Group("/api")
+{
+    public.GET("/reactions/:content_type/:content_id/counts", 
+        handler.GetReactionCounts)
+    public.GET("/reactions/:content_type/:content_id/users", 
+        handler.GetReactionUsers)
+}
+
+// Protected routes (require authentication)
+protected := router.Group("/api")
+protected.Use(authMiddleware)
+{
+    protected.POST("/reactions", handler.AddReaction)
+    protected.DELETE("/reactions/:content_type/:content_id", 
+        handler.RemoveReaction)
+    protected.GET("/reactions/:content_type/:content_id/me", 
+        handler.GetUserReaction)
+}
+
+═══════════════════════════════════════════════════════════════
+  UPDATE FEED ENDPOINTS
+═══════════════════════════════════════════════════════════════
+
+When returning news/highlights in feed, include reaction counts:
+
+Response Format:
+{
+  "id": "abc123",
+  "title": "News Title",
+  "body": "News body...",
+  "image_url": "...",
+  "created_at": "2026-03-01T12:00:00Z",
+  "reactions": {
+    "like": 15,
+    "love": 8,
+    "wow": 3,
+    "sad": 1,
+    "angry": 0,
+    "total": 27
+  },
+  "user_reaction": "like"  // User's reaction (if authenticated)
+}
+
+═══════════════════════════════════════════════════════════════
+  MIGRATION SCRIPT
+═══════════════════════════════════════════════════════════════
+
+Add reactions field to existing content:
+
+// MongoDB migration
+db.content.updateMany(
+  { reactions: { $exists: false } },
+  {
+    $set: {
+      reactions: {
+        like: 0,
+        love: 0,
+        wow: 0,
+        sad: 0,
+        angry: 0,
+        total: 0
+      }
+    }
+  }
+);
+
+db.highlights.updateMany(
+  { reactions: { $exists: false } },
+  {
+    $set: {
+      reactions: {
+        like: 0,
+        love: 0,
+        wow: 0,
+        sad: 0,
+        angry: 0,
+        total: 0
+      }
+    }
+  }
+);
+
+═══════════════════════════════════════════════════════════════
+  ANALYTICS & INSIGHTS
+═══════════════════════════════════════════════════════════════
+
+1. MOST REACTED CONTENT
+   GET /api/analytics/top-reacted?type=news&limit=10
+   
+   Returns top content by reaction count
+
+2. REACTION TRENDS
+   GET /api/analytics/reaction-trends?days=7
+   
+   Returns reaction counts over time
+
+3. USER ENGAGEMENT
+   GET /api/analytics/user-engagement/:user_id
+   
+   Returns user's reaction history
+
+═══════════════════════════════════════════════════════════════
+  PERFORMANCE OPTIMIZATION
+═══════════════════════════════════════════════════════════════
+
+1. CACHING
+   - Cache reaction counts (Redis)
+   - TTL: 5 minutes
+   - Invalidate on reaction add/remove
+
+2. BATCH OPERATIONS
+   - When loading feed, batch fetch user reactions
+   - Single query for all content IDs
+
+3. INDEXES
+   - Create compound indexes for fast queries
+   - Index on user_id + content_type + content_id
+
+═══════════════════════════════════════════════════════════════
+  TESTING
+═══════════════════════════════════════════════════════════════
+
+1. Unit Tests
+   - Test add reaction
+   - Test update reaction
+   - Test remove reaction
+   - Test count updates
+
+2. Integration Tests
+   - Test concurrent reactions
+   - Test race conditions
+   - Test count accuracy
+
+3. Load Tests
+   - Test high reaction volume
+   - Test database performance
+
+═══════════════════════════════════════════════════════════════
+  SECURITY CONSIDERATIONS
+═══════════════════════════════════════════════════════════════
+
+1. RATE LIMITING
+   - Limit reactions per user per minute
+   - Prevent spam/abuse
+
+2. VALIDATION
+   - Validate content exists
+   - Validate reaction type
+   - Validate user authentication
+
+3. AUTHORIZATION
+   - Only authenticated users can react
+   - Users can only modify their own reactions
+
+═══════════════════════════════════════════════════════════════
+  SUMMARY
+═══════════════════════════════════════════════════════════════
+
+ENDPOINTS TO IMPLEMENT:
+  ✓ POST /api/reactions (add/update)
+  ✓ DELETE /api/reactions/:type/:id (remove)
+  ✓ GET /api/reactions/:type/:id/me (get user's reaction)
+  ✓ GET /api/reactions/:type/:id/counts (get counts)
+  ✓ GET /api/reactions/:type/:id/users (get users)
+
+DATABASE CHANGES:
+  ✓ Create reactions collection
+  ✓ Add reactions field to content/highlights
+  ✓ Create indexes
+
+FEATURES:
+  ✓ 5 reaction types (like, love, wow, sad, angry)
+  ✓ Real-time count updates
+  ✓ User reaction tracking
+  ✓ Analytics support
+
+═══════════════════════════════════════════════════════════════

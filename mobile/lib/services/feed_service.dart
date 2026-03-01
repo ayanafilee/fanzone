@@ -5,13 +5,27 @@ import '../config/constants.dart';
 import '../models/feed_item.dart';
 
 class FeedService {
+  static const String _userIdKey = 'reaction_user_id';
+  
+  // Get user ID for reactions
+  Future<String?> _getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userIdKey);
+  }
+  
   Future<List<FeedItem>> getMyClubFeed(String clubId) async {
     print('🔵 FeedService: Fetching my club feed for club: $clubId');
     
-    // Use /api/feed/club/{club_id} endpoint
-    final response = await http.get(
-      Uri.parse('${AppConstants.baseUrl}/feed/club/$clubId'),
-    );
+    // Get user_id to include in request
+    final userId = await _getUserId();
+    
+    // Build URL with optional user_id parameter
+    var url = '${AppConstants.baseUrl}/feed/club/$clubId';
+    if (userId != null) {
+      url += '?user_id=$userId';
+    }
+    
+    final response = await http.get(Uri.parse(url));
 
     print('🔵 FeedService: Response status = ${response.statusCode}');
 
@@ -27,9 +41,16 @@ class FeedService {
   }
 
   Future<List<FeedItem>> getAllFeed() async {
-    final response = await http.get(
-      Uri.parse('${AppConstants.baseUrl}/feed/all'),
-    );
+    // Get user_id to include in request
+    final userId = await _getUserId();
+    
+    // Build URL with optional user_id parameter
+    var url = '${AppConstants.baseUrl}/feed/all';
+    if (userId != null) {
+      url += '?user_id=$userId';
+    }
+    
+    final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);

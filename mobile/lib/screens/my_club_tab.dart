@@ -6,7 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/feed_item.dart';
+import '../models/reaction.dart';
 import '../services/feed_service.dart';
+import '../services/reaction_service.dart';
+import '../widgets/telegram_reaction_bar.dart';
 import 'news_detail_screen.dart';
 
 class MyClubTab extends StatefulWidget {
@@ -20,6 +23,7 @@ class MyClubTab extends StatefulWidget {
 
 class _MyClubTabState extends State<MyClubTab> {
   final _feedService = FeedService();
+  final _reactionService = ReactionService();
   List<FeedItem> _feedItems = [];
   List<FeedItem> _filteredItems = [];
   bool _isLoading = true;
@@ -389,6 +393,37 @@ class _MyClubTabState extends State<MyClubTab> {
       ),
     );
   }
+  
+  Future<void> _handleReaction(String contentId, String contentType, ReactionType type) async {
+    try {
+      final counts = await _reactionService.addReaction(
+        contentType: contentType,
+        contentId: contentId,
+        reactionType: type,
+      );
+      
+      setState(() {
+        // Update would reflect in UI on next load
+      });
+    } catch (e) {
+      print('Error adding reaction: $e');
+    }
+  }
+  
+  Future<void> _handleRemoveReaction(String contentId, String contentType) async {
+    try {
+      await _reactionService.removeReaction(
+        contentType: contentType,
+        contentId: contentId,
+      );
+      
+      setState(() {
+        // Update would reflect in UI on next load
+      });
+    } catch (e) {
+      print('Error removing reaction: $e');
+    }
+  }
 
   Widget _buildFeedCard(FeedItem item) {
     if (item.type == 'news' && item.news != null) {
@@ -523,6 +558,14 @@ class _MyClubTabState extends State<MyClubTab> {
                   style: const TextStyle(color: AppColors.textGrey, fontSize: 14),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                // Telegram-Style Reaction Bar
+                TelegramReactionBar(
+                  counts: news.reactions,
+                  userReaction: news.userReaction,
+                  onReactionTap: (type) => _handleReaction(news.id, 'news', type),
+                  onRemoveReaction: () => _handleRemoveReaction(news.id, 'news'),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -760,6 +803,14 @@ class _MyClubTabState extends State<MyClubTab> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Telegram-Style Reaction Bar
+                  TelegramReactionBar(
+                    counts: highlight.reactions,
+                    userReaction: highlight.userReaction,
+                    onReactionTap: (type) => _handleReaction(highlight.id, 'highlight', type),
+                    onRemoveReaction: () => _handleRemoveReaction(highlight.id, 'highlight'),
                   ),
                   const SizedBox(height: 8),
                   Row(

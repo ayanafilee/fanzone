@@ -5,6 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/news.dart';
 import '../models/user.dart';
+import '../models/reaction.dart';
+import '../services/reaction_service.dart';
+import '../widgets/telegram_reaction_bar.dart';
+import '../widgets/floating_reaction_animation.dart';
+import '../widgets/recent_reactions_display.dart';
 
 class NewsDetailScreen extends StatefulWidget {
   final News news;
@@ -24,6 +29,10 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
   bool _isBookmarked = false;
   final ScrollController _scrollController = ScrollController();
   bool _showTitle = false;
+  final _reactionService = ReactionService();
+  ReactionCounts _reactionCounts = ReactionCounts();
+  ReactionType? _userReaction;
+  final GlobalKey<RecentReactionsDisplayState> _recentReactionsKey = GlobalKey();
 
   @override
   void initState() {
@@ -36,7 +45,74 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
       ),
     );
     _loadBookmarkStatus();
+    _loadReactions();
     _scrollController.addListener(_onScroll);
+  }
+  
+  Future<void> _loadReactions() async {
+    // Initialize with data from news object
+    setState(() {
+      _reactionCounts = widget.news.reactions;
+      _userReaction = widget.news.userReaction;
+    });
+    
+    // Optionally fetch fresh data from server
+    try {
+      final counts = await _reactionService.getReactionCounts(
+        contentType: 'news',
+        contentId: widget.news.id,
+      );
+      
+      setState(() {
+        _reactionCounts = counts;
+      });
+    } catch (e) {
+      print('Error loading reactions: $e');
+    }
+  }
+  
+  Future<void> _handleReaction(ReactionType type) async {
+    try {
+      // Show in recent reactions display
+      _recentReactionsKey.currentState?.addReaction(type);
+      
+      final counts = await _reactionService.addReaction(
+        contentType: 'news',
+        contentId: widget.news.id,
+        reactionType: type,
+      );
+      
+      setState(() {
+        _reactionCounts = counts;
+        _userReaction = type;
+      });
+    } catch (e) {
+      print('Error adding reaction: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_getText('reaction_error')),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+    }
+  }
+  
+  Future<void> _handleRemoveReaction() async {
+    try {
+      final counts = await _reactionService.removeReaction(
+        contentType: 'news',
+        contentId: widget.news.id,
+      );
+      
+      setState(() {
+        _reactionCounts = counts;
+        _userReaction = null;
+      });
+    } catch (e) {
+      print('Error removing reaction: $e');
+    }
   }
 
   @override
@@ -121,6 +197,11 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
         'am': 'ታትሟል',
         'om': 'Maxxanfameera',
       },
+      'reaction_error': {
+        'en': 'Failed to add reaction',
+        'am': 'ምላሽ መስጠት አልተሳካም',
+        'om': 'Deebii kennuun hin milkoofne',
+      },
     };
     
     return texts[key]?[lang] ?? texts[key]?['en'] ?? key;
@@ -141,8 +222,9 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
     final title = widget.news.getTitle(widget.user.language);
     final body = widget.news.getBody(widget.user.language);
 
-    return Scaffold(
-      body: Container(
+    return FloatingReactionsOverlay(
+      child: Scaffold(
+        body: Container(
         decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
         child: CustomScrollView(
           controller: _scrollController,
@@ -365,6 +447,22 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 32),
+                          
+                          // Recent Reactions Display (Telegram-style)
+                          RecentReactionsDisplay(
+                            key: _recentReactionsKey,
+                            contentId: widget.news.id,
+                            contentType: 'news',
+                          ),
+                          
+                          // Telegram-Style Reaction Bar
+                          TelegramReactionBar(
+                            counts: _reactionCounts,
+                            userReaction: _userReaction,
+                            onReactionTap: _handleReaction,
+                            onRemoveReaction: _handleRemoveReaction,
+                          ),
+                          const SizedBox(height: 24),
 
                           // Action Buttons
                           Row(
@@ -442,6 +540,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

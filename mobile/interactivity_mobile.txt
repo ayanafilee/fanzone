@@ -1,0 +1,892 @@
+═══════════════════════════════════════════════════════════════
+  CONTENT INTERACTIVITY - MOBILE IMPLEMENTATION GUIDE
+═══════════════════════════════════════════════════════════════
+
+This guide covers implementing reactions (like, love, etc.) for
+news content and highlights in the Flutter mobile app.
+
+═══════════════════════════════════════════════════════════════
+  OVERVIEW
+═══════════════════════════════════════════════════════════════
+
+FEATURES TO IMPLEMENT:
+  1. Reaction Buttons (Like, Love, Wow, Sad, Angry)
+  2. Animated Reaction Selection
+  3. Real-time Count Updates
+  4. User Reaction State
+  5. Reaction Bar UI Component
+
+═══════════════════════════════════════════════════════════════
+  FILE STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+CREATE NEW FILES:
+  lib/models/reaction.dart
+  lib/services/reaction_service.dart
+  lib/widgets/reaction_bar.dart
+  lib/widgets/reaction_picker.dart
+
+UPDATE EXISTING FILES:
+  lib/models/news.dart
+  lib/models/highlight.dart
+  lib/screens/news_detail_screen.dart
+  lib/screens/all_news_tab.dart
+  lib/screens/my_club_tab.dart
+  lib/screens/highlights_tab.dart
+
+═══════════════════════════════════════════════════════════════
+  1. REACTION MODEL
+═══════════════════════════════════════════════════════════════
+
+File: lib/models/reaction.dart
+
+enum ReactionType {
+  like,
+  love,
+  wow,
+  sad,
+  angry;
+  
+  String get emoji {
+    switch (this) {
+      case ReactionType.like:
+        return '👍';
+      case ReactionType.love:
+        return '❤️';
+      case ReactionType.wow:
+        return '😮';
+      case ReactionType.sad:
+        return '😢';
+      case ReactionType.angry:
+        return '😠';
+    }
+  }
+  
+  String get label {
+    switch (this) {
+      case ReactionType.like:
+        return 'Like';
+      case ReactionType.love:
+        return 'Love';
+      case ReactionType.wow:
+        return 'Wow';
+      case ReactionType.sad:
+        return 'Sad';
+      case ReactionType.angry:
+        return 'Angry';
+    }
+  }
+}
+
+class ReactionCounts {
+  final int like;
+  final int love;
+  final int wow;
+  final int sad;
+  final int angry;
+  final int total;
+  
+  ReactionCounts({
+    this.like = 0,
+    this.love = 0,
+    this.wow = 0,
+    this.sad = 0,
+    this.angry = 0,
+    this.total = 0,
+  });
+  
+  factory ReactionCounts.fromJson(Map<String, dynamic> json) {
+    return ReactionCounts(
+      like: json['like'] ?? 0,
+      love: json['love'] ?? 0,
+      wow: json['wow'] ?? 0,
+      sad: json['sad'] ?? 0,
+      angry: json['angry'] ?? 0,
+      total: json['total'] ?? 0,
+    );
+  }
+  
+  int getCount(ReactionType type) {
+    switch (type) {
+      case ReactionType.like:
+        return like;
+      case ReactionType.love:
+        return love;
+      case ReactionType.wow:
+        return wow;
+      case ReactionType.sad:
+        return sad;
+      case ReactionType.angry:
+        return angry;
+    }
+  }
+}
+
+class UserReaction {
+  final bool hasReacted;
+  final ReactionType? reactionType;
+  final DateTime? createdAt;
+  
+  UserReaction({
+    required this.hasReacted,
+    this.reactionType,
+    this.createdAt,
+  });
+  
+  factory UserReaction.fromJson(Map<String, dynamic> json) {
+    return UserReaction(
+      hasReacted: json['has_reacted'] ?? false,
+      reactionType: json['reaction_type'] != null
+          ? ReactionType.values.firstWhere(
+              (e) => e.name == json['reaction_type'],
+            )
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+  2. REACTION SERVICE
+═══════════════════════════════════════════════════════════════
+
+File: lib/services/reaction_service.dart
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../config/constants.dart';
+import '../models/reaction.dart';
+
+class ReactionService {
+  // Add or update reaction
+  Future<ReactionCounts> addReaction({
+    required String contentType,
+    required String contentId,
+    required ReactionType reactionType,
+    String? token,
+  }) async {
+    try {
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/reactions'),
+        headers: headers,
+        body: jsonEncode({
+          'content_type': contentType,
+          'content_id': contentId,
+          'reaction_type': reactionType.name,
+        }),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return ReactionCounts.fromJson(data['counts']);
+      } else {
+        throw Exception('Failed to add reaction');
+      }
+    } catch (e) {
+      print('Error adding reaction: $e');
+      rethrow;
+    }
+  }
+  
+  // Remove reaction
+  Future<ReactionCounts> removeReaction({
+    required String contentType,
+    required String contentId,
+    String? token,
+  }) async {
+    try {
+      final headers = <String, String>{};
+      
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/reactions/$contentType/$contentId'),
+        headers: headers,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return ReactionCounts.fromJson(data['counts']);
+      } else {
+        throw Exception('Failed to remove reaction');
+      }
+    } catch (e) {
+      print('Error removing reaction: $e');
+      rethrow;
+    }
+  }
+  
+  // Get user's reaction
+  Future<UserReaction> getUserReaction({
+    required String contentType,
+    required String contentId,
+    String? token,
+  }) async {
+    try {
+      final headers = <String, String>{};
+      
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/reactions/$contentType/$contentId/me'),
+        headers: headers,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return UserReaction.fromJson(data);
+      } else {
+        return UserReaction(hasReacted: false);
+      }
+    } catch (e) {
+      print('Error getting user reaction: $e');
+      return UserReaction(hasReacted: false);
+    }
+  }
+  
+  // Get reaction counts
+  Future<ReactionCounts> getReactionCounts({
+    required String contentType,
+    required String contentId,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/reactions/$contentType/$contentId/counts'),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return ReactionCounts.fromJson(data);
+      } else {
+        return ReactionCounts();
+      }
+    } catch (e) {
+      print('Error getting reaction counts: $e');
+      return ReactionCounts();
+    }
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+  3. UPDATE MODELS
+═══════════════════════════════════════════════════════════════
+
+A. UPDATE NEWS MODEL
+File: lib/models/news.dart
+
+Add to News class:
+
+class News {
+  // ... existing fields
+  final ReactionCounts reactions;
+  final ReactionType? userReaction;
+  
+  News({
+    // ... existing parameters
+    ReactionCounts? reactions,
+    this.userReaction,
+  }) : reactions = reactions ?? ReactionCounts();
+  
+  factory News.fromJson(Map<String, dynamic> json) {
+    return News(
+      // ... existing fields
+      reactions: json['reactions'] != null
+          ? ReactionCounts.fromJson(json['reactions'])
+          : ReactionCounts(),
+      userReaction: json['user_reaction'] != null
+          ? ReactionType.values.firstWhere(
+              (e) => e.name == json['user_reaction'],
+            )
+          : null,
+    );
+  }
+}
+
+B. UPDATE HIGHLIGHT MODEL
+File: lib/models/highlight.dart
+
+Add to Highlight class:
+
+class Highlight {
+  // ... existing fields
+  final ReactionCounts reactions;
+  final ReactionType? userReaction;
+  
+  Highlight({
+    // ... existing parameters
+    ReactionCounts? reactions,
+    this.userReaction,
+  }) : reactions = reactions ?? ReactionCounts();
+  
+  factory Highlight.fromJson(Map<String, dynamic> json) {
+    return Highlight(
+      // ... existing fields
+      reactions: json['reactions'] != null
+          ? ReactionCounts.fromJson(json['reactions'])
+          : ReactionCounts(),
+      userReaction: json['user_reaction'] != null
+          ? ReactionType.values.firstWhere(
+              (e) => e.name == json['user_reaction'],
+            )
+          : null,
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+  4. REACTION BAR WIDGET
+═══════════════════════════════════════════════════════════════
+
+File: lib/widgets/reaction_bar.dart
+
+import 'package:flutter/material.dart';
+import '../models/reaction.dart';
+import '../config/app_colors.dart';
+import 'reaction_picker.dart';
+
+class ReactionBar extends StatelessWidget {
+  final ReactionCounts counts;
+  final ReactionType? userReaction;
+  final Function(ReactionType) onReactionTap;
+  final VoidCallback? onRemoveReaction;
+  final bool isCompact;
+  
+  const ReactionBar({
+    super.key,
+    required this.counts,
+    this.userReaction,
+    required this.onReactionTap,
+    this.onRemoveReaction,
+    this.isCompact = false,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 8 : 12,
+        vertical: isCompact ? 6 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.inputBackground.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.inputBorder.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Main reaction button
+          InkWell(
+            onTap: () {
+              if (userReaction != null && onRemoveReaction != null) {
+                // Show picker to change reaction
+                _showReactionPicker(context);
+              } else {
+                // Show picker to add reaction
+                _showReactionPicker(context);
+              }
+            },
+            onLongPress: () {
+              _showReactionPicker(context);
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 8 : 12,
+                vertical: isCompact ? 4 : 6,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    userReaction?.emoji ?? '👍',
+                    style: TextStyle(
+                      fontSize: isCompact ? 16 : 20,
+                    ),
+                  ),
+                  if (!isCompact) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      userReaction?.label ?? 'Like',
+                      style: TextStyle(
+                        color: userReaction != null
+                            ? AppColors.buttonGreenEnd
+                            : Colors.white70,
+                        fontSize: 14,
+                        fontWeight: userReaction != null
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          
+          if (counts.total > 0) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 1,
+              height: isCompact ? 16 : 20,
+              color: AppColors.inputBorder.withOpacity(0.3),
+            ),
+            const SizedBox(width: 8),
+            // Reaction counts
+            InkWell(
+              onTap: () {
+                // Show detailed reaction breakdown
+                _showReactionDetails(context);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 4 : 8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Show top 3 reactions
+                    ..._getTopReactions().map((type) => Padding(
+                      padding: const EdgeInsets.only(right: 2),
+                      child: Text(
+                        type.emoji,
+                        style: TextStyle(
+                          fontSize: isCompact ? 14 : 16,
+                        ),
+                      ),
+                    )),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatCount(counts.total),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: isCompact ? 12 : 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  List<ReactionType> _getTopReactions() {
+    final reactions = <ReactionType, int>{
+      ReactionType.like: counts.like,
+      ReactionType.love: counts.love,
+      ReactionType.wow: counts.wow,
+      ReactionType.sad: counts.sad,
+      ReactionType.angry: counts.angry,
+    };
+    
+    final sorted = reactions.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    return sorted
+        .where((e) => e.value > 0)
+        .take(3)
+        .map((e) => e.key)
+        .toList();
+  }
+  
+  String _formatCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K';
+    }
+    return count.toString();
+  }
+  
+  void _showReactionPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ReactionPicker(
+        currentReaction: userReaction,
+        onReactionSelected: (type) {
+          Navigator.pop(context);
+          if (type == userReaction && onRemoveReaction != null) {
+            onRemoveReaction!();
+          } else {
+            onReactionTap(type);
+          }
+        },
+      ),
+    );
+  }
+  
+  void _showReactionDetails(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkGreen,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Reactions',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...ReactionType.values.map((type) {
+              final count = counts.getCount(type);
+              if (count == 0) return const SizedBox.shrink();
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Text(
+                      type.emoji,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      type.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      count.toString(),
+                      style: const TextStyle(
+                        color: AppColors.textGrey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+  5. REACTION PICKER WIDGET
+═══════════════════════════════════════════════════════════════
+
+File: lib/widgets/reaction_picker.dart
+
+import 'package:flutter/material.dart';
+import '../models/reaction.dart';
+import '../config/app_colors.dart';
+
+class ReactionPicker extends StatefulWidget {
+  final ReactionType? currentReaction;
+  final Function(ReactionType) onReactionSelected;
+  
+  const ReactionPicker({
+    super.key,
+    this.currentReaction,
+    required this.onReactionSelected,
+  });
+  
+  @override
+  State<ReactionPicker> createState() => _ReactionPickerState();
+}
+
+class _ReactionPickerState extends State<ReactionPicker>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+    );
+    _controller.forward();
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.darkGreen,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.min,
+          children: ReactionType.values.map((type) {
+            final isSelected = type == widget.currentReaction;
+            
+            return InkWell(
+              onTap: () => widget.onReactionSelected(type),
+              borderRadius: BorderRadius.circular(30),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.accentGreen
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      type.emoji,
+                      style: const TextStyle(fontSize: 32),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      type.label,
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textGrey,
+                        fontSize: 10,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+  6. USAGE IN NEWS DETAIL SCREEN
+═══════════════════════════════════════════════════════════════
+
+File: lib/screens/news_detail_screen.dart
+
+Add to state:
+  final _reactionService = ReactionService();
+  ReactionCounts _reactionCounts = ReactionCounts();
+  ReactionType? _userReaction;
+
+In initState, load reactions:
+  @override
+  void initState() {
+    super.initState();
+    _loadReactions();
+  }
+  
+  Future<void> _loadReactions() async {
+    // Load counts
+    final counts = await _reactionService.getReactionCounts(
+      contentType: 'news',
+      contentId: widget.news.id,
+    );
+    
+    // Load user's reaction (if authenticated)
+    final userReaction = await _reactionService.getUserReaction(
+      contentType: 'news',
+      contentId: widget.news.id,
+      token: null, // Add token if available
+    );
+    
+    setState(() {
+      _reactionCounts = counts;
+      _userReaction = userReaction.reactionType;
+    });
+  }
+
+Add reaction handlers:
+  Future<void> _handleReaction(ReactionType type) async {
+    try {
+      final counts = await _reactionService.addReaction(
+        contentType: 'news',
+        contentId: widget.news.id,
+        reactionType: type,
+        token: null, // Add token if available
+      );
+      
+      setState(() {
+        _reactionCounts = counts;
+        _userReaction = type;
+      });
+    } catch (e) {
+      print('Error adding reaction: $e');
+    }
+  }
+  
+  Future<void> _handleRemoveReaction() async {
+    try {
+      final counts = await _reactionService.removeReaction(
+        contentType: 'news',
+        contentId: widget.news.id,
+        token: null, // Add token if available
+      );
+      
+      setState(() {
+        _reactionCounts = counts;
+        _userReaction = null;
+      });
+    } catch (e) {
+      print('Error removing reaction: $e');
+    }
+  }
+
+Add ReactionBar to UI (after body content):
+  // Add after article body
+  const SizedBox(height: 24),
+  ReactionBar(
+    counts: _reactionCounts,
+    userReaction: _userReaction,
+    onReactionTap: _handleReaction,
+    onRemoveReaction: _handleRemoveReaction,
+  ),
+
+═══════════════════════════════════════════════════════════════
+  7. USAGE IN NEWS CARDS (Feed)
+═══════════════════════════════════════════════════════════════
+
+Add compact reaction bar to news cards:
+
+In _buildNewsCard method, add after date:
+
+const SizedBox(height: 12),
+ReactionBar(
+  counts: news.reactions,
+  userReaction: news.userReaction,
+  onReactionTap: (type) => _handleReaction(news.id, type),
+  onRemoveReaction: () => _handleRemoveReaction(news.id),
+  isCompact: true,
+),
+
+═══════════════════════════════════════════════════════════════
+  8. STYLING & ANIMATIONS
+═══════════════════════════════════════════════════════════════
+
+REACTION BUTTON STATES:
+  - Default: Gray with white text
+  - Selected: Green gradient with white text
+  - Hover: Slight scale animation
+
+REACTION PICKER:
+  - Slide up animation
+  - Elastic scale animation for emojis
+  - Backdrop blur effect
+
+REACTION COUNTS:
+  - Animated number changes
+  - Smooth transitions
+  - Compact format (1K, 1M)
+
+═══════════════════════════════════════════════════════════════
+  9. TESTING CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+FUNCTIONALITY:
+  [ ] Tap reaction button shows picker
+  [ ] Select reaction updates UI
+  [ ] Change reaction works
+  [ ] Remove reaction works
+  [ ] Counts update correctly
+  [ ] Works offline (cached)
+  [ ] Works with authentication
+  [ ] Works without authentication
+
+UI/UX:
+  [ ] Animations smooth
+  [ ] Picker appears correctly
+  [ ] Counts format correctly
+  [ ] Responsive on all screens
+  [ ] Accessible (screen readers)
+  [ ] Multi-language support
+
+PERFORMANCE:
+  [ ] Fast reaction updates
+  [ ] No lag on scroll
+  [ ] Efficient API calls
+  [ ] Proper error handling
+
+═══════════════════════════════════════════════════════════════
+  10. SUMMARY
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+  ✓ lib/models/reaction.dart
+  ✓ lib/services/reaction_service.dart
+  ✓ lib/widgets/reaction_bar.dart
+  ✓ lib/widgets/reaction_picker.dart
+
+FILES TO UPDATE:
+  ✓ lib/models/news.dart
+  ✓ lib/models/highlight.dart
+  ✓ lib/screens/news_detail_screen.dart
+  ✓ lib/screens/all_news_tab.dart
+  ✓ lib/screens/my_club_tab.dart
+  ✓ lib/screens/highlights_tab.dart
+
+FEATURES:
+  ✓ 5 reaction types (👍 ❤️ 😮 😢 😠)
+  ✓ Animated reaction picker
+  ✓ Real-time count updates
+  ✓ Compact and full modes
+  ✓ Reaction details modal
+  ✓ Multi-language support
+
+═══════════════════════════════════════════════════════════════

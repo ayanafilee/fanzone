@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../services/notification_service.dart';
+import '../widgets/floating_reaction_animation.dart';
 import 'my_club_tab.dart';
 import 'all_news_tab.dart';
 import 'highlights_tab.dart';
@@ -302,8 +303,9 @@ class _HomeScreenState extends State<HomeScreen> {
         statusBarIconBrightness: Brightness.light, // White icons for dark background
         statusBarBrightness: Brightness.dark, // For iOS
       ),
-      child: Scaffold(
-        body: Container(
+      child: FloatingReactionsOverlay(
+        child: Scaffold(
+          body: Container(
           decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
           child: SafeArea(
             child: Column(
@@ -368,6 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -6,7 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/feed_item.dart';
+import '../models/reaction.dart';
 import '../services/feed_service.dart';
+import '../services/reaction_service.dart';
+import '../widgets/telegram_reaction_bar.dart';
 import 'news_detail_screen.dart';
 
 class AllNewsTab extends StatefulWidget {
@@ -20,6 +23,7 @@ class AllNewsTab extends StatefulWidget {
 
 class _AllNewsTabState extends State<AllNewsTab> {
   final _feedService = FeedService();
+  final _reactionService = ReactionService();
   List<FeedItem> _feedItems = [];
   List<FeedItem> _filteredItems = [];
   bool _isLoading = true;
@@ -27,6 +31,8 @@ class _AllNewsTabState extends State<AllNewsTab> {
   String _filterType = 'all'; // 'all', 'news', 'highlight'
   Set<String> _bookmarkedIds = {};
   final TextEditingController _searchController = TextEditingController();
+  final Map<String, ReactionCounts> _reactionCounts = {};
+  final Map<String, ReactionType?> _userReactions = {};
 
   @override
   void initState() {
@@ -400,6 +406,49 @@ class _AllNewsTabState extends State<AllNewsTab> {
       ),
     );
   }
+  
+  Future<void> _handleReaction(String contentId, String contentType, ReactionType type) async {
+    try {
+      final counts = await _reactionService.addReaction(
+        contentType: contentType,
+        contentId: contentId,
+        reactionType: type,
+      );
+      
+      setState(() {
+        _reactionCounts[contentId] = counts;
+        _userReactions[contentId] = type;
+        
+        // Update the feed item
+        for (var item in _feedItems) {
+          if (item.type == 'news' && item.news?.id == contentId) {
+            // Update would require modifying the News object
+            // For now, the UI will update from local state
+          } else if (item.type == 'highlight' && item.highlight?.id == contentId) {
+            // Same for highlights
+          }
+        }
+      });
+    } catch (e) {
+      print('Error adding reaction: $e');
+    }
+  }
+  
+  Future<void> _handleRemoveReaction(String contentId, String contentType) async {
+    try {
+      final counts = await _reactionService.removeReaction(
+        contentType: contentType,
+        contentId: contentId,
+      );
+      
+      setState(() {
+        _reactionCounts[contentId] = counts;
+        _userReactions[contentId] = null;
+      });
+    } catch (e) {
+      print('Error removing reaction: $e');
+    }
+  }
 
   Widget _buildFeedCard(FeedItem item) {
     if (item.type == 'news' && item.news != null) {
@@ -548,6 +597,14 @@ class _AllNewsTabState extends State<AllNewsTab> {
                   style: const TextStyle(color: AppColors.textGrey, fontSize: 14),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                // Telegram-Style Reaction Bar
+                TelegramReactionBar(
+                  counts: news.reactions,
+                  userReaction: news.userReaction,
+                  onReactionTap: (type) => _handleReaction(news.id, 'news', type),
+                  onRemoveReaction: () => _handleRemoveReaction(news.id, 'news'),
                 ),
                 const SizedBox(height: 12),
                 Row(

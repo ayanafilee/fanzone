@@ -1,3 +1,5 @@
+import 'reaction.dart';
+
 class Highlight {
   final String id;
   final String type;
@@ -5,6 +7,8 @@ class Highlight {
   final String videoUrl;
   final List<String> clubIds;
   final DateTime createdAt;
+  final ReactionCounts reactions;
+  final ReactionType? userReaction;
 
   Highlight({
     required this.id,
@@ -13,7 +17,9 @@ class Highlight {
     required this.videoUrl,
     required this.clubIds,
     required this.createdAt,
-  });
+    ReactionCounts? reactions,
+    this.userReaction,
+  }) : reactions = reactions ?? ReactionCounts();
 
   factory Highlight.fromJson(Map<String, dynamic> json) {
     return Highlight(
@@ -23,6 +29,15 @@ class Highlight {
       videoUrl: json['video_url'] ?? json['youtube_url'] ?? '',
       clubIds: List<String>.from(json['club_ids'] ?? []),
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      reactions: json['reactions'] != null
+          ? ReactionCounts.fromJson(json['reactions'])
+          : ReactionCounts(),
+      userReaction: json['user_reaction'] != null
+          ? ReactionType.values.firstWhere(
+              (e) => e.name == json['user_reaction'],
+              orElse: () => ReactionType.like,
+            )
+          : null,
     );
   }
 }

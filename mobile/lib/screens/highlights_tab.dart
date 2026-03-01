@@ -6,7 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/feed_item.dart';
+import '../models/reaction.dart';
 import '../services/feed_service.dart';
+import '../services/reaction_service.dart';
+import '../widgets/telegram_reaction_bar.dart';
 
 class HighlightsTab extends StatefulWidget {
   final User user;
@@ -19,6 +22,7 @@ class HighlightsTab extends StatefulWidget {
 
 class _HighlightsTabState extends State<HighlightsTab> {
   final _feedService = FeedService();
+  final _reactionService = ReactionService();
   List<FeedItem> _highlights = [];
   List<FeedItem> _filteredHighlights = [];
   bool _isLoading = true;
@@ -298,6 +302,38 @@ class _HighlightsTabState extends State<HighlightsTab> {
       ),
     );
   }
+  
+  Future<void> _handleReaction(String contentId, String contentType, ReactionType type) async {
+    try {
+      final counts = await _reactionService.addReaction(
+        contentType: contentType,
+        contentId: contentId,
+        reactionType: type,
+      );
+      
+      setState(() {
+        // Update would reflect in UI on next load
+        // For immediate feedback, you could maintain local state
+      });
+    } catch (e) {
+      print('Error adding reaction: $e');
+    }
+  }
+  
+  Future<void> _handleRemoveReaction(String contentId, String contentType) async {
+    try {
+      await _reactionService.removeReaction(
+        contentType: contentType,
+        contentId: contentId,
+      );
+      
+      setState(() {
+        // Update would reflect in UI on next load
+      });
+    } catch (e) {
+      print('Error removing reaction: $e');
+    }
+  }
 
   Widget _buildHighlightCard(highlight) {
     final videoId = YoutubePlayer.convertUrlToId(highlight.videoUrl);
@@ -460,6 +496,14 @@ class _HighlightsTabState extends State<HighlightsTab> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Telegram-Style Reaction Bar
+                  TelegramReactionBar(
+                    counts: highlight.reactions,
+                    userReaction: highlight.userReaction,
+                    onReactionTap: (type) => _handleReaction(highlight.id, 'highlight', type),
+                    onRemoveReaction: () => _handleRemoveReaction(highlight.id, 'highlight'),
                   ),
                   const SizedBox(height: 8),
                   Row(
