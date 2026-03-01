@@ -97,6 +97,8 @@ class NotificationService {
       final type = data['type'];
       final actionId = response.actionId;
       
+      print('📱 Type: $type, Action: $actionId');
+      
       // Handle action buttons
       if (actionId == 'watch' || actionId == 'read') {
         // Open the content immediately
@@ -105,11 +107,15 @@ class NotificationService {
         // Save for later
         _saveForLater(data);
         _showNavigationMessage('Saved for later');
-      } else if (actionId == 'turn_off') {
+      } else if (actionId == 'dismiss' || actionId == 'turn_off') {
         // Just dismiss - notification is already cancelled
         print('🔕 Notification dismissed');
-      } else {
+      } else if (actionId == null) {
         // Default tap (no action button) - open content
+        _handleContentOpen(data);
+      } else {
+        // Handle any custom action from backend
+        print('🎯 Custom action: $actionId');
         _handleContentOpen(data);
       }
     } catch (e) {
@@ -189,13 +195,21 @@ class NotificationService {
     }
 
     print('🔔 Showing local notification: ${notification.title}');
+    print('🔔 Notification data: $data');
 
     final type = data['type']; // 'news' or 'highlight'
-    final imageUrl = data['image_url'] ?? notification.android?.imageUrl;
+    
+    // Get image URL from multiple possible locations
+    String? imageUrl = data['image_url'];
+    if (imageUrl == null || imageUrl.isEmpty) {
+      imageUrl = notification.android?.imageUrl;
+    }
+    
+    print('📸 Image URL: $imageUrl');
     
     // Download image for big picture style
     BigPictureStyleInformation? bigPictureStyle;
-    if (imageUrl != null && imageUrl.isNotEmpty) {
+    if (imageUrl != null && imageUrl.isNotEmpty && imageUrl != 'VIDEO_ID') {
       try {
         print('📸 Loading notification image: $imageUrl');
         final response = await http.get(Uri.parse(imageUrl));
@@ -209,14 +223,18 @@ class NotificationService {
             largeIcon: bigPicture,
           );
           print('✅ Image loaded successfully');
+        } else {
+          print('⚠️ Image load failed with status: ${response.statusCode}');
         }
       } catch (e) {
         print('⚠️ Error loading notification image: $e');
       }
+    } else {
+      print('ℹ️ No valid image URL provided, showing text-only notification');
     }
 
-    // Create action buttons based on type
-    final actions = _createNotificationActions(type, data);
+    // Create action buttons from backend data
+    final actions = _createDynamicNotificationActions(data);
 
     final androidDetails = AndroidNotificationDetails(
       'fanzone_channel',
@@ -253,50 +271,61 @@ class NotificationService {
     print('✅ Local notification displayed successfully');
   }
 
-  List<AndroidNotificationAction> _createNotificationActions(String? type, Map<String, dynamic> data) {
-    if (type == 'highlight') {
-      return [
-        const AndroidNotificationAction(
-          'watch',
-          'Watch',
+  List<AndroidNotificationAction> _createDynamicNotificationActions(Map<String, dynamic> data) {
+    final actions = <AndroidNotificationAction>[];
+    
+    // Get action data from backend
+    final actionLeft = data['action_left'];
+    final actionLeftLabel = data['action_left_label'];
+    final actionRight = data['action_right'];
+    final actionRightLabel = data['action_right_label'];
+    
+    // Add left action if provided
+    if (actionLeft != null && actionLeftLabel != null) {
+      actions.add(
+        AndroidNotificationAction(
+          actionLeft,
+          actionLeftLabel,
           icon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           showsUserInterface: true,
         ),
+      );
+    }
+    
+    // Add "Watch Later" / "Read Later" action
+    final type = data['type'];
+    if (type == 'highlight') {
+      actions.add(
         const AndroidNotificationAction(
           'watch_later',
           'Watch Later',
           showsUserInterface: false,
         ),
-        const AndroidNotificationAction(
-          'turn_off',
-          'Turn Off',
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
-      ];
+      );
     } else if (type == 'news') {
-      return [
-        const AndroidNotificationAction(
-          'read',
-          'Read',
-          icon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          showsUserInterface: true,
-        ),
+      actions.add(
         const AndroidNotificationAction(
           'read_later',
           'Read Later',
           showsUserInterface: false,
         ),
-        const AndroidNotificationAction(
-          'turn_off',
-          'Turn Off',
+      );
+    }
+    
+    // Add right action if provided (usually dismiss)
+    if (actionRight != null && actionRightLabel != null) {
+      actions.add(
+        AndroidNotificationAction(
+          actionRight,
+          actionRightLabel,
           showsUserInterface: false,
           cancelNotification: true,
         ),
-      ];
+      );
     }
     
-    return [];
+    print('🎯 Created ${actions.length} notification actions');
+    return actions;
   }
   
   void _showNavigationMessage(String message) {
