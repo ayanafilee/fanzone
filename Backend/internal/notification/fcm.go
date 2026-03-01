@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"log"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -16,17 +17,27 @@ type FCMService struct {
 }
 
 func NewFCMService() (*FCMService, error) {
-	// Path to Firebase service account key
-	serviceAccountPath := filepath.Join("internal", "config", "fanzone-c7f93-firebase-adminsdk-fbsvc-7fa1955ab1.json")
+	log.Printf("🔧 [FCM INIT] Attempting to initialize Firebase")
+
+	var opt option.ClientOption
 	
-	log.Printf("🔧 [FCM INIT] Attempting to initialize Firebase with service account: %s", serviceAccountPath)
+	// Try to get credentials from environment variable first
+	firebaseCredentials := os.Getenv("FIREBASE_CREDENTIALS")
+	if firebaseCredentials != "" {
+		log.Printf("🔧 [FCM INIT] Using Firebase credentials from environment variable")
+		opt = option.WithCredentialsJSON([]byte(firebaseCredentials))
+	} else {
+		// Fallback to file-based credentials for local development
+		serviceAccountPath := filepath.Join("internal", "config", "fanzone-c7f93-firebase-adminsdk-fbsvc-7fa1955ab1.json")
+		log.Printf("🔧 [FCM INIT] Using Firebase credentials from file: %s", serviceAccountPath)
+		opt = option.WithCredentialsFile(serviceAccountPath)
+	}
 
 	// Configure Firebase with project ID
 	config := &firebase.Config{
 		ProjectID: "fanzone-c7f93",
 	}
 
-	opt := option.WithCredentialsFile(serviceAccountPath)
 	app, err := firebase.NewApp(context.Background(), config, opt)
 	if err != nil {
 		log.Printf("❌ [FCM INIT ERROR] Failed to initialize Firebase app: %v", err)
