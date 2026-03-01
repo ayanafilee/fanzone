@@ -24,12 +24,12 @@ func NewFCMService() (*FCMService, error) {
 	// Try to get credentials from environment variable first
 	firebaseCredentials := os.Getenv("FIREBASE_CREDENTIALS")
 	if firebaseCredentials != "" {
-		log.Printf("🔧 [FCM INIT] Using Firebase credentials from environment variable")
+		log.Printf("🔧 [FCM INIT] Using Firebase credentials from environment variable (length: %d bytes)", len(firebaseCredentials))
 		opt = option.WithCredentialsJSON([]byte(firebaseCredentials))
 	} else {
 		// Fallback to file-based credentials for local development
 		serviceAccountPath := filepath.Join("internal", "config", "fanzone-c7f93-firebase-adminsdk-fbsvc-7fa1955ab1.json")
-		log.Printf("🔧 [FCM INIT] Using Firebase credentials from file: %s", serviceAccountPath)
+		log.Printf("🔧 [FCM INIT] Environment variable not found, trying file: %s", serviceAccountPath)
 		opt = option.WithCredentialsFile(serviceAccountPath)
 	}
 
