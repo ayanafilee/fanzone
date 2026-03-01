@@ -7,6 +7,7 @@ import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/feed_item.dart';
 import '../services/feed_service.dart';
+import 'news_detail_screen.dart';
 
 class MyClubTab extends StatefulWidget {
   final User user;
@@ -408,9 +409,25 @@ class _MyClubTabState extends State<MyClubTab> {
       margin: const EdgeInsets.only(bottom: 16),
       color: AppColors.newsCardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NewsDetailScreen(
+                news: news,
+                user: widget.user,
+              ),
+            ),
+          ).then((_) {
+            // Reload bookmarks when returning from detail screen
+            _loadBookmarks();
+          });
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           if (news.imageUrl.isNotEmpty)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -508,14 +525,53 @@ class _MyClubTabState extends State<MyClubTab> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  _formatDate(news.createdAt),
-                  style: const TextStyle(color: AppColors.textGrey, fontSize: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _formatDate(news.createdAt),
+                      style: const TextStyle(color: AppColors.textGrey, fontSize: 12),
+                    ),
+                    // Read More button
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.accentGreen, AppColors.buttonGreenEnd],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.user.language == 'am'
+                                ? 'ተጨማሪ አንብብ'
+                                : widget.user.language == 'om'
+                                    ? 'Dabalata Dubbisi'
+                                    : 'Read More',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ],
+      ),
       ),
     );
   }

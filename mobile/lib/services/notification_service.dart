@@ -130,11 +130,16 @@ class NotificationService {
     
     if (navigatorKey?.currentContext != null) {
       if (type == 'news' && contentId != null) {
-        _showNavigationMessage('Opening news: $contentId');
-        // TODO: Navigate to news detail screen
+        // Navigate to news detail screen
+        print('🔗 Opening news detail: $contentId');
+        _showNavigationMessage('Opening news article...');
+        // TODO: Fetch news data and navigate to NewsDetailScreen
+        // For now, just show message
       } else if (type == 'highlight' && highlightId != null) {
-        _showNavigationMessage('Opening highlight: $highlightId');
-        // TODO: Navigate to highlight detail screen
+        // Navigate to highlight/video player
+        print('🔗 Opening highlight: $highlightId');
+        _showNavigationMessage('Opening highlight...');
+        // TODO: Navigate to highlight player or open YouTube
       }
     }
   }
