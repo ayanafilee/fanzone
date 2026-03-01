@@ -9,6 +9,7 @@ import 'all_news_tab.dart';
 import 'highlights_tab.dart';
 import 'notifications_screen.dart';
 import 'language_selection_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,12 +58,18 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
 
-      // Subscribe to notifications for user's club
+      // Subscribe to notifications (backend format)
+      // Subscribe to all_users topic for general notifications
+      await _notificationService.subscribeToAllUsers();
+      
+      // Subscribe to user's club topic (format: club_{club_id})
       if (favClubId.isNotEmpty) {
-        await _notificationService.subscribeToTopic('club_$favClubId');
+        print('🔔 Subscribing to club notifications for club ID: $favClubId');
+        print('🔔 Topic name: club_$favClubId');
+        await _notificationService.subscribeToClub(favClubId);
+      } else {
+        print('⚠️ No favorite club selected, skipping club subscription');
       }
-      // Subscribe to general news
-      await _notificationService.subscribeToTopic('all_news');
     } catch (e) {
       print('Error loading preferences: $e');
       _navigateToOnboarding();
@@ -84,6 +91,20 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => NotificationsScreen(user: _currentUser!),
       ),
     );
+  }
+
+  void _showSettings() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SettingsScreen(user: _currentUser!),
+      ),
+    );
+    
+    // Reload user preferences if settings were changed
+    if (result == true) {
+      _loadUserPreferences();
+    }
   }
 
   String _getTabLabel(int index) {
@@ -292,6 +313,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
+                      // Settings Icon
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 22),
+                        onPressed: _showSettings,
+                        tooltip: 'Settings',
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(),
+                      ),
                       const Spacer(),
                       // Language Dropdown
                       _buildLanguageDropdown(),

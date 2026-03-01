@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════════════════════
+    FANZONE - NOTIFICATION TESTING CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+📱 DEVICE SETUP
+═══════════════════════════════════════════════════════════════
+[ ] Physical Android device connected via USB
+[ ] Device has internet connection (WiFi or mobile data)
+[ ] USB debugging enabled on device
+[ ] App installed on device
+
+🔧 FIREBASE SETUP
+═══════════════════════════════════════════════════════════════
+[ ] Firebase project created
+[ ] google-services.json file in android/app/ folder
+[ ] Package name matches: com.example.fanzone
+[ ] Firebase initialized in main.dart
+
+🚀 INITIAL TEST
+═══════════════════════════════════════════════════════════════
+[ ] Run: flutter run
+[ ] App launches successfully
+[ ] FCM Token appears in console (copy it!)
+      Token: _________________________________
+[ ] Topics subscription confirmed in logs:
+      ✅ Subscribed to topic: all_news
+      ✅ Subscribed to topic: club_{club_id}
+
+📨 FIREBASE CONSOLE TEST
+═══════════════════════════════════════════════════════════════
+[ ] Open Firebase Console (console.firebase.google.com)
+[ ] Navigate to: Engage → Messaging
+[ ] Create new campaign
+[ ] Send test notification to topic: all_news
+[ ] Wait 30 seconds
+
+✅ SCENARIO 1: APP IN FOREGROUND
+═══════════════════════════════════════════════════════════════
+[ ] App is open and visible
+[ ] Send notification from Firebase Console
+[ ] Notification appears at top of screen
+[ ] Console shows: 📬 Foreground message: [Title]
+
+✅ SCENARIO 2: APP IN BACKGROUND
+═══════════════════════════════════════════════════════════════
+[ ] Press home button (app goes to background)
+[ ] Send notification from Firebase Console
+[ ] Notification appears in notification tray
+[ ] Tap notification
+[ ] App comes to foreground
+[ ] Console shows: 📱 Notification tapped: [Title]
+
+✅ SCENARIO 3: APP COMPLETELY CLOSED
+═══════════════════════════════════════════════════════════════
+[ ] Swipe away app from recent apps
+[ ] Send notification from Firebase Console
+[ ] Notification appears in notification tray
+[ ] Tap notification
+[ ] App launches
+[ ] Console shows: 📬 Background message: [Title]
+
+🎯 TOPIC-BASED NOTIFICATIONS
+═══════════════════════════════════════════════════════════════
+[ ] Select a club in the app (e.g., Arsenal)
+[ ] Note the club_id from logs
+[ ] Send notification to topic: club_{club_id}
+[ ] Notification received
+[ ] Send to different club topic
+[ ] Notification NOT received (correct!)
+
+🔔 IN-APP NOTIFICATION FEATURES
+═══════════════════════════════════════════════════════════════
+[ ] Notification bell icon visible in header
+[ ] Tap notification bell icon
+[ ] Notifications screen opens
+[ ] Recent feed items displayed
+
+🧪 ADVANCED TESTS
+═══════════════════════════════════════════════════════════════
+[ ] Send notification with custom data payload
+[ ] Test notification with image (if supported)
+[ ] Test notification sound
+[ ] Test notification priority (high/normal)
+[ ] Multiple notifications stack correctly
+
+📊 VERIFICATION
+═══════════════════════════════════════════════════════════════
+[ ] Check Firebase Console delivery statistics
+[ ] All test notifications delivered successfully
+[ ] No errors in Firebase Console
+[ ] No errors in app logs
+
+🐛 TROUBLESHOOTING (If issues occur)
+═══════════════════════════════════════════════════════════════
+If notifications not working:
+[ ] Run: flutter clean
+[ ] Run: flutter pub get
+[ ] Uninstall app: adb uninstall com.example.fanzone
+[ ] Reinstall: flutter run
+[ ] Check google-services.json is correct
+[ ] Verify internet connection
+[ ] Check Firebase Console for errors
+[ ] View logs: adb logcat | grep -E "FCM|Firebase"
+
+📝 TEST RESULTS
+═══════════════════════════════════════════════════════════════
+Date: _______________
+Tester: _______________
+
+Foreground Test:     [ ] PASS  [ ] FAIL
+Background Test:     [ ] PASS  [ ] FAIL
+Closed App Test:     [ ] PASS  [ ] FAIL
+Topic Test:          [ ] PASS  [ ] FAIL
+In-App Bell:         [ ] PASS  [ ] FAIL
+
+Notes:
+_________________________________________________________________
+_________________________________________________________________
+_________________________________________________________________
+_________________________________________________________________
+
+═══════════════════════════════════════════════════════════════
+    ✅ ALL TESTS PASSED - NOTIFICATIONS WORKING!
+═══════════════════════════════════════════════════════════════

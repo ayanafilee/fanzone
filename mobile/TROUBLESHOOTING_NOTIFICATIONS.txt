@@ -1,0 +1,312 @@
+═══════════════════════════════════════════════════════════════════════════════
+    TROUBLESHOOTING - NO NOTIFICATIONS RECEIVED
+═══════════════════════════════════════════════════════════════════════════════
+
+Let's debug step by step to find out why notifications aren't working.
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 1: CHECK MOBILE APP LOGS
+═══════════════════════════════════════════════════════════════════════════════
+
+Run the app and look for these logs in the console:
+
+EXPECTED LOGS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 FCM Token: eXaMpLeToKeN123...
+✅ Subscribed to topic: all_users
+✅ Subscribed to topic: club_507f1f77bcf86cd799439011
+
+QUESTIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Do you see the FCM Token in the logs? YES / NO
+2. Do you see "Subscribed to topic: all_users"? YES / NO
+3. Do you see "Subscribed to topic: club_xxx"? YES / NO
+4. What is the club_id you see? _______________________
+
+If you DON'T see these logs:
+- Firebase is not initialized properly
+- Check google-services.json is in android/app/
+- Run: flutter clean && flutter run
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 2: CHECK BACKEND LOGS
+═══════════════════════════════════════════════════════════════════════════════
+
+When you created the highlight, check your backend logs for:
+
+EXPECTED BACKEND LOGS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"Successfully sent message to topic club_xxx"
+OR
+"Error sending FCM message to topic xxx"
+
+QUESTIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Does backend show "Successfully sent message"? YES / NO
+2. Does backend show any FCM errors? YES / NO
+3. What error message do you see? _______________________
+
+If backend shows errors:
+- Firebase service account key might be wrong
+- Check: internal/config/fanzone-c7f93-firebase-adminsdk-fbsvc-7fa1955ab1.json
+- Verify Firebase project is active
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 3: VERIFY CLUB IDS MATCH
+═══════════════════════════════════════════════════════════════════════════════
+
+This is the MOST COMMON issue!
+
+MOBILE APP SUBSCRIBES TO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Check your mobile app logs for:
+✅ Subscribed to topic: club_507f1f77bcf86cd799439011
+
+The club_id is: 507f1f77bcf86cd799439011
+
+BACKEND SENDS TO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+When you created the highlight, what club_ids did you use?
+
+Example highlight creation:
+{
+  "match_title": "Arsenal vs Chelsea",
+  "youtube_url": "https://youtube.com/watch?v=test",
+  "club_ids": [
+    "507f1f77bcf86cd799439011",  <-- Must match mobile app subscription!
+    "507f1f77bcf86cd799439012"
+  ]
+}
+
+CRITICAL CHECK:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Mobile subscribed to: club_507f1f77bcf86cd799439011
+Backend sent to:      club_507f1f77bcf86cd799439011
+
+DO THESE MATCH? YES / NO
+
+If NO:
+- You won't receive notifications!
+- Make sure the club_id in your highlight matches the club you selected in the app
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 4: CHECK DEVICE PERMISSIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+On your Android device:
+
+1. Go to: Settings → Apps → FanZone → Notifications
+2. Check: Are notifications enabled? YES / NO
+3. Check: Is "All FanZone notifications" turned ON? YES / NO
+
+If notifications are disabled:
+- Enable them in device settings
+- Restart the app
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 5: TEST WITH FIREBASE CONSOLE (BYPASS BACKEND)
+═══════════════════════════════════════════════════════════════════════════════
+
+Let's test if FCM works at all by sending directly from Firebase Console:
+
+1. Go to: https://console.firebase.google.com
+2. Select your project
+3. Click: Engage → Messaging → New campaign
+4. Select: Firebase Notification messages
+5. Fill in:
+   - Title: Test Notification
+   - Text: This is a test
+6. Click Next
+7. Select: Topic
+8. Enter: all_users
+9. Click Next → Next → Publish
+
+RESULT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Did you receive the notification? YES / NO
+
+If YES:
+- FCM is working!
+- Problem is with backend sending notifications
+- Check backend logs for errors
+
+If NO:
+- FCM setup issue
+- Check google-services.json matches Firebase project
+- Verify app package name: com.example.fanzone
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 6: GET YOUR CLUB ID FROM DATABASE
+═══════════════════════════════════════════════════════════════════════════════
+
+You need to know the exact club_id from your database.
+
+Run this query in your database:
+
+MongoDB:
+db.clubs.find({}, {_id: 1, name: 1})
+
+SQL:
+SELECT id, name FROM clubs;
+
+EXAMPLE OUTPUT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_id: 507f1f77bcf86cd799439011, name: "Arsenal FC"
+_id: 507f1f77bcf86cd799439012, name: "Chelsea FC"
+
+Write down the club_id for the club you selected in the app:
+My club: _______________________
+Club ID: _______________________
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 7: VERIFY HIGHLIGHT CREATION REQUEST
+═══════════════════════════════════════════════════════════════════════════════
+
+When you created the highlight, what was your request?
+
+SHOW ME YOUR REQUEST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST /api/admin/highlights
+{
+  "match_title": "_______________",
+  "youtube_url": "_______________",
+  "club_ids": [
+    "_______________",
+    "_______________"
+  ]
+}
+
+CHECKLIST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] club_ids is an array
+[ ] club_ids contains valid club IDs from database
+[ ] club_ids matches the club you selected in mobile app
+[ ] Request was successful (200 OK)
+[ ] Backend logs show notification sent
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 8: COMMON ISSUES & SOLUTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 1: Club IDs don't match
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUTION:
+1. Check mobile app logs for subscribed topic
+2. Use the EXACT same club_id in your highlight creation
+3. Example: If app shows "club_507f1f77bcf86cd799439011"
+   Then use "507f1f77bcf86cd799439011" in club_ids array
+
+ISSUE 2: Backend not sending notifications
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUTION:
+1. Check backend logs for FCM errors
+2. Verify service account key exists
+3. Check Firebase project is active
+4. Restart backend server
+
+ISSUE 3: Firebase not initialized
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUTION:
+1. Check google-services.json in android/app/
+2. Verify package name matches: com.example.fanzone
+3. Run: flutter clean && flutter run
+
+ISSUE 4: Notifications disabled on device
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUTION:
+1. Settings → Apps → FanZone → Notifications
+2. Enable all notification categories
+3. Restart app
+
+ISSUE 5: Wrong Firebase project
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOLUTION:
+1. Check google-services.json project_id
+2. Check backend service account key project_id
+3. Both must match!
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 9: MANUAL TEST WITH CURL
+═══════════════════════════════════════════════════════════════════════════════
+
+Test notification directly using Firebase REST API:
+
+1. Get your Server Key from Firebase Console:
+   - Project Settings → Cloud Messaging → Server key
+
+2. Run this command (replace YOUR_SERVER_KEY):
+
+curl -X POST https://fcm.googleapis.com/fcm/send \
+  -H "Authorization: key=YOUR_SERVER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "/topics/all_users",
+    "notification": {
+      "title": "Manual Test",
+      "body": "Testing notifications manually"
+    }
+  }'
+
+RESULT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Did you receive the notification? YES / NO
+
+If YES:
+- FCM works!
+- Problem is with backend implementation
+
+If NO:
+- Check server key is correct
+- Verify topic name: all_users
+- Check device internet connection
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 10: COLLECT INFORMATION FOR DEBUGGING
+═══════════════════════════════════════════════════════════════════════════════
+
+Please provide this information:
+
+MOBILE APP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. FCM Token: _______________________
+2. Subscribed topics: _______________________
+3. Selected club in app: _______________________
+4. Any errors in console? _______________________
+
+BACKEND:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Highlight creation successful? YES / NO
+2. Backend logs show notification sent? YES / NO
+3. Any FCM errors in backend? _______________________
+4. Club IDs used in request: _______________________
+
+FIREBASE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Project name: _______________________
+2. Package name in google-services.json: _______________________
+3. Test notification from console works? YES / NO
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK FIX CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+Try these in order:
+
+[ ] 1. Check mobile app logs for FCM token and topic subscriptions
+[ ] 2. Check backend logs for notification sending
+[ ] 3. Verify club_ids match between mobile and backend
+[ ] 4. Test with Firebase Console (send to all_users topic)
+[ ] 5. Check device notification permissions
+[ ] 6. Restart mobile app
+[ ] 7. Restart backend server
+[ ] 8. Run: flutter clean && flutter run
+[ ] 9. Test with curl command
+[ ] 10. Check Firebase project is active
+
+═══════════════════════════════════════════════════════════════════════════════
+
+After going through these steps, you should find the issue!
+
+Most common problem: Club IDs don't match between mobile app and backend request.
+
+═══════════════════════════════════════════════════════════════════════════════

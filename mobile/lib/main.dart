@@ -17,12 +17,19 @@ void main() async {
 
 class FanZoneApp extends StatelessWidget {
   const FanZoneApp({super.key});
+  
+  // Global navigator key for notification navigation
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
+    // Set navigator key for notification service
+    NotificationService.navigatorKey = navigatorKey;
+    
     return MaterialApp(
       title: 'FanZone',
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,

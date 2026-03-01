@@ -1,0 +1,243 @@
+═══════════════════════════════════════════════════════════════════════════════
+    HOW TO TEST PUSH NOTIFICATIONS - STEP BY STEP
+═══════════════════════════════════════════════════════════════════════════════
+
+Your mobile app is FULLY CONFIGURED and ready to receive notifications!
+Follow these steps to test:
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 1: RUN THE APP AND GET YOUR CLUB ID
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Open terminal and run:
+   flutter run
+
+2. Look for these logs in the console:
+
+   📱 FCM Token: cBojBV0rT4eaag3yGo1ax9:APA91bE3TdjqSDvEKozQckAOdvFQ7Vtw2deMp0Q7lGoE-ts7umHzk_ZCz5aTxnwcaOG-bQ7ITfwu6XNmwKNklmFNsK112WWPOQY2tZw7IzMHqBrZ9Xh08bE
+   ✅ Subscribed to topic: all_users
+   ✅ Subscribed to topic: club_6993686bb2702c6a00284d2e
+
+3. WRITE DOWN YOUR CLUB ID:
+   
+   My Club ID: club_6993686bb2702c6a00284d2e
+   
+   (This is the exact topic your app is subscribed to!)
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 2: CREATE A HIGHLIGHT WITH THE EXACT CLUB ID
+═══════════════════════════════════════════════════════════════════════════════
+
+When creating a highlight in your backend, you MUST use the EXACT club_id
+from Step 1 (without the "club_" prefix).
+
+Example Request:
+POST http://localhost:8080/api/admin/highlights
+Headers:
+  Authorization: Bearer YOUR_ADMIN_TOKEN
+  Content-Type: application/json
+
+Body:
+{
+  "match_title": "Arsenal vs Chelsea - Test Notification",
+  "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "club_ids": [
+    "6993686bb2702c6a00284d2e"
+  ]
+}
+
+CRITICAL: The club_id in the array MUST match what you saw in Step 1!
+
+If your app subscribed to: club_6993686bb2702c6a00284d2e
+Then use in request:        "6993686bb2702c6a00284d2e"
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 3: CHECK BACKEND LOGS
+═══════════════════════════════════════════════════════════════════════════════
+
+After creating the highlight, check your backend console for:
+
+✅ GOOD LOG:
+   "Successfully sent message to topic club_6993686bb2702c6a00284d2e"
+
+❌ BAD LOG:
+   "Error sending FCM message to topic club_xxx"
+   "Failed to initialize FCM"
+
+If you see errors:
+- Check that your Firebase service account key is correct
+- Verify the file exists: internal/config/fanzone-c7f93-firebase-adminsdk-fbsvc-7fa1955ab1.json
+- Make sure Firebase project is active
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 4: CHECK YOUR MOBILE DEVICE
+═══════════════════════════════════════════════════════════════════════════════
+
+You should see a notification appear on your device:
+
+Title: "New Match Highlight"
+Body: "Arsenal vs Chelsea - Test Notification"
+
+If you DON'T see the notification:
+
+1. Check device notification permissions:
+   Settings → Apps → FanZone → Notifications → Enable all
+
+2. Check internet connection on device
+
+3. Make sure app is still running (or in background)
+
+4. Check mobile console for any errors
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 5: TEST NOTIFICATION TAP
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Tap the notification
+
+2. Check mobile console logs:
+   📱 Notification tapped: New Match Highlight
+   📱 Data: {type: highlight, highlight_id: xxx, club_id: xxx, ...}
+
+3. You should see a snackbar message:
+   "Opening highlight: [highlight_id]"
+
+(Later you can implement navigation to the highlight detail screen)
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+Before testing, verify:
+
+[ ] App is running (flutter run)
+[ ] Console shows FCM token
+[ ] Console shows topic subscriptions
+[ ] You wrote down the exact club_id
+[ ] Backend request uses the EXACT same club_id
+[ ] Device has notification permissions enabled
+[ ] Device has internet connection
+[ ] Backend shows "Successfully sent message" log
+
+═══════════════════════════════════════════════════════════════════════════════
+COMMON MISTAKES
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ MISTAKE 1: Wrong Club ID
+   App subscribed to: club_6993686bb2702c6a00284d2e
+   Backend sent to:   club_507f1f77bcf86cd799439011
+   Result: NO NOTIFICATION (IDs don't match!)
+
+✅ CORRECT:
+   App subscribed to: club_6993686bb2702c6a00284d2e
+   Backend sent to:   club_6993686bb2702c6a00284d2e
+   Result: NOTIFICATION RECEIVED!
+
+❌ MISTAKE 2: Including "club_" prefix in request
+   {
+     "club_ids": ["club_6993686bb2702c6a00284d2e"]  ← WRONG!
+   }
+
+✅ CORRECT:
+   {
+     "club_ids": ["6993686bb2702c6a00284d2e"]  ← RIGHT!
+   }
+
+❌ MISTAKE 3: Using wrong club from database
+   You selected Arsenal in app (ID: 6993686bb2702c6a00284d2e)
+   But created highlight for Chelsea (ID: 507f1f77bcf86cd799439012)
+   Result: NO NOTIFICATION (different club!)
+
+✅ CORRECT:
+   Selected Arsenal in app (ID: 6993686bb2702c6a00284d2e)
+   Created highlight for Arsenal (ID: 6993686bb2702c6a00284d2e)
+   Result: NOTIFICATION RECEIVED!
+
+═══════════════════════════════════════════════════════════════════════════════
+TESTING WITH FIREBASE CONSOLE (ALTERNATIVE METHOD)
+═══════════════════════════════════════════════════════════════════════════════
+
+If backend isn't working, test directly with Firebase:
+
+1. Go to: https://console.firebase.google.com
+2. Select your project: fanzone-c7f93
+3. Click: Engage → Messaging → New campaign
+4. Select: Firebase Notification messages
+5. Fill in:
+   - Title: Test Notification
+   - Text: This is a test from Firebase Console
+6. Click Next
+7. Select: Topic
+8. Enter: club_6993686bb2702c6a00284d2e
+   (Use the exact topic from your mobile logs!)
+9. Click Next → Next → Publish
+
+If you receive this notification:
+✅ FCM is working!
+✅ Problem is with backend sending notifications
+
+If you DON'T receive this notification:
+❌ FCM setup issue
+❌ Check google-services.json
+❌ Verify app package name: com.example.fanzone
+
+═══════════════════════════════════════════════════════════════════════════════
+EXAMPLE: COMPLETE TEST FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Run app:
+   flutter run
+
+2. See in console:
+   📱 FCM Token: cBojBV0rT4eaag3yGo1ax9...
+   ✅ Subscribed to topic: all_users
+   ✅ Subscribed to topic: club_6993686bb2702c6a00284d2e
+
+3. Create highlight:
+   POST http://localhost:8080/api/admin/highlights
+   {
+     "match_title": "Test Match",
+     "youtube_url": "https://youtube.com/watch?v=test",
+     "club_ids": ["6993686bb2702c6a00284d2e"]
+   }
+
+4. Backend logs:
+   "Successfully sent message to topic club_6993686bb2702c6a00284d2e"
+
+5. Mobile device:
+   🔔 Notification appears!
+   Title: "New Match Highlight"
+   Body: "Test Match"
+
+6. Tap notification:
+   📱 Notification tapped: New Match Highlight
+   📱 Data: {type: highlight, highlight_id: xxx, ...}
+   Snackbar: "Opening highlight: xxx"
+
+SUCCESS! 🎉
+
+═══════════════════════════════════════════════════════════════════════════════
+WHAT TO DO IF IT STILL DOESN'T WORK
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Copy your mobile console logs (all of them)
+2. Copy your backend logs (when creating highlight)
+3. Copy the exact request you sent to create highlight
+4. Share all three with me
+
+I'll help you debug the exact issue!
+
+═══════════════════════════════════════════════════════════════════════════════
+SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+Your mobile app is ready! The key is:
+
+1. Get the exact club_id from mobile console logs
+2. Use that EXACT club_id when creating highlights in backend
+3. Verify backend logs show "Successfully sent message"
+4. Check device for notification
+
+The most common issue is club_id mismatch. Make sure they match exactly!
+
+═══════════════════════════════════════════════════════════════════════════════
