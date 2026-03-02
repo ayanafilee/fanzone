@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
-import 'club_selection_screen.dart';
+import '../services/club_service.dart';
+import '../models/club.dart';
+import 'home_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -12,6 +15,10 @@ class LanguageSelectionScreen extends StatefulWidget {
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   String? _selectedLanguage;
+  String? _selectedClubId;
+  final _clubService = ClubService();
+  List<Club> _clubs = [];
+  bool _isLoadingClubs = false;
 
   final List<Map<String, String>> _languages = [
     {'code': 'en', 'name': 'English'},
@@ -30,18 +37,51 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
         statusBarBrightness: Brightness.dark,
       ),
     );
+    _loadClubs();
+  }
+
+  Future<void> _loadClubs() async {
+    setState(() => _isLoadingClubs = true);
+    try {
+      final clubs = await _clubService.getClubsPublic();
+      setState(() {
+        _clubs = clubs;
+        _isLoadingClubs = false;
+      });
+    } catch (e) {
+      print('Error loading clubs: $e');
+      setState(() => _isLoadingClubs = false);
+    }
   }
 
   String _getTitle() {
-    if (_selectedLanguage == 'am') return 'የእርስዎን ቋንቋ ይምረጡ';
-    if (_selectedLanguage == 'om') return 'Afaan keessan filadhaa';
-    return 'Select Your Language';
+    if (_selectedLanguage == 'am') return 'ቋንቋ እና ክለብ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Afaan fi Kilaba filadhaa';
+    return 'Select Language & Club';
   }
 
   String _getSubtitle() {
-    if (_selectedLanguage == 'am') return 'በመተግበሪያው ውስጥ መጠቀም የሚፈልጉትን ቋንቋ ይምረጡ';
-    if (_selectedLanguage == 'om') return 'Afaan appii keessatti fayyadamuu barbaaddan filadhaa';
-    return 'Choose the language you want to use in the app';
+    if (_selectedLanguage == 'am') return 'የእርስዎን ቋንቋ እና የሚደግፉትን ክለብ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Afaan fi kilaba deeggartan filadhaa';
+    return 'Choose your language and favorite club';
+  }
+
+  String _getLanguageLabel() {
+    if (_selectedLanguage == 'am') return 'ቋንቋ';
+    if (_selectedLanguage == 'om') return 'Afaan';
+    return 'Language';
+  }
+
+  String _getClubLabel() {
+    if (_selectedLanguage == 'am') return 'ክለብ';
+    if (_selectedLanguage == 'om') return 'Kilaba';
+    return 'Club';
+  }
+
+  String _getSelectClubPlaceholder() {
+    if (_selectedLanguage == 'am') return 'ክለብ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Kilaba filadhaa';
+    return 'Select a club';
   }
 
   String _getContinueButton() {
@@ -50,20 +90,60 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     return 'Continue';
   }
 
-  void _continue() {
+  String _getSelectLanguageMessage() {
+    if (_selectedLanguage == 'am') return 'እባክዎ ቋንቋ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Maaloo afaan filadhaa';
+    return 'Please select a language';
+  }
+
+  String _getSelectClubMessage() {
+    if (_selectedLanguage == 'am') return 'እባክዎ ክለብ ይምረጡ';
+    if (_selectedLanguage == 'om') return 'Maaloo kilaba filadhaa';
+    return 'Please select a club';
+  }
+
+  Future<void> _continue() async {
     if (_selectedLanguage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a language')),
+        SnackBar(
+          content: Text(_getSelectLanguageMessage()),
+          backgroundColor: AppColors.warningYellow,
+        ),
       );
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ClubSelectionScreen(language: _selectedLanguage!),
-      ),
-    );
+    if (_selectedClubId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_getSelectClubMessage()),
+          backgroundColor: AppColors.warningYellow,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Save preferences locally
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('language', _selectedLanguage!);
+      await prefs.setString('favorite_club_id', _selectedClubId!);
+      await prefs.setBool('onboarding_complete', true);
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Error saving preferences. Please try again.'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+    }
   }
 
   @override
@@ -91,48 +171,139 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 ),
                 const SizedBox(height: 40),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: _languages.length,
-                    itemBuilder: (context, index) {
-                      final lang = _languages[index];
-                      final isSelected = _selectedLanguage == lang['code'];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: InkWell(
-                          onTap: () => setState(() => _selectedLanguage = lang['code']),
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.accentGreen : AppColors.inputBackground,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected ? AppColors.buttonGreenEnd : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                                  color: isSelected ? Colors.white : Colors.white54,
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  lang['name']!,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Language Section
+                        Text(
+                          _getLanguageLabel(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                      );
-                    },
+                        const SizedBox(height: 16),
+                        ...List.generate(_languages.length, (index) {
+                          final lang = _languages[index];
+                          final isSelected = _selectedLanguage == lang['code'];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: InkWell(
+                              onTap: () => setState(() => _selectedLanguage = lang['code']),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? AppColors.accentGreen : AppColors.inputBackground,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected ? AppColors.buttonGreenEnd : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                      color: isSelected ? Colors.white : Colors.white54,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      lang['name']!,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 32),
+                        // Club Section
+                        Text(
+                          _getClubLabel(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.inputBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedClubId != null 
+                                  ? AppColors.buttonGreenEnd 
+                                  : AppColors.inputBorder.withOpacity(0.3),
+                              width: _selectedClubId != null ? 2 : 1,
+                            ),
+                          ),
+                          child: _isLoadingClubs
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.buttonGreenEnd,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              : DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedClubId,
+                                    hint: Text(
+                                      _getSelectClubPlaceholder(),
+                                      style: const TextStyle(color: Colors.white54),
+                                    ),
+                                    isExpanded: true,
+                                    dropdownColor: AppColors.darkGreen,
+                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                                    menuMaxHeight: 300,
+                                    borderRadius: BorderRadius.circular(12),
+                                    onChanged: (String? newValue) {
+                                      setState(() => _selectedClubId = newValue);
+                                    },
+                                    items: _clubs.map((Club club) {
+                                      return DropdownMenuItem<String>(
+                                        value: club.id,
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.sports_soccer,
+                                              color: AppColors.buttonGreenEnd,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                club.name,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
