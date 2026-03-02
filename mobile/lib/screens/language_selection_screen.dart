@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
 import '../services/club_service.dart';
 import '../models/club.dart';
+import '../utils/page_transitions.dart';
 import 'home_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
@@ -162,10 +163,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       await prefs.setBool('onboarding_complete', true);
 
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
+      navigateAndRemoveUntil(context, const HomeScreen());
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

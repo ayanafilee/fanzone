@@ -8,6 +8,7 @@ import '../models/club.dart';
 import '../services/notification_service.dart';
 import '../services/club_service.dart';
 import '../widgets/floating_reaction_animation.dart';
+import '../utils/page_transitions.dart';
 import 'my_club_tab.dart';
 import 'all_news_tab.dart';
 import 'highlights_tab.dart';
@@ -188,21 +189,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _navigateToOnboarding() {
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
-      (route) => false,
-    );
+    navigateAndRemoveUntil(context, const LanguageSelectionScreen());
   }
 
   void _showNotifications() {
     // Mark all as read when opening notifications
     _markAllAsRead();
     
-    Navigator.push(
+    navigateToPage(
       context,
-      MaterialPageRoute(
-        builder: (_) => NotificationsScreen(user: _currentUser!),
-      ),
+      NotificationsScreen(user: _currentUser!),
     ).then((_) {
       // Reload count when returning
       _loadUnreadCount();
@@ -648,7 +644,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 // Tab Content
                 Expanded(
-                  child: tabs[_currentIndex],
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.05, 0),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      key: ValueKey<int>(_currentIndex),
+                      child: tabs[_currentIndex],
+                    ),
+                  ),
                 ),
               ],
             ),

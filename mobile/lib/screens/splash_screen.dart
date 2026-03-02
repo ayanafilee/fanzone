@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_colors.dart';
+import '../utils/page_transitions.dart';
 import 'language_selection_screen.dart';
 import 'home_screen.dart';
 
@@ -35,13 +36,9 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     
     if (onboardingComplete) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      navigateAndReplace(context, const HomeScreen());
     } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
-      );
+      navigateAndReplace(context, const LanguageSelectionScreen());
     }
   }
 

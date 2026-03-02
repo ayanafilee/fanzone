@@ -11,6 +11,7 @@ import '../services/feed_service.dart';
 import '../services/reaction_service.dart';
 import '../widgets/telegram_reaction_bar.dart';
 import '../widgets/highlight_card.dart';
+import '../utils/page_transitions.dart';
 import 'news_detail_screen.dart';
 
 class AllNewsTab extends StatefulWidget {
@@ -540,13 +541,11 @@ class _AllNewsTabState extends State<AllNewsTab> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
-          Navigator.push(
+          navigateToPage(
             context,
-            MaterialPageRoute(
-              builder: (_) => NewsDetailScreen(
-                news: news,
-                user: widget.user,
-              ),
+            NewsDetailScreen(
+              news: news,
+              user: widget.user,
             ),
           ).then((_) {
             // Reload bookmarks when returning from detail screen
