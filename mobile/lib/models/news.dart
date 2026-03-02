@@ -47,6 +47,25 @@ class News {
     );
   }
 
+  News copyWith({
+    ReactionCounts? reactions,
+    ReactionType? userReaction,
+    bool clearUserReaction = false,
+  }) {
+    return News(
+      id: id,
+      type: type,
+      title: title,
+      body: body,
+      imageUrl: imageUrl,
+      category: category,
+      clubId: clubId,
+      createdAt: createdAt,
+      reactions: reactions ?? this.reactions,
+      userReaction: clearUserReaction ? null : (userReaction ?? this.userReaction),
+    );
+  }
+
   String getTitle(String language) {
     return title[language] ?? title['en'] ?? '';
   }

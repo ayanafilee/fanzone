@@ -40,4 +40,21 @@ class Highlight {
           : null,
     );
   }
+
+  Highlight copyWith({
+    ReactionCounts? reactions,
+    ReactionType? userReaction,
+    bool clearUserReaction = false,
+  }) {
+    return Highlight(
+      id: id,
+      type: type,
+      title: title,
+      videoUrl: videoUrl,
+      clubIds: clubIds,
+      createdAt: createdAt,
+      reactions: reactions ?? this.reactions,
+      userReaction: clearUserReaction ? null : (userReaction ?? this.userReaction),
+    );
+  }
 }

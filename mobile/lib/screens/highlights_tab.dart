@@ -307,9 +307,34 @@ class _HighlightsTabState extends State<HighlightsTab> {
         reactionType: type,
       );
       
+      if (!mounted) return;
+      
       setState(() {
-        // Update would reflect in UI on next load
-        // For immediate feedback, you could maintain local state
+        // Update the highlights with new reaction counts
+        _highlights = _highlights.map((item) {
+          if (item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, userReaction: type),
+            );
+          }
+          return item;
+        }).toList();
+        
+        // Also update filtered highlights
+        _filteredHighlights = _filteredHighlights.map((item) {
+          if (item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, userReaction: type),
+            );
+          }
+          return item;
+        }).toList();
       });
     } catch (e) {
       print('Error adding reaction: $e');
@@ -318,13 +343,39 @@ class _HighlightsTabState extends State<HighlightsTab> {
   
   Future<void> _handleRemoveReaction(String contentId, String contentType) async {
     try {
-      await _reactionService.removeReaction(
+      final counts = await _reactionService.removeReaction(
         contentType: contentType,
         contentId: contentId,
       );
       
+      if (!mounted) return;
+      
       setState(() {
-        // Update would reflect in UI on next load
+        // Update the highlights with new reaction counts
+        _highlights = _highlights.map((item) {
+          if (item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, clearUserReaction: true),
+            );
+          }
+          return item;
+        }).toList();
+        
+        // Also update filtered highlights
+        _filteredHighlights = _filteredHighlights.map((item) {
+          if (item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, clearUserReaction: true),
+            );
+          }
+          return item;
+        }).toList();
       });
     } catch (e) {
       print('Error removing reaction: $e');

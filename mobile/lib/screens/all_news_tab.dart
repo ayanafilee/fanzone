@@ -416,19 +416,48 @@ class _AllNewsTabState extends State<AllNewsTab> {
         reactionType: type,
       );
       
+      if (!mounted) return;
+      
       setState(() {
-        _reactionCounts[contentId] = counts;
-        _userReactions[contentId] = type;
-        
-        // Update the feed item
-        for (var item in _feedItems) {
-          if (item.type == 'news' && item.news?.id == contentId) {
-            // Update would require modifying the News object
-            // For now, the UI will update from local state
-          } else if (item.type == 'highlight' && item.highlight?.id == contentId) {
-            // Same for highlights
+        // Update the feed items with new reaction counts
+        _feedItems = _feedItems.map((item) {
+          if (contentType == 'news' && item.news?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              news: item.news?.copyWith(reactions: counts, userReaction: type),
+            );
+          } else if (contentType == 'highlight' && item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, userReaction: type),
+            );
           }
-        }
+          return item;
+        }).toList();
+        
+        // Also update filtered items
+        _filteredItems = _filteredItems.map((item) {
+          if (contentType == 'news' && item.news?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              news: item.news?.copyWith(reactions: counts, userReaction: type),
+            );
+          } else if (contentType == 'highlight' && item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, userReaction: type),
+            );
+          }
+          return item;
+        }).toList();
       });
     } catch (e) {
       print('Error adding reaction: $e');
@@ -442,9 +471,48 @@ class _AllNewsTabState extends State<AllNewsTab> {
         contentId: contentId,
       );
       
+      if (!mounted) return;
+      
       setState(() {
-        _reactionCounts[contentId] = counts;
-        _userReactions[contentId] = null;
+        // Update the feed items with new reaction counts
+        _feedItems = _feedItems.map((item) {
+          if (contentType == 'news' && item.news?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              news: item.news?.copyWith(reactions: counts, clearUserReaction: true),
+            );
+          } else if (contentType == 'highlight' && item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, clearUserReaction: true),
+            );
+          }
+          return item;
+        }).toList();
+        
+        // Also update filtered items
+        _filteredItems = _filteredItems.map((item) {
+          if (contentType == 'news' && item.news?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              news: item.news?.copyWith(reactions: counts, clearUserReaction: true),
+            );
+          } else if (contentType == 'highlight' && item.highlight?.id == contentId) {
+            return FeedItem(
+              id: item.id,
+              type: item.type,
+              createdAt: item.createdAt,
+              highlight: item.highlight?.copyWith(reactions: counts, clearUserReaction: true),
+            );
+          }
+          return item;
+        }).toList();
       });
     } catch (e) {
       print('Error removing reaction: $e');
