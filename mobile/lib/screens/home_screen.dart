@@ -670,29 +670,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.darkGreen,
-          selectedItemColor: AppColors.buttonGreenEnd,
-          unselectedItemColor: AppColors.textGrey,
-          selectedFontSize: 12,
-          unselectedFontSize: 11,
-          items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.sports_soccer),
-              label: _getTabLabel(0),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.article),
-              label: _getTabLabel(1),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.play_circle),
-              label: _getTabLabel(2),
-            ),
-          ],
+        bottomNavigationBar: Theme(
+          data: Theme.of(context).copyWith(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+          ),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) => setState(() => _currentIndex = index),
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: AppColors.darkGreen,
+            selectedItemColor: AppColors.buttonGreenEnd,
+            unselectedItemColor: AppColors.textGrey,
+            selectedFontSize: 12,
+            unselectedFontSize: 11,
+            elevation: 0,
+            enableFeedback: false,
+            items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.sports_soccer),
+                label: _getTabLabel(0),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.article),
+                label: _getTabLabel(1),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.play_circle),
+                label: _getTabLabel(2),
+              ),
+            ],
+          ),
         ),
       ),
       ),

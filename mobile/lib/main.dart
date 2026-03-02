@@ -52,6 +52,10 @@ class FanZoneApp extends StatelessWidget {
             TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           },
         ),
+        // Reduce splash/ripple effects
+        splashColor: Colors.transparent,
+        highlightColor: Colors.white.withOpacity(0.05),
+        splashFactory: NoSplash.splashFactory,
       ),
       home: const SplashScreen(),
     );
