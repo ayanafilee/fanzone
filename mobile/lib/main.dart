@@ -6,11 +6,23 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp();
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized successfully');
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
+    // Continue anyway - app can work without Firebase
+  }
   
-  // Initialize notifications
-  await NotificationService().initialize();
+  try {
+    // Initialize notifications
+    await NotificationService().initialize();
+    print('✅ Notification service initialized successfully');
+  } catch (e) {
+    print('❌ Notification service initialization failed: $e');
+    // Continue anyway - app can work without notifications
+  }
   
   runApp(const FanZoneApp());
 }

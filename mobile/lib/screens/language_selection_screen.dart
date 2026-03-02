@@ -29,6 +29,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    print('🟢 LanguageSelectionScreen: initState called');
     // Set status bar to light icons
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -37,20 +38,50 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
         statusBarBrightness: Brightness.dark,
       ),
     );
+    print('🟢 LanguageSelectionScreen: Loading clubs...');
     _loadClubs();
   }
 
   Future<void> _loadClubs() async {
+    print('🟢 LanguageSelectionScreen: _loadClubs started');
     setState(() => _isLoadingClubs = true);
     try {
+      print('🟢 LanguageSelectionScreen: Calling getClubsPublic...');
       final clubs = await _clubService.getClubsPublic();
+      print('🟢 LanguageSelectionScreen: Received ${clubs.length} clubs');
+      if (!mounted) return;
       setState(() {
         _clubs = clubs;
         _isLoadingClubs = false;
       });
+      print('🟢 LanguageSelectionScreen: Clubs loaded successfully');
     } catch (e) {
-      print('Error loading clubs: $e');
+      print('❌ LanguageSelectionScreen: Error loading clubs: $e');
+      if (!mounted) return;
       setState(() => _isLoadingClubs = false);
+      
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _selectedLanguage == 'am' 
+                ? 'ክለቦችን መጫን አልተሳካም። እባክዎ እንደገና ይሞክሩ።'
+                : _selectedLanguage == 'om'
+                    ? 'Kilaboota fe\'uun hin milkoofne. Maaloo irra deebi\'ii yaali.'
+                    : 'Failed to load clubs. Please try again.',
+          ),
+          backgroundColor: AppColors.errorRed,
+          action: SnackBarAction(
+            label: _selectedLanguage == 'am' 
+                ? 'እንደገና ሞክር'
+                : _selectedLanguage == 'om'
+                    ? 'Irra deebi\'ii yaali'
+                    : 'Retry',
+            textColor: Colors.white,
+            onPressed: _loadClubs,
+          ),
+        ),
+      );
     }
   }
 
@@ -256,48 +287,79 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                     ),
                                   ),
                                 )
-                              : DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedClubId,
-                                    hint: Text(
-                                      _getSelectClubPlaceholder(),
-                                      style: const TextStyle(color: Colors.white54),
-                                    ),
-                                    isExpanded: true,
-                                    dropdownColor: AppColors.darkGreen,
-                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                                    menuMaxHeight: 300,
-                                    borderRadius: BorderRadius.circular(12),
-                                    onChanged: (String? newValue) {
-                                      setState(() => _selectedClubId = newValue);
-                                    },
-                                    items: _clubs.map((Club club) {
-                                      return DropdownMenuItem<String>(
-                                        value: club.id,
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.sports_soccer,
-                                              color: AppColors.buttonGreenEnd,
-                                              size: 20,
+                              : _clubs.isEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              _selectedLanguage == 'am'
+                                                  ? 'ክለቦችን መጫን አልተሳካም'
+                                                  : _selectedLanguage == 'om'
+                                                      ? 'Kilaboota fe\'uun hin milkoofne'
+                                                      : 'Failed to load clubs',
+                                              style: const TextStyle(color: Colors.white70),
                                             ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                club.name,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 15,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                          ),
+                                          TextButton.icon(
+                                            onPressed: _loadClubs,
+                                            icon: const Icon(Icons.refresh, color: AppColors.buttonGreenEnd, size: 18),
+                                            label: Text(
+                                              _selectedLanguage == 'am'
+                                                  ? 'እንደገና ሞክር'
+                                                  : _selectedLanguage == 'om'
+                                                      ? 'Irra deebi\'ii yaali'
+                                                      : 'Retry',
+                                              style: const TextStyle(color: AppColors.buttonGreenEnd),
                                             ),
-                                          ],
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedClubId,
+                                        hint: Text(
+                                          _getSelectClubPlaceholder(),
+                                          style: const TextStyle(color: Colors.white54),
                                         ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
+                                        isExpanded: true,
+                                        dropdownColor: AppColors.darkGreen,
+                                        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                                        menuMaxHeight: 300,
+                                        borderRadius: BorderRadius.circular(12),
+                                        onChanged: (String? newValue) {
+                                          setState(() => _selectedClubId = newValue);
+                                        },
+                                        items: _clubs.map((Club club) {
+                                          return DropdownMenuItem<String>(
+                                            value: club.id,
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.sports_soccer,
+                                                  color: AppColors.buttonGreenEnd,
+                                                  size: 20,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    club.name,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 15,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
                         ),
                       ],
                     ),
