@@ -43,3 +43,27 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Additional build artifacts
+/android/.gradle/
+/android/.kotlin/
+/android/app/build/
+/android/build/
+/android/local.properties
+/ios/Pods/
+/ios/.symlinks/
+/ios/Podfile.lock
+/ios/Flutter/ephemeral/
+
+# IDE files
+.metadata
+*.iml
+
+# Platform folders (if not deploying to these platforms)
+/linux/
+/macos/
+/windows/
+/web/
+
+# Test folder
+/test/
