@@ -16,6 +16,9 @@ class NotificationService {
   
   // Navigation key for handling notification taps
   static GlobalKey<NavigatorState>? navigatorKey;
+  
+  // Callback for unread count changes
+  static Function(int)? onUnreadCountChanged;
 
   Future<void> initialize() async {
     // Request permission for iOS and Android 13+
@@ -162,8 +165,28 @@ class NotificationService {
     print('📬 Body: ${message.notification?.body}');
     print('📬 Data: ${message.data}');
     
+    // Increment unread count
+    await _incrementUnreadCount();
+    
     // Display notification using local notifications
     await _showLocalNotification(message);
+  }
+
+  Future<void> _incrementUnreadCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentCount = prefs.getInt('unread_notification_count') ?? 0;
+      final newCount = currentCount + 1;
+      await prefs.setInt('unread_notification_count', newCount);
+      print('📊 Unread notification count: $newCount');
+      
+      // Notify listeners about the count change
+      if (onUnreadCountChanged != null) {
+        onUnreadCountChanged!(newCount);
+      }
+    } catch (e) {
+      print('❌ Error incrementing unread count: $e');
+    }
   }
 
   void _handleNotificationTap(RemoteMessage message) {
@@ -387,4 +410,18 @@ class NotificationService {
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('📬 Background message: ${message.notification?.title}');
   print('📬 Data: ${message.data}');
+  
+  // Increment unread count
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final currentCount = prefs.getInt('unread_notification_count') ?? 0;
+    final newCount = currentCount + 1;
+    await prefs.setInt('unread_notification_count', newCount);
+    print('📊 Background unread count: $newCount');
+    
+    // Note: We can't call the callback here because this runs in a separate isolate
+    // The count will be updated when the app comes to foreground
+  } catch (e) {
+    print('❌ Error incrementing background unread count: $e');
+  }
 }

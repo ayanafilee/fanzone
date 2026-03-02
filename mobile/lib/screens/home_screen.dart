@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 import '../config/app_colors.dart';
 import '../models/user.dart';
 import '../models/club.dart';
@@ -20,7 +21,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   User? _currentUser;
   bool _isLoading = true;
@@ -28,10 +29,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final _clubService = ClubService();
   List<Club> _clubs = [];
   bool _isLoadingClubs = false;
+  int _unreadNotificationCount = 0;
+  StreamSubscription? _unreadCountTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -39,8 +44,93 @@ class _HomeScreenState extends State<HomeScreen> {
         statusBarBrightness: Brightness.dark, // For iOS
       ),
     );
+    
+    // Set up callback for notification count changes
+    NotificationService.onUnreadCountChanged = (int newCount) {
+      print('🔔 Callback received: new count = $newCount');
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+      }
+    };
+    
     _loadUserPreferences();
     _loadClubs();
+    _loadUnreadCount();
+    
+    // Set up periodic check for unread count (every 30 seconds)
+    _startUnreadCountTimer();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _unreadCountTimer?.cancel();
+    NotificationService.onUnreadCountChanged = null;
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Reload count when app comes to foreground
+    if (state == AppLifecycleState.resumed) {
+      print('🔔 App resumed, reloading unread count');
+      _loadUnreadCount();
+    }
+  }
+
+  void _startUnreadCountTimer() {
+    _unreadCountTimer = Stream.periodic(const Duration(seconds: 30)).listen((_) {
+      _loadUnreadCount();
+    });
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastReadTimestamp = prefs.getInt('last_read_notification_timestamp') ?? 0;
+    final lastReadDateTime = DateTime.fromMillisecondsSinceEpoch(lastReadTimestamp);
+    
+    // Count notifications newer than last read time
+    // For now, we'll use a simple counter that gets updated when new notifications arrive
+    final count = prefs.getInt('unread_notification_count') ?? 0;
+    
+    print('🔔 Loading unread count: $count');
+    print('🔔 Last read timestamp: $lastReadTimestamp');
+    
+    if (mounted) {
+      setState(() {
+        _unreadNotificationCount = count;
+      });
+      print('🔔 Updated UI with count: $_unreadNotificationCount');
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_read_notification_timestamp', DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt('unread_notification_count', 0);
+    
+    print('🔔 Marked all as read, count reset to 0');
+    
+    if (mounted) {
+      setState(() {
+        _unreadNotificationCount = 0;
+      });
+    }
+  }
+
+  // Test method to simulate notifications (for development/testing)
+  Future<void> _simulateNotification() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentCount = prefs.getInt('unread_notification_count') ?? 0;
+    await prefs.setInt('unread_notification_count', currentCount + 1);
+    
+    print('🔔 Simulated notification, new count: ${currentCount + 1}');
+    
+    await _loadUnreadCount();
   }
 
   Future<void> _loadClubs() async {
@@ -105,12 +195,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showNotifications() {
+    // Mark all as read when opening notifications
+    _markAllAsRead();
+    
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => NotificationsScreen(user: _currentUser!),
       ),
-    );
+    ).then((_) {
+      // Reload count when returning
+      _loadUnreadCount();
+    });
   }
 
   String _getTabLabel(int index) {
@@ -497,13 +593,55 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Language Dropdown
                       _buildLanguageDropdown(),
                       const SizedBox(width: 4),
-                      // Notification Icon
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
-                        onPressed: _showNotifications,
-                        tooltip: 'Notifications',
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(),
+                      // Notification Icon with Badge
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
+                            onPressed: _showNotifications,
+                            onLongPress: _simulateNotification, // Long press to test
+                            tooltip: 'Notifications (Long press to test)',
+                            padding: const EdgeInsets.all(8),
+                            constraints: const BoxConstraints(),
+                          ),
+                          if (_unreadNotificationCount > 0)
+                            Positioned(
+                              right: 2,
+                              top: 2,
+                              child: Container(
+                                padding: EdgeInsets.all(_unreadNotificationCount > 9 ? 3 : 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.errorRed,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.darkGreen, width: 1.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.errorRed.withOpacity(0.5),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                constraints: BoxConstraints(
+                                  minWidth: _unreadNotificationCount > 9 ? 20 : 18,
+                                  minHeight: _unreadNotificationCount > 9 ? 20 : 18,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: _unreadNotificationCount > 9 ? 9 : 10,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.1,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
