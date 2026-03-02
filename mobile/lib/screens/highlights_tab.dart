@@ -362,7 +362,7 @@ class _HighlightsTabState extends State<HighlightsTab> {
                         thumbnailUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          color: AppColors.accentGreen,
+                          color: Colors.black87,
                           child: const Center(
                             child: Icon(Icons.play_circle_outline, size: 80, color: Colors.white54),
                           ),
@@ -372,7 +372,7 @@ class _HighlightsTabState extends State<HighlightsTab> {
                   else
                     Positioned.fill(
                       child: Container(
-                        color: AppColors.accentGreen,
+                        color: Colors.black87,
                         child: const Center(
                           child: Icon(Icons.play_circle_outline, size: 80, color: Colors.white54),
                         ),
@@ -393,37 +393,45 @@ class _HighlightsTabState extends State<HighlightsTab> {
                       ),
                     ),
                   ),
-                  // Play button overlay
-                  const Positioned.fill(
+                  // Play button overlay with YouTube red
+                  Positioned.fill(
                     child: Center(
-                      child: Icon(
-                        Icons.play_circle_filled,
-                        size: 72,
-                        color: Colors.white,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.youtubeRed,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          size: 48,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                  // Duration badge
+                  // YouTube badge
                   Positioned(
-                    bottom: 12,
-                    right: 12,
+                    top: 12,
+                    left: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.8),
+                        color: AppColors.youtubeRed,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.play_arrow, color: Colors.white, size: 14),
-                          SizedBox(width: 4),
+                        children: const [
+                          Icon(Icons.play_arrow, color: Colors.white, size: 16),
+                          SizedBox(width: 2),
                           Text(
-                            'WATCH',
+                            'YouTube',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
                             ),
                           ),
                         ],

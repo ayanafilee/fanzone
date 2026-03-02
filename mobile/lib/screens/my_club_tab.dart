@@ -675,7 +675,7 @@ class _MyClubTabState extends State<MyClubTab> {
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       height: 200,
-                      color: AppColors.accentGreen,
+                      color: Colors.black87,
                       child: const Center(
                         child: Icon(Icons.play_circle_outline, size: 80, color: Colors.white54),
                       ),
@@ -684,7 +684,7 @@ class _MyClubTabState extends State<MyClubTab> {
                 else
                   Container(
                     height: 200,
-                    color: AppColors.accentGreen,
+                    color: Colors.black87,
                     child: const Center(
                       child: Icon(Icons.play_circle_outline, size: 80, color: Colors.white54),
                     ),
@@ -702,36 +702,44 @@ class _MyClubTabState extends State<MyClubTab> {
                         ],
                       ),
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.play_circle_filled,
-                        size: 64,
-                        color: Colors.white,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.youtubeRed,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          size: 48,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                // Highlight badge
+                // YouTube badge
                 Positioned(
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.errorRed,
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.youtubeRed,
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.play_arrow, color: Colors.white, size: 16),
-                        SizedBox(width: 4),
+                      children: const [
+                        Icon(Icons.play_arrow, color: Colors.white, size: 18),
+                        SizedBox(width: 2),
                         Text(
-                          'HIGHLIGHT',
+                          'YouTube',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
                           ),
                         ),
                       ],

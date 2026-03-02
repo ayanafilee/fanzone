@@ -22,7 +22,9 @@ class AppColors {
   
   // Card colors
   static const Color newsCardBackground = Color(0xFF1E3D32); // Slightly lighter green for news
-  static const Color highlightCardBackground = Color(0xFF2D1F1F); // Dark red/burgundy for highlights (YouTube-like)
+  static const Color highlightCardBackground = Color(0xFF282828); // YouTube dark theme background
+  static const Color youtubeRed = Color(0xFFFF0000); // YouTube red color
+  static const Color youtubeDarkRed = Color(0xFFCC0000); // Darker YouTube red
   
   // Background gradient
   static LinearGradient backgroundGradient = const LinearGradient(
