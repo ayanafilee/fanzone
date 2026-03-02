@@ -10,6 +10,7 @@ import '../models/reaction.dart';
 import '../services/feed_service.dart';
 import '../services/reaction_service.dart';
 import '../widgets/telegram_reaction_bar.dart';
+import '../widgets/highlight_card.dart';
 
 class HighlightsTab extends StatefulWidget {
   final User user;
@@ -280,13 +281,8 @@ class _HighlightsTabState extends State<HighlightsTab> {
                         : RefreshIndicator(
                             onRefresh: _loadHighlights,
                             color: AppColors.buttonGreenEnd,
-                            child: GridView.builder(
+                            child: ListView.builder(
                               padding: const EdgeInsets.all(16),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 1,
-                                childAspectRatio: 16 / 12,
-                                mainAxisSpacing: 16,
-                              ),
                               itemCount: _filteredHighlights.length,
                               itemBuilder: (context, index) {
                                 final item = _filteredHighlights[index];
@@ -336,216 +332,15 @@ class _HighlightsTabState extends State<HighlightsTab> {
   }
 
   Widget _buildHighlightCard(highlight) {
-    final videoId = YoutubePlayer.convertUrlToId(highlight.videoUrl);
-    final thumbnailUrl = videoId != null
-        ? 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg'
-        : '';
     final itemId = 'highlight_${highlight.id}';
     final isBookmarked = _bookmarkedIds.contains(itemId);
 
-    return Card(
-      color: AppColors.highlightCardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _openYouTubeVideo(highlight.videoUrl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Full-width video thumbnail
-            Expanded(
-              child: Stack(
-                children: [
-                  if (thumbnailUrl.isNotEmpty)
-                    Positioned.fill(
-                      child: Image.network(
-                        thumbnailUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: Colors.black87,
-                          child: const Center(
-                            child: Icon(Icons.play_circle_outline, size: 80, color: Colors.white54),
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black87,
-                        child: const Center(
-                          child: Icon(Icons.play_circle_outline, size: 80, color: Colors.white54),
-                        ),
-                      ),
-                    ),
-                  // Gradient overlay
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.7),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Play button overlay with YouTube red
-                  Positioned.fill(
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.youtubeRed,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow,
-                          size: 48,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // YouTube badge
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.youtubeRed,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.play_arrow, color: Colors.white, size: 16),
-                          SizedBox(width: 2),
-                          Text(
-                            'YouTube',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Title, actions, and info
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          highlight.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Bookmark button
-                      Container(
-                        decoration: BoxDecoration(
-                          color: isBookmarked 
-                              ? AppColors.buttonGreenEnd.withOpacity(0.2) 
-                              : AppColors.inputBackground.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                            color: isBookmarked ? AppColors.buttonGreenEnd : Colors.white,
-                            size: 22,
-                          ),
-                          onPressed: () => _toggleBookmark(itemId),
-                          padding: const EdgeInsets.all(8),
-                          constraints: const BoxConstraints(),
-                          tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Share button
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.inputBackground.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.share, color: Colors.white, size: 22),
-                          onPressed: () {
-                            Share.share(
-                              '${highlight.title}\n\nWatch: ${highlight.videoUrl}\n\nShared from FanZone',
-                              subject: highlight.title,
-                            );
-                          },
-                          padding: const EdgeInsets.all(8),
-                          constraints: const BoxConstraints(),
-                          tooltip: 'Share',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Telegram-Style Reaction Bar
-                  TelegramReactionBar(
-                    counts: highlight.reactions,
-                    userReaction: highlight.userReaction,
-                    onReactionTap: (type) => _handleReaction(highlight.id, 'highlight', type),
-                    onRemoveReaction: () => _handleRemoveReaction(highlight.id, 'highlight'),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.errorRed,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'HIGHLIGHT',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Icon(Icons.access_time, size: 14, color: AppColors.textGrey),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDate(highlight.createdAt),
-                        style: const TextStyle(color: AppColors.textGrey, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return HighlightCard(
+      highlight: highlight,
+      isBookmarked: isBookmarked,
+      onBookmarkToggle: () => _toggleBookmark(itemId),
+      onReactionTap: (type) => _handleReaction(highlight.id, 'highlight', type),
+      onRemoveReaction: () => _handleRemoveReaction(highlight.id, 'highlight'),
     );
   }
 
