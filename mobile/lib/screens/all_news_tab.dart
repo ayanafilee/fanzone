@@ -11,6 +11,7 @@ import '../services/feed_service.dart';
 import '../services/reaction_service.dart';
 import '../widgets/telegram_reaction_bar.dart';
 import '../widgets/highlight_card.dart';
+import '../widgets/cached_image.dart';
 import '../utils/page_transitions.dart';
 import 'news_detail_screen.dart';
 
@@ -557,19 +558,12 @@ class _AllNewsTabState extends State<AllNewsTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
           if (news.imageUrl.isNotEmpty)
-            ClipRRect(
+            CachedImage(
+              imageUrl: news.imageUrl,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.network(
-                news.imageUrl,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 200,
-                  color: AppColors.accentGreen,
-                  child: const Icon(Icons.image, size: 64, color: AppColors.textGrey),
-                ),
-              ),
             ),
           Padding(
             padding: const EdgeInsets.all(16),

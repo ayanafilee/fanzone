@@ -212,6 +212,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     
     switch (index) {
       case 0:
+        // Get the selected club name
+        if (_currentUser!.favClubId != null && _clubs.isNotEmpty) {
+          try {
+            final selectedClub = _clubs.firstWhere(
+              (club) => club.id == _currentUser!.favClubId,
+            );
+            return selectedClub.name;
+          } catch (e) {
+            // If club not found, show default label
+            return lang == 'am' ? 'የእኔ ክለብ' : lang == 'om' ? 'Kilaba Koo' : 'My Club';
+          }
+        }
         return lang == 'am' ? 'የእኔ ክለብ' : lang == 'om' ? 'Kilaba Koo' : 'My Club';
       case 1:
         return lang == 'am' ? 'ሁሉም ክለቦች' : lang == 'om' ? 'Kilaboota Hunda' : 'All Clubs';
