@@ -1,1 +1,1 @@
-what you want is what you wantedFanZone is your sports application with a Golang backend and Flutter mobile app that provides clubs, reactions, watch links, quizzes, and multilingual football content.
+what you want is what you wanted
