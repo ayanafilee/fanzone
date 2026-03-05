@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, Smartphone, Globe, Bell, Heart, TrendingUp, Shield,
   Users, Zap, Star, Trophy, Play, ChevronRight, Check, 
-  MessageSquare, Video, Newspaper, Calendar, Award, Target,
+  MessageSquare, Video, Newspaper, Calendar, Target,
   Sparkles, Rocket, Lock, Clock, Download, Menu, X,
   Facebook, Twitter, Instagram, Youtube, Mail, MapPin, Phone
 } from 'lucide-react';
@@ -45,14 +44,13 @@ export default function Home() {
               <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How It Works</a>
               <a href="#leagues" className="text-slate-300 hover:text-white transition-colors">Leagues</a>
               <a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Testimonials</a>
-              <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">Pricing</a>
               <a href="#faq" className="text-slate-300 hover:text-white transition-colors">FAQ</a>
             </div>
 
             <div className="flex items-center gap-4">
-              <Link href="/admin" className="hidden sm:block text-white px-6 py-2.5 rounded-lg font-semibold transition-all hover:scale-105" style={{ background: gradients.button }}>
-                Admin Login
-              </Link>
+              <a href="#download" className="hidden sm:block text-white px-6 py-2.5 rounded-lg font-semibold transition-all hover:scale-105" style={{ background: gradients.button }}>
+                Get Started
+              </a>
               <button 
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden text-white p-2"
@@ -73,11 +71,10 @@ export default function Home() {
               <a href="#how-it-works" className="block text-slate-300 hover:text-white transition-colors">How It Works</a>
               <a href="#leagues" className="block text-slate-300 hover:text-white transition-colors">Leagues</a>
               <a href="#testimonials" className="block text-slate-300 hover:text-white transition-colors">Testimonials</a>
-              <a href="#pricing" className="block text-slate-300 hover:text-white transition-colors">Pricing</a>
               <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
-              <Link href="/admin" className="block text-white px-6 py-2.5 rounded-lg font-semibold text-center" style={{ background: gradients.button }}>
-                Admin Login
-              </Link>
+              <a href="#download" className="block text-white px-6 py-2.5 rounded-lg font-semibold text-center" style={{ background: gradients.button }}>
+                Get Started
+              </a>
             </motion.div>
           )}
         </div>
@@ -99,14 +96,14 @@ export default function Home() {
                 </div>
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                   Your Ultimate
-                  <span className="block animate-gradient" style={{ background: 'linear-gradient(to right, #4A8B6F, #B8D96E, #B8D96E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> Football Companion</span>
+                  <span className="block animate-gradient" style={getGradientTextStyle(gradients.textLong)}> Football Companion</span>
                 </h1>
                 <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                   Stay connected with your favorite clubs, leagues, and matches. Get real-time updates, 
                   highlights, and news in your language. Join millions of passionate fans worldwide.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <a href="#download" className="group text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg" style={{ background: 'linear-gradient(to right, #2D5F4C, #4A8B6F, #B8D96E)', boxShadow: '0 10px 25px rgba(45, 95, 76, 0.25)' }}>
+                  <a href="#download" className="group text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg" style={{ background: gradients.button, boxShadow: `0 10px 25px ${colors.accentGreen}40` }}>
                     Download Now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </a>
                   <a href="#features" className="group glass-effect text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2">
@@ -388,68 +385,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-4 relative">
-        <div className="max-w-7xl mx-auto">
-          <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
-              <Award className="w-4 h-4 text-[#B8D96E]" />
-              <span className="text-sm text-[#B8D96E]">Simple Pricing</span>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              Choose Your Plan
-            </h2>
-            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              Start free and upgrade when you need more features
-            </p>
-          </AnimatedSection>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <PricingCard
-              name="Free"
-              price="$0"
-              period="forever"
-              features={[
-                "Access to all leagues",
-                "Basic news updates",
-                "Match highlights",
-                "Anonymous reactions",
-                "Multi-language support"
-              ]}
-              popular={false}
-            />
-            <PricingCard
-              name="Pro"
-              price="$4.99"
-              period="per month"
-              features={[
-                "Everything in Free",
-                "Ad-free experience",
-                "Priority notifications",
-                "Exclusive content",
-                "Advanced statistics",
-                "Custom themes"
-              ]}
-              popular={true}
-            />
-            <PricingCard
-              name="Premium"
-              price="$9.99"
-              period="per month"
-              features={[
-                "Everything in Pro",
-                "Live match streaming",
-                "Expert analysis",
-                "VIP community access",
-                "Early feature access",
-                "Premium support"
-              ]}
-              popular={false}
-            />
-          </div>
-        </div>
-      </section>
-
       {/* FAQ Section */}
       <section id="faq" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-4xl mx-auto">
@@ -594,7 +529,6 @@ export default function Home() {
               <h3 className="text-white font-bold mb-4 text-lg">Product</h3>
               <ul className="space-y-3">
                 <li><a href="#features" className="text-slate-400 hover:text-white transition">Features</a></li>
-                <li><a href="#pricing" className="text-slate-400 hover:text-white transition">Pricing</a></li>
                 <li><a href="#download" className="text-slate-400 hover:text-white transition">Download</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white transition">Updates</a></li>
               </ul>
@@ -738,53 +672,6 @@ function TestimonialCard({ name, role, content, rating }: {
           </div>
         </div>
       </div>
-    </AnimatedSection>
-  );
-}
-
-function PricingCard({ name, price, period, features, popular }: {
-  name: string;
-  price: string;
-  period: string;
-  features: string[];
-  popular: boolean;
-}) {
-  return (
-    <AnimatedSection>
-      <motion.div 
-        whileHover={{ scale: 1.05 }}
-        className={`relative p-8 rounded-2xl h-full ${
-          popular 
-            ? 'gradient-border bg-gradient-to-b from-slate-900 to-slate-800' 
-            : 'glass-effect'
-        }`}
-      >
-        {popular && (
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] text-white px-4 py-1 rounded-full text-sm font-bold">
-            Most Popular
-          </div>
-        )}
-        <h3 className="text-2xl font-bold text-white mb-2">{name}</h3>
-        <div className="mb-6">
-          <span className="text-5xl font-bold bg-gradient-to-r from-[#4A8B6F] to-[#B8D96E] bg-clip-text text-transparent">{price}</span>
-          <span className="text-slate-400 ml-2">/{period}</span>
-        </div>
-        <ul className="space-y-4 mb-8">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-              <span className="text-slate-300">{feature}</span>
-            </li>
-          ))}
-        </ul>
-        <button className={`w-full py-4 rounded-xl font-bold transition-all ${
-          popular
-            ? 'bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] hover:from-[#4A8B6F] hover:to-[#B8D96E] text-white'
-            : 'bg-[#1A3A2E] hover:bg-[#2D5F4C] text-white'
-        }`}>
-          Get Started
-        </button>
-      </motion.div>
     </AnimatedSection>
   );
 }
