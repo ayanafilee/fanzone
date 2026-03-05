@@ -3,10 +3,10 @@
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, Smartphone, Globe, Bell, Heart, TrendingUp, Shield,
-  Users, Zap, Star, Trophy, Play, ChevronRight, Check, 
-  MessageSquare, Video, Newspaper, Calendar, Target,
-  Sparkles, Rocket, Lock, Clock, Download, Menu, X,
-  Facebook, Twitter, Instagram, Youtube, Mail, MapPin, Phone
+  Users, Star, Trophy, ChevronRight, Check, 
+  MessageSquare, Video, Newspaper, Target,
+  Rocket, Download, Menu, X,
+  Facebook, Twitter, Instagram, Youtube, Mail
 } from 'lucide-react';
 import { useState } from 'react';
 import AnimatedSection from '@/components/AnimatedSection';
@@ -90,10 +90,6 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-6" style={styles.badge}>
-                  <Sparkles className="w-4 h-4" style={{ color: colors.limeGreen }} />
-                  <span className="text-sm" style={{ color: colors.limeGreen }}>The Future of Football Engagement</span>
-                </div>
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                   Your Ultimate
                   <span className="block animate-gradient" style={getGradientTextStyle(gradients.textLong)}> Football Companion</span>
@@ -202,10 +198,6 @@ export default function Home() {
       <section id="features" className="py-32 px-4 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
-              <Star className="w-4 h-4 text-[#B8D96E]" />
-              <span className="text-sm text-[#B8D96E]">Powerful Features</span>
-            </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Everything You Need to Stay in the Game
             </h2>
@@ -277,10 +269,6 @@ export default function Home() {
       <section id="how-it-works" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
-              <Zap className="w-4 h-4 text-[#B8D96E]" />
-              <span className="text-sm text-[#B8D96E]">Simple Process</span>
-            </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Get Started in Minutes
             </h2>
@@ -319,10 +307,6 @@ export default function Home() {
       <section id="leagues" className="py-32 px-4 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
-              <Trophy className="w-4 h-4 text-[#B8D96E]" />
-              <span className="text-sm text-[#B8D96E]">Global Coverage</span>
-            </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Follow Your Favorite Leagues
             </h2>
@@ -350,10 +334,6 @@ export default function Home() {
       <section id="testimonials" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
-              <MessageSquare className="w-4 h-4 text-[#B8D96E]" />
-              <span className="text-sm text-[#B8D96E]">User Reviews</span>
-            </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Loved by Football Fans Worldwide
             </h2>
@@ -389,10 +369,6 @@ export default function Home() {
       <section id="faq" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-4xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
-              <MessageSquare className="w-4 h-4 text-[#B8D96E]" />
-              <span className="text-sm text-[#B8D96E]">Got Questions?</span>
-            </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Frequently Asked Questions
             </h2>
