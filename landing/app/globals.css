@@ -1,12 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-  }
+@theme {
+  --color-dark-green: #0a1f1a;
+  --color-medium-green: #1a3a2e;
+  --color-accent-green: #2d5f4c;
+  --color-forest-green: #4a8b6f;
+  --color-lime-green: #b8d96e;
+  --color-card-green: #1e3d32;
 }
 
 @layer utilities {
@@ -27,23 +27,15 @@
     animation: gradient 8s ease infinite;
   }
   
-  .animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out;
-  }
-  
   .glass-effect {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(26, 58, 46, 0.6);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(148, 163, 184, 0.1);
+    border: 1px solid rgba(45, 95, 76, 0.3);
   }
   
   .gradient-border {
     position: relative;
-    background: linear-gradient(to right, #1e293b, #0f172a);
+    background: linear-gradient(to right, #1A3A2E, #0A1F1A);
   }
   
   .gradient-border::before {
@@ -52,10 +44,54 @@
     inset: 0;
     border-radius: inherit;
     padding: 2px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+    background: linear-gradient(135deg, #2D5F4C, #4A8B6F, #B8D96E);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
+  }
+  
+  .bg-dark-green {
+    background-color: #0a1f1a;
+  }
+  
+  .bg-medium-green {
+    background-color: #1a3a2e;
+  }
+  
+  .bg-accent-green {
+    background-color: #2d5f4c;
+  }
+  
+  .bg-forest-green {
+    background-color: #4a8b6f;
+  }
+  
+  .bg-lime-green {
+    background-color: #b8d96e;
+  }
+  
+  .text-lime-green {
+    color: #b8d96e;
+  }
+  
+  .text-forest-green {
+    color: #4a8b6f;
+  }
+  
+  .border-accent-green {
+    border-color: #2d5f4c;
+  }
+  
+  .border-forest-green {
+    border-color: #4a8b6f;
+  }
+  
+  .bg-gradient-green {
+    background: linear-gradient(to right, #2d5f4c, #4a8b6f, #b8d96e);
+  }
+  
+  .bg-gradient-green-hover:hover {
+    background: linear-gradient(to right, #4a8b6f, #b8d96e);
   }
 }
 
@@ -80,31 +116,20 @@
   }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0A1F1A;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  background: linear-gradient(to bottom, #2D5F4C, #B8D96E);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #2563eb, #7c3aed);
+  background: linear-gradient(to bottom, #4A8B6F, #B8D96E);
 }

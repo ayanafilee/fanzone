@@ -12,21 +12,22 @@ import {
 import { useState } from 'react';
 import AnimatedSection from '@/components/AnimatedSection';
 import StatsCounter from '@/components/StatsCounter';
+import { colors, gradients, styles, getGradientTextStyle } from '@/lib/styles';
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
+    <div className="min-h-screen overflow-hidden" style={{ background: gradients.background }}>
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl animate-float" style={styles.floatingOrb(0.1)}></div>
+        <div className="absolute top-40 right-20 w-96 h-96 rounded-full blur-3xl animate-float-delayed" style={{ backgroundColor: `rgba(74, 139, 111, 0.1)` }}></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 rounded-full blur-3xl animate-float" style={{ backgroundColor: `rgba(184, 217, 110, 0.1)` }}></div>
       </div>
 
       {/* Navigation */}
-      <nav className="fixed w-full glass-effect z-50 border-b border-slate-700/50">
+      <nav className="fixed w-full glass-effect z-50" style={{ borderBottom: `1px solid ${colors.accentGreen}80` }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <motion.div 
@@ -34,8 +35,8 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-3"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl animate-gradient"></div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FanZone</span>
+              <div className="w-10 h-10 rounded-xl animate-gradient" style={{ background: gradients.card }}></div>
+              <span className="text-2xl font-bold" style={getGradientTextStyle()}>FanZone</span>
             </motion.div>
             
             {/* Desktop Menu */}
@@ -49,7 +50,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Link href="/admin" className="hidden sm:block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all hover:scale-105">
+              <Link href="/admin" className="hidden sm:block text-white px-6 py-2.5 rounded-lg font-semibold transition-all hover:scale-105" style={{ background: gradients.button }}>
                 Admin Login
               </Link>
               <button 
@@ -74,7 +75,7 @@ export default function Home() {
               <a href="#testimonials" className="block text-slate-300 hover:text-white transition-colors">Testimonials</a>
               <a href="#pricing" className="block text-slate-300 hover:text-white transition-colors">Pricing</a>
               <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
-              <Link href="/admin" className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold text-center">
+              <Link href="/admin" className="block text-white px-6 py-2.5 rounded-lg font-semibold text-center" style={{ background: gradients.button }}>
                 Admin Login
               </Link>
             </motion.div>
@@ -92,23 +93,23 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-2 mb-6">
-                  <Sparkles className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm text-blue-300">The Future of Football Engagement</span>
+                <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-6" style={styles.badge}>
+                  <Sparkles className="w-4 h-4" style={{ color: colors.limeGreen }} />
+                  <span className="text-sm" style={{ color: colors.limeGreen }}>The Future of Football Engagement</span>
                 </div>
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                   Your Ultimate
-                  <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient"> Football Companion</span>
+                  <span className="block animate-gradient" style={{ background: 'linear-gradient(to right, #4A8B6F, #B8D96E, #B8D96E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> Football Companion</span>
                 </h1>
                 <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                   Stay connected with your favorite clubs, leagues, and matches. Get real-time updates, 
                   highlights, and news in your language. Join millions of passionate fans worldwide.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <a href="#download" className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg shadow-blue-500/25">
+                  <a href="#download" className="group text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg" style={{ background: 'linear-gradient(to right, #2D5F4C, #4A8B6F, #B8D96E)', boxShadow: '0 10px 25px rgba(45, 95, 76, 0.25)' }}>
                     Download Now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </a>
-                  <a href="#features" className="group glass-effect hover:bg-slate-800/80 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2">
+                  <a href="#features" className="group glass-effect text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2">
                     Explore Features <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </a>
                 </div>
@@ -123,7 +124,7 @@ export default function Home() {
               className="relative"
             >
               <div className="relative w-full h-[600px] flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2D5F4C]/20 to-[#B8D96E]/20 rounded-3xl blur-3xl"></div>
                 <div className="relative grid grid-cols-2 gap-4 p-8">
                   <motion.div 
                     animate={{ y: [0, -10, 0] }}
@@ -173,25 +174,25 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <AnimatedSection className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+              <div className="text-5xl font-bold bg-gradient-to-r from-[#4A8B6F] to-[#B8D96E] bg-clip-text text-transparent mb-2">
                 <StatsCounter end={500} suffix="K+" />
               </div>
               <p className="text-slate-400">Active Users</p>
             </AnimatedSection>
             <AnimatedSection delay={0.1} className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+              <div className="text-5xl font-bold bg-gradient-to-r from-[#B8D96E] to-[#4A8B6F] bg-clip-text text-transparent mb-2">
                 <StatsCounter end={150} suffix="+" />
               </div>
               <p className="text-slate-400">Football Clubs</p>
             </AnimatedSection>
             <AnimatedSection delay={0.2} className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent mb-2">
+              <div className="text-5xl font-bold bg-gradient-to-r from-[#2D5F4C] to-[#B8D96E] bg-clip-text text-transparent mb-2">
                 <StatsCounter end={25} suffix="+" />
               </div>
               <p className="text-slate-400">Leagues Covered</p>
             </AnimatedSection>
             <AnimatedSection delay={0.3} className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent mb-2">
+              <div className="text-5xl font-bold bg-gradient-to-r from-[#B8D96E] to-[#2D5F4C] bg-clip-text text-transparent mb-2">
                 <StatsCounter end={1000} suffix="+" />
               </div>
               <p className="text-slate-400">Daily Updates</p>
@@ -204,9 +205,9 @@ export default function Home() {
       <section id="features" className="py-32 px-4 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-2 mb-6">
-              <Star className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-purple-300">Powerful Features</span>
+            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
+              <Star className="w-4 h-4 text-[#B8D96E]" />
+              <span className="text-sm text-[#B8D96E]">Powerful Features</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Everything You Need to Stay in the Game
@@ -221,67 +222,67 @@ export default function Home() {
               icon={<Globe className="w-10 h-10" />}
               title="Multi-Language Support"
               description="Access content in English, Amharic, and Oromo. Your language, your choice. Breaking language barriers for all fans."
-              gradient="from-blue-500 to-cyan-500"
+              gradient="from-[#2D5F4C] to-[#4A8B6F]"
             />
             <FeatureCard
               icon={<Bell className="w-10 h-10" />}
               title="Real-Time Notifications"
               description="Never miss a moment with instant push notifications for your favorite clubs, matches, and breaking news."
-              gradient="from-purple-500 to-pink-500"
+              gradient="from-[#4A8B6F] to-[#B8D96E]"
             />
             <FeatureCard
               icon={<Video className="w-10 h-10" />}
               title="Match Highlights"
               description="Watch match highlights and key moments from all major leagues. Relive the best goals and saves."
-              gradient="from-pink-500 to-red-500"
+              gradient="from-[#B8D96E] to-[#4A8B6F]"
             />
             <FeatureCard
               icon={<Heart className="w-10 h-10" />}
               title="React & Engage"
               description="Express your emotions with reactions - like, love, wow, sad, or angry. Join the conversation."
-              gradient="from-red-500 to-orange-500"
+              gradient="from-[#2D5F4C] to-[#B8D96E]"
             />
             <FeatureCard
               icon={<Smartphone className="w-10 h-10" />}
               title="Mobile First Design"
               description="Beautiful, fast, and intuitive mobile experience built with Flutter. Optimized for all devices."
-              gradient="from-orange-500 to-yellow-500"
+              gradient="from-[#4A8B6F] to-[#2D5F4C]"
             />
             <FeatureCard
               icon={<Shield className="w-10 h-10" />}
               title="Privacy Focused"
               description="Engage with content freely with anonymous reactions. Your privacy is our priority."
-              gradient="from-green-500 to-emerald-500"
+              gradient="from-[#B8D96E] to-[#2D5F4C]"
             />
             <FeatureCard
               icon={<Newspaper className="w-10 h-10" />}
               title="Latest News"
               description="Stay updated with breaking news, transfer rumors, and exclusive interviews from the football world."
-              gradient="from-emerald-500 to-teal-500"
+              gradient="from-[#2D5F4C] to-[#4A8B6F]"
             />
             <FeatureCard
               icon={<Trophy className="w-10 h-10" />}
               title="League Tables"
               description="Track standings, fixtures, and results from your favorite leagues in real-time."
-              gradient="from-teal-500 to-cyan-500"
+              gradient="from-[#4A8B6F] to-[#B8D96E]"
             />
             <FeatureCard
               icon={<Users className="w-10 h-10" />}
               title="Community Driven"
               description="Join a passionate community of football fans from around the world. Share your passion."
-              gradient="from-cyan-500 to-blue-500"
+              gradient="from-[#B8D96E] to-[#4A8B6F]"
             />
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-32 px-4 relative bg-slate-900/50">
+      <section id="how-it-works" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-2 mb-6">
-              <Zap className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-blue-300">Simple Process</span>
+            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
+              <Zap className="w-4 h-4 text-[#B8D96E]" />
+              <span className="text-sm text-[#B8D96E]">Simple Process</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Get Started in Minutes
@@ -293,7 +294,7 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-12 relative">
             {/* Connection Lines */}
-            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 -translate-y-1/2"></div>
+            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] -translate-y-1/2"></div>
             
             <StepCard
               number="01"
@@ -321,9 +322,9 @@ export default function Home() {
       <section id="leagues" className="py-32 px-4 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-2 mb-6">
-              <Trophy className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-green-300">Global Coverage</span>
+            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
+              <Trophy className="w-4 h-4 text-[#B8D96E]" />
+              <span className="text-sm text-[#B8D96E]">Global Coverage</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Follow Your Favorite Leagues
@@ -349,12 +350,12 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-32 px-4 relative bg-slate-900/50">
+      <section id="testimonials" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-4 py-2 mb-6">
-              <MessageSquare className="w-4 h-4 text-pink-400" />
-              <span className="text-sm text-pink-300">User Reviews</span>
+            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
+              <MessageSquare className="w-4 h-4 text-[#B8D96E]" />
+              <span className="text-sm text-[#B8D96E]">User Reviews</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Loved by Football Fans Worldwide
@@ -391,9 +392,9 @@ export default function Home() {
       <section id="pricing" className="py-32 px-4 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full px-4 py-2 mb-6">
-              <Award className="w-4 h-4 text-yellow-400" />
-              <span className="text-sm text-yellow-300">Simple Pricing</span>
+            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
+              <Award className="w-4 h-4 text-[#B8D96E]" />
+              <span className="text-sm text-[#B8D96E]">Simple Pricing</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Choose Your Plan
@@ -450,12 +451,12 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-32 px-4 relative bg-slate-900/50">
+      <section id="faq" className="py-32 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-4xl mx-auto">
           <AnimatedSection className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-2 mb-6">
-              <MessageSquare className="w-4 h-4 text-purple-400" />
-              <span className="text-sm text-purple-300">Got Questions?</span>
+            <div className="inline-flex items-center gap-2 bg-[#2D5F4C]/20 border border-[#4A8B6F]/30 rounded-full px-4 py-2 mb-6">
+              <MessageSquare className="w-4 h-4 text-[#B8D96E]" />
+              <span className="text-sm text-[#B8D96E]">Got Questions?</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Frequently Asked Questions
@@ -499,7 +500,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <AnimatedSection>
             <div className="relative gradient-border rounded-3xl p-12 md:p-16 text-center overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#2D5F4C]/20 via-[#4A8B6F]/20 to-[#B8D96E]/20"></div>
               <div className="relative z-10">
                 <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
                   Ready to Join the Action?
@@ -534,10 +535,10 @@ export default function Home() {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-20 px-4 relative bg-slate-900/50">
+      <section className="py-20 px-4 relative bg-[#1A3A2E]/30">
         <div className="max-w-4xl mx-auto">
           <AnimatedSection className="text-center">
-            <Mail className="w-16 h-16 text-blue-400 mx-auto mb-6" />
+            <Mail className="w-16 h-16 text-[#B8D96E] mx-auto mb-6" />
             <h2 className="text-4xl font-bold text-white mb-4">
               Stay Updated
             </h2>
@@ -548,11 +549,11 @@ export default function Home() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-6 py-4 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                className="flex-1 px-6 py-4 rounded-xl bg-[#1A3A2E] border border-[#2D5F4C] text-white placeholder-slate-500 focus:outline-none focus:border-[#B8D96E] transition"
               />
               <button
                 type="submit"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105"
+                className="bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] hover:from-[#4A8B6F] hover:to-[#B8D96E] text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105"
               >
                 Subscribe
               </button>
@@ -562,28 +563,28 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-4 border-t border-slate-800">
+      <footer className="py-20 px-4 border-t border-[#2D5F4C]/50">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
             <div className="lg:col-span-2">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl animate-gradient"></div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FanZone</span>
+                <div className="w-12 h-12 bg-gradient-to-br from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] rounded-xl animate-gradient"></div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-[#4A8B6F] to-[#B8D96E] bg-clip-text text-transparent">FanZone</span>
               </div>
               <p className="text-slate-400 mb-6 max-w-md">
                 Your ultimate football companion. Stay connected with your favorite clubs, leagues, and matches. Join millions of passionate fans worldwide.
               </p>
               <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition">
+                <a href="#" className="w-10 h-10 rounded-lg bg-[#1A3A2E] hover:bg-[#2D5F4C] flex items-center justify-center text-slate-400 hover:text-white transition">
                   <Facebook className="w-5 h-5" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition">
+                <a href="#" className="w-10 h-10 rounded-lg bg-[#1A3A2E] hover:bg-[#2D5F4C] flex items-center justify-center text-slate-400 hover:text-white transition">
                   <Twitter className="w-5 h-5" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition">
+                <a href="#" className="w-10 h-10 rounded-lg bg-[#1A3A2E] hover:bg-[#2D5F4C] flex items-center justify-center text-slate-400 hover:text-white transition">
                   <Instagram className="w-5 h-5" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition">
+                <a href="#" className="w-10 h-10 rounded-lg bg-[#1A3A2E] hover:bg-[#2D5F4C] flex items-center justify-center text-slate-400 hover:text-white transition">
                   <Youtube className="w-5 h-5" />
                 </a>
               </div>
@@ -621,7 +622,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="border-t border-slate-800 pt-8">
+          <div className="border-t border-[#2D5F4C]/50 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-slate-400 text-center md:text-left">
                 &copy; 2026 FanZone. All rights reserved. Made with ❤️ for football fans.
@@ -641,7 +642,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition-all z-40"
+        className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] hover:from-[#4A8B6F] hover:to-[#B8D96E] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition-all z-40"
       >
         <ChevronRight className="w-6 h-6 -rotate-90" />
       </motion.button>
@@ -682,10 +683,10 @@ function StepCard({ number, title, description, icon }: {
   return (
     <AnimatedSection className="relative">
       <div className="glass-effect p-8 rounded-2xl text-center relative z-10">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto mb-6 text-white">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] flex items-center justify-center mx-auto mb-6 text-white">
           {icon}
         </div>
-        <div className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+        <div className="text-6xl font-bold bg-gradient-to-r from-[#4A8B6F] to-[#B8D96E] bg-clip-text text-transparent mb-4">
           {number}
         </div>
         <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>
@@ -702,7 +703,7 @@ function LeagueCard({ name, country }: { name: string; country: string }) {
         whileHover={{ scale: 1.05 }}
         className="glass-effect p-6 rounded-xl text-center cursor-pointer group"
       >
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
           <Trophy className="w-8 h-8 text-white" />
         </div>
         <h3 className="text-white font-bold mb-1">{name}</h3>
@@ -728,7 +729,7 @@ function TestimonialCard({ name, role, content, rating }: {
         </div>
         <p className="text-slate-300 mb-6 leading-relaxed italic">&quot;{content}&quot;</p>
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] flex items-center justify-center text-white font-bold">
             {name.charAt(0)}
           </div>
           <div>
@@ -759,13 +760,13 @@ function PricingCard({ name, price, period, features, popular }: {
         }`}
       >
         {popular && (
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] text-white px-4 py-1 rounded-full text-sm font-bold">
             Most Popular
           </div>
         )}
         <h3 className="text-2xl font-bold text-white mb-2">{name}</h3>
         <div className="mb-6">
-          <span className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{price}</span>
+          <span className="text-5xl font-bold bg-gradient-to-r from-[#4A8B6F] to-[#B8D96E] bg-clip-text text-transparent">{price}</span>
           <span className="text-slate-400 ml-2">/{period}</span>
         </div>
         <ul className="space-y-4 mb-8">
@@ -778,8 +779,8 @@ function PricingCard({ name, price, period, features, popular }: {
         </ul>
         <button className={`w-full py-4 rounded-xl font-bold transition-all ${
           popular
-            ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-            : 'bg-slate-800 hover:bg-slate-700 text-white'
+            ? 'bg-gradient-to-r from-[#2D5F4C] via-[#4A8B6F] to-[#B8D96E] hover:from-[#4A8B6F] hover:to-[#B8D96E] text-white'
+            : 'bg-[#1A3A2E] hover:bg-[#2D5F4C] text-white'
         }`}>
           Get Started
         </button>
@@ -796,7 +797,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
       <div className="glass-effect rounded-xl overflow-hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full p-6 text-left flex justify-between items-center hover:bg-slate-800/50 transition"
+          className="w-full p-6 text-left flex justify-between items-center hover:bg-[#1A3A2E]/50 transition"
         >
           <span className="text-lg font-semibold text-white pr-8">{question}</span>
           <motion.div
