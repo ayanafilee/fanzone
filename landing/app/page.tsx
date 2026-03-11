@@ -30,10 +30,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-24">
             {/* Logo - Left Aligned */}
-            <motion.div 
+            <motion.a
+              href="#top"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3 mr-auto"
+              className="flex items-center gap-3 mr-auto cursor-pointer hover:opacity-80 transition-opacity"
             >
               <img 
                 src="/fanzonelogo.jpg" 
@@ -44,7 +45,7 @@ export default function Home() {
                 <span className="text-2xl font-bold tracking-tight" style={getGradientTextStyle()}>FanZone</span>
                 <span className="text-xs text-slate-400 -mt-1">Your Football Hub</span>
               </div>
-            </motion.div>
+            </motion.a>
             
             {/* Desktop Menu - Centered */}
             <div className="hidden lg:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
