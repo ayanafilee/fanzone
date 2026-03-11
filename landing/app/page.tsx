@@ -27,14 +27,14 @@ export default function Home() {
 
       {/* Navigation */}
       <nav className="fixed w-full glass-effect z-50" style={{ borderBottom: `1px solid ${colors.accentGreen}40` }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center h-24 pr-6 lg:pr-8">
             {/* Logo - Left Aligned */}
             <motion.a
               href="#top"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3 mr-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center gap-3 mr-auto cursor-pointer hover:opacity-80 transition-opacity pl-6 lg:pl-8"
             >
               <img 
                 src="/fanzonelogo.jpg" 
