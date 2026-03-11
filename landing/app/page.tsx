@@ -26,34 +26,42 @@ export default function Home() {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed w-full glass-effect z-50" style={{ borderBottom: `1px solid ${colors.accentGreen}80` }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+      <nav className="fixed w-full glass-effect z-50" style={{ borderBottom: `1px solid ${colors.accentGreen}40` }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-24">
+            {/* Logo - Left Aligned */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-3"
+              className="flex items-center gap-3 mr-auto"
             >
-              <div className="w-10 h-10 rounded-xl animate-gradient" style={{ background: gradients.card }}></div>
-              <span className="text-2xl font-bold" style={getGradientTextStyle()}>FanZone</span>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center animate-gradient" style={{ background: gradients.card }}>
+                <Trophy className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold tracking-tight" style={getGradientTextStyle()}>FanZone</span>
+                <span className="text-xs text-slate-400 -mt-1">Your Football Hub</span>
+              </div>
             </motion.div>
             
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex space-x-8">
-              <a href="#features" className="text-slate-300 hover:text-white transition-colors">Features</a>
-              <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How It Works</a>
-              <a href="#leagues" className="text-slate-300 hover:text-white transition-colors">Leagues</a>
-              <a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Testimonials</a>
-              <a href="#faq" className="text-slate-300 hover:text-white transition-colors">FAQ</a>
+            {/* Desktop Menu - Centered */}
+            <div className="hidden lg:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+              <a href="#features" className="text-slate-300 hover:text-white transition-colors text-sm font-medium">Features</a>
+              <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors text-sm font-medium">How It Works</a>
+              <a href="#leagues" className="text-slate-300 hover:text-white transition-colors text-sm font-medium">Leagues</a>
+              <a href="#testimonials" className="text-slate-300 hover:text-white transition-colors text-sm font-medium">Testimonials</a>
+              <a href="#faq" className="text-slate-300 hover:text-white transition-colors text-sm font-medium">FAQ</a>
             </div>
 
+            {/* CTA - Right Aligned */}
             <div className="flex items-center gap-4">
-              <a href="#download" className="hidden sm:block text-white px-6 py-2.5 rounded-lg font-semibold transition-all hover:scale-105" style={{ background: gradients.button }}>
+              <a href="#download" className="hidden sm:flex items-center gap-2 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 hover:shadow-lg text-sm" style={{ background: gradients.button }}>
+                <Download className="w-4 h-4" />
                 Get Started
               </a>
               <button 
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden text-white p-2"
+                className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -65,14 +73,15 @@ export default function Home() {
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="lg:hidden py-4 space-y-4"
+              className="lg:hidden py-6 space-y-4 border-t border-accent-green/20"
             >
-              <a href="#features" className="block text-slate-300 hover:text-white transition-colors">Features</a>
-              <a href="#how-it-works" className="block text-slate-300 hover:text-white transition-colors">How It Works</a>
-              <a href="#leagues" className="block text-slate-300 hover:text-white transition-colors">Leagues</a>
-              <a href="#testimonials" className="block text-slate-300 hover:text-white transition-colors">Testimonials</a>
-              <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
-              <a href="#download" className="block text-white px-6 py-2.5 rounded-lg font-semibold text-center" style={{ background: gradients.button }}>
+              <a href="#features" className="block text-slate-300 hover:text-white transition-colors py-2 text-sm font-medium">Features</a>
+              <a href="#how-it-works" className="block text-slate-300 hover:text-white transition-colors py-2 text-sm font-medium">How It Works</a>
+              <a href="#leagues" className="block text-slate-300 hover:text-white transition-colors py-2 text-sm font-medium">Leagues</a>
+              <a href="#testimonials" className="block text-slate-300 hover:text-white transition-colors py-2 text-sm font-medium">Testimonials</a>
+              <a href="#faq" className="block text-slate-300 hover:text-white transition-colors py-2 text-sm font-medium">FAQ</a>
+              <a href="#download" className="flex items-center justify-center gap-2 text-white px-6 py-3 rounded-xl font-semibold text-sm mt-4" style={{ background: gradients.button }}>
+                <Download className="w-4 h-4" />
                 Get Started
               </a>
             </motion.div>
