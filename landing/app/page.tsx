@@ -35,9 +35,11 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3 mr-auto"
             >
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center animate-gradient" style={{ background: gradients.card }}>
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
+              <img 
+                src="/fanzonelogo.jpg" 
+                alt="FanZone Logo" 
+                className="w-11 h-11 rounded-xl object-cover"
+              />
               <div className="flex flex-col">
                 <span className="text-2xl font-bold tracking-tight" style={getGradientTextStyle()}>FanZone</span>
                 <span className="text-xs text-slate-400 -mt-1">Your Football Hub</span>
