@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MdLanguage, MdClose, MdSave, MdArrowBack } from 'react-icons/md';
+import { MdLanguage, MdClose, MdSave, MdArrowBack, MdTranslate } from 'react-icons/md';
 import { CloudinaryUpload } from '../common/CloudinaryUpload';
 import { Content } from '@/lib/features/admin/adminApi';
 import { useRouter } from 'next/navigation';
@@ -24,6 +24,76 @@ export default function ContentForm({ content, clubs, categories, onSubmit, isLo
         category: 'News',
         club_id: ''
     });
+
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    const handleTranslateAll = async () => {
+        if (!formData.title.en && !formData.body.en) return;
+        setIsTranslating(true);
+        
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
+        
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: formData.title.en,
+                        body: formData.body.en
+                    })
+                });
+                
+                if (!response.ok) {
+                    // Check if it's a 503 error (service unavailable) and we have retries left
+                    if (response.status === 503 && attempt < maxRetries) {
+                        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+                        console.warn(`Translation service temporarily unavailable (attempt ${attempt + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    
+                    // For other errors or if we've exhausted retries, throw error
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `Translation failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                setFormData(prev => ({
+                    ...prev,
+                    title: {
+                        ...prev.title,
+                        am: data.title?.am || prev.title.am,
+                        om: data.title?.om || prev.title.om,
+                    },
+                    body: {
+                        ...prev.body,
+                        am: data.body?.am || prev.body.am,
+                        om: data.body?.om || prev.body.om,
+                    }
+                }));
+                
+                // Success - break out of retry loop
+                break;
+                
+            } catch (error) {
+                // If this was the last attempt, show error to user
+                if (attempt === maxRetries) {
+                    console.error("Translation failed after all retries", error);
+                    alert(`Translation failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again later.`);
+                } else {
+                    // Log the error but continue retrying
+                    console.error(`Translation attempt ${attempt + 1} failed:`, error);
+                }
+            }
+        }
+        
+        setIsTranslating(false);
+    };
 
     useEffect(() => {
         if (content) {
@@ -152,6 +222,21 @@ export default function ContentForm({ content, clubs, categories, onSubmit, isLo
                         </div>
                     </div>
 
+                    {/* Translate Button Section */}
+                    <div className="flex justify-center pt-8 border-t border-gray-50">
+                        <button
+                            type="button"
+                            onClick={handleTranslateAll}
+                            disabled={isTranslating || (!formData.title.en && !formData.body.en)}
+                            className="flex items-center gap-3 px-8 py-4 bg-[#00A3E0]/10 text-[#00A3E0] rounded-2xl font-bold hover:bg-[#00A3E0]/20 transition-all disabled:opacity-50 shadow-sm"
+                        >
+                            {isTranslating ? (
+                                <div className="w-6 h-6 border-2 border-[#00A3E0]/30 border-t-[#00A3E0] rounded-full animate-spin" />
+                            ) : <MdLanguage size={24} />}
+                            <span>Translate</span>
+                        </button>
+                    </div>
+
                     {/* 4. Featured Image Section (At the End) */}
                     <div className="space-y-4 pt-8 border-t border-gray-50">
                         <div className="flex items-center gap-3 mb-4">
@@ -170,24 +255,24 @@ export default function ContentForm({ content, clubs, categories, onSubmit, isLo
 
                 {/* Sticky Action Footer */}
                 <div className="flex items-center justify-end gap-4 pb-12">
-                    <button
-                        type="button"
-                        onClick={() => router.back()}
-                        className="px-10 h-16 rounded-2xl text-gray-400 font-black uppercase tracking-widest hover:text-red-500 transition-all"
-                    >
-                        Discard
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="px-12 h-16 rounded-2xl bg-[#132A5B] text-white font-black uppercase tracking-widest shadow-2xl shadow-blue-900/20 hover:bg-blue-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center gap-3"
-                    >
-                        {isLoading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : <MdSave size={24} />}
-                        <span>{content ? 'Save Changes' : 'Publish Article'}</span>
-                    </button>
-                </div>
+                        <button
+                            type="button"
+                            onClick={() => router.back()}
+                            className="px-10 h-16 rounded-2xl text-gray-400 font-black uppercase tracking-widest hover:text-red-500 transition-all"
+                        >
+                            Discard
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="px-12 h-16 rounded-2xl bg-[#132A5B] text-white font-black uppercase tracking-widest shadow-2xl shadow-blue-900/20 hover:bg-blue-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center gap-3"
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : <MdSave size={24} />}
+                            <span>{content ? 'Save Changes' : 'Publish Article'}</span>
+                        </button>
+                    </div>
             </form>
         </div>
     );

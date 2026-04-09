@@ -1,0 +1,596 @@
+================================================================================
+                    LEAGUE CRUD ENDPOINTS DOCUMENTATION
+================================================================================
+
+OVERVIEW:
+Leagues represent football competitions (e.g., Premier League, La Liga).
+Each club must be attached to a league.
+
+PUBLIC ENDPOINTS:
+- GET /api/leagues (list all leagues)
+- GET /api/leagues/:id (get league details)
+
+ADMIN ONLY ENDPOINTS:
+- POST /api/admin/leagues (create league)
+- PUT /api/admin/leagues/:id (update league)
+- DELETE /api/admin/leagues/:id (delete league)
+
+================================================================================
+                         PUBLIC ENDPOINTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. GET ALL LEAGUES (PUBLIC)
+--------------------------------------------------------------------------------
+
+Endpoint: GET /api/leagues
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns list of all leagues. Used to display available leagues and group clubs.
+
+Request Headers:
+Content-Type: application/json
+
+Request Body: None
+
+Success Response (200 OK):
+[
+  {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "Premier League",
+    "logo_url": "https://example.com/logos/premier-league.png",
+    "country": "England"
+  },
+  {
+    "id": "507f1f77bcf86cd799439012",
+    "name": "La Liga",
+    "logo_url": "https://example.com/logos/laliga.png",
+    "country": "Spain"
+  },
+  {
+    "id": "507f1f77bcf86cd799439013",
+    "name": "Serie A",
+    "logo_url": "https://example.com/logos/seriea.png",
+    "country": "Italy"
+  }
+]
+
+Error Responses:
+500 Internal Server Error:
+{
+  "error": "Error fetching leagues"
+}
+
+Example using curl:
+curl -X GET http://localhost:8080/api/leagues
+
+Example using JavaScript:
+const response = await fetch('http://localhost:8080/api/leagues');
+const leagues = await response.json();
+console.log(leagues);
+
+--------------------------------------------------------------------------------
+2. GET LEAGUE BY ID (PUBLIC)
+--------------------------------------------------------------------------------
+
+Endpoint: GET /api/leagues/:id
+Authentication: NOT REQUIRED (Public)
+
+Description:
+Returns detailed information for a specific league.
+
+Request Headers:
+Content-Type: application/json
+
+URL Parameters:
+:id - League ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "Premier League",
+  "logo_url": "https://example.com/logos/premier-league.png",
+  "country": "England"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid ID"
+}
+
+404 Not Found:
+{
+  "error": "League not found"
+}
+
+Example using curl:
+curl -X GET http://localhost:8080/api/leagues/507f1f77bcf86cd799439011
+
+Example using JavaScript:
+const leagueId = '507f1f77bcf86cd799439011';
+const response = await fetch(`http://localhost:8080/api/leagues/${leagueId}`);
+const league = await response.json();
+console.log(league);
+
+
+================================================================================
+                         ADMIN ENDPOINTS
+================================================================================
+
+--------------------------------------------------------------------------------
+3. CREATE LEAGUE (ADMIN ONLY)
+--------------------------------------------------------------------------------
+
+Endpoint: POST /api/admin/leagues
+Authentication: REQUIRED (Admin or Super Admin)
+
+Description:
+Creates a new league. Only admins can create leagues.
+
+Request Headers:
+Authorization: Bearer <admin_access_token>
+Content-Type: application/json
+
+Request Body:
+{
+  "name": "Bundesliga",
+  "logo_url": "https://example.com/logos/bundesliga.png",
+  "country": "Germany"
+}
+
+Field Descriptions:
+- name: Required, string - Name of the league
+- logo_url: Required, string - URL to league logo image
+- country: Required, string - Country where league is based
+
+Success Response (201 Created):
+{
+  "id": "507f1f77bcf86cd799439014",
+  "name": "Bundesliga",
+  "logo_url": "https://example.com/logos/bundesliga.png",
+  "country": "Germany"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Key: 'name' Error:Field validation for 'name' failed"
+}
+
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+403 Forbidden:
+{
+  "error": "Admin access required"
+}
+
+500 Internal Server Error:
+{
+  "error": "Failed to add league"
+}
+
+Example using curl:
+curl -X POST http://localhost:8080/api/admin/leagues \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Bundesliga",
+    "logo_url": "https://example.com/logos/bundesliga.png",
+    "country": "Germany"
+  }'
+
+Example using JavaScript:
+const adminToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+const response = await fetch('http://localhost:8080/api/admin/leagues', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${adminToken}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: "Bundesliga",
+    logo_url: "https://example.com/logos/bundesliga.png",
+    country: "Germany"
+  })
+});
+
+const league = await response.json();
+console.log(league);
+
+Example using Postman:
+1. Method: POST
+2. URL: http://localhost:8080/api/admin/leagues
+3. Headers:
+   - Authorization: Bearer <your_admin_token>
+   - Content-Type: application/json
+4. Body (raw JSON):
+   {
+     "name": "Bundesliga",
+     "logo_url": "https://example.com/logos/bundesliga.png",
+     "country": "Germany"
+   }
+5. Click Send
+
+--------------------------------------------------------------------------------
+4. UPDATE LEAGUE (ADMIN ONLY)
+--------------------------------------------------------------------------------
+
+Endpoint: PUT /api/admin/leagues/:id
+Authentication: REQUIRED (Admin or Super Admin)
+
+Description:
+Updates an existing league. All fields are optional - only send fields to update.
+
+Request Headers:
+Authorization: Bearer <admin_access_token>
+Content-Type: application/json
+
+URL Parameters:
+:id - League ID (MongoDB ObjectID)
+
+Request Body (all fields optional):
+{
+  "name": "English Premier League",
+  "logo_url": "https://example.com/logos/epl-new.png",
+  "country": "England"
+}
+
+Success Response (200 OK):
+{
+  "message": "League updated successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid ID"
+}
+
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+403 Forbidden:
+{
+  "error": "Admin access required"
+}
+
+500 Internal Server Error:
+{
+  "error": "Update failed"
+}
+
+Example using curl:
+curl -X PUT http://localhost:8080/api/admin/leagues/507f1f77bcf86cd799439011 \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "English Premier League",
+    "logo_url": "https://example.com/logos/epl-new.png"
+  }'
+
+Example using JavaScript:
+const adminToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const leagueId = "507f1f77bcf86cd799439011";
+
+const response = await fetch(`http://localhost:8080/api/admin/leagues/${leagueId}`, {
+  method: 'PUT',
+  headers: {
+    'Authorization': `Bearer ${adminToken}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: "English Premier League",
+    logo_url: "https://example.com/logos/epl-new.png"
+  })
+});
+
+const result = await response.json();
+console.log(result);
+
+Notes:
+- Only send the fields you want to update
+- Fields not included will remain unchanged
+- Cannot update the ID field
+
+--------------------------------------------------------------------------------
+5. DELETE LEAGUE (ADMIN ONLY)
+--------------------------------------------------------------------------------
+
+Endpoint: DELETE /api/admin/leagues/:id
+Authentication: REQUIRED (Admin or Super Admin)
+
+Description:
+Deletes a league. WARNING: This may affect clubs attached to this league.
+
+Request Headers:
+Authorization: Bearer <admin_access_token>
+
+URL Parameters:
+:id - League ID (MongoDB ObjectID)
+
+Request Body: None
+
+Success Response (200 OK):
+{
+  "message": "League deleted successfully"
+}
+
+Error Responses:
+400 Bad Request:
+{
+  "error": "Invalid ID"
+}
+
+401 Unauthorized:
+{
+  "error": "Authorization header required"
+}
+
+403 Forbidden:
+{
+  "error": "Admin access required"
+}
+
+500 Internal Server Error:
+{
+  "error": "Delete failed"
+}
+
+Example using curl:
+curl -X DELETE http://localhost:8080/api/admin/leagues/507f1f77bcf86cd799439011 \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+Example using JavaScript:
+const adminToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const leagueId = "507f1f77bcf86cd799439011";
+
+const response = await fetch(`http://localhost:8080/api/admin/leagues/${leagueId}`, {
+  method: 'DELETE',
+  headers: {
+    'Authorization': `Bearer ${adminToken}`
+  }
+});
+
+const result = await response.json();
+console.log(result);
+
+IMPORTANT WARNING:
+- Before deleting a league, ensure no clubs are attached to it
+- Deleting a league may cause issues with clubs that reference it
+- Consider updating clubs to a different league first
+
+
+================================================================================
+                         COMPLETE WORKFLOW
+================================================================================
+
+Workflow 1: Admin Creates a New League
+---------------------------------------
+
+Step 1: Login as Admin
+POST /api/auth/login
+Body:
+{
+  "email": "admin@fanzone.com",
+  "password": "your_password"
+}
+
+Response:
+{
+  "access_token": "eyJhbGc...",
+  "user": {
+    "role": "admin",
+    ...
+  }
+}
+
+Step 2: Create League
+POST /api/admin/leagues
+Headers:
+  Authorization: Bearer <access_token_from_step_1>
+Body:
+{
+  "name": "Ligue 1",
+  "logo_url": "https://example.com/logos/ligue1.png",
+  "country": "France"
+}
+
+Response:
+{
+  "id": "507f1f77bcf86cd799439015",
+  "name": "Ligue 1",
+  "logo_url": "https://example.com/logos/ligue1.png",
+  "country": "France"
+}
+
+Step 3: Verify League Created (Public endpoint)
+GET /api/leagues
+
+Response will include the new league in the list.
+
+
+Workflow 2: Admin Updates League Information
+---------------------------------------------
+
+Step 1: Get League ID
+GET /api/leagues
+
+Find the league you want to update and note its ID.
+
+Step 2: Update League
+PUT /api/admin/leagues/507f1f77bcf86cd799439015
+Headers:
+  Authorization: Bearer <admin_token>
+Body:
+{
+  "logo_url": "https://example.com/logos/ligue1-new.png"
+}
+
+Response:
+{
+  "message": "League updated successfully"
+}
+
+
+Workflow 3: Creating Club with League
+--------------------------------------
+
+Step 1: Get Available Leagues
+GET /api/leagues
+
+Response:
+[
+  {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "Premier League",
+    "country": "England"
+  }
+]
+
+Step 2: Create Club with League ID
+POST /api/admin/clubs
+Headers:
+  Authorization: Bearer <admin_token>
+Body:
+{
+  "name": "Arsenal FC",
+  "logo_url": "https://example.com/logos/arsenal.png",
+  "league_id": "507f1f77bcf86cd799439011"
+}
+
+The club is now attached to the Premier League.
+
+
+================================================================================
+                         DATA MODEL
+================================================================================
+
+League Object Structure:
+{
+  "id": "string (MongoDB ObjectID)",
+  "name": "string",
+  "logo_url": "string (URL)",
+  "country": "string"
+}
+
+Field Details:
+- id: Auto-generated MongoDB ObjectID (24-character hex string)
+- name: League name (e.g., "Premier League", "La Liga")
+- logo_url: Full URL to league logo image
+- country: Country where league is based
+
+Example Leagues:
+- Premier League (England)
+- La Liga (Spain)
+- Serie A (Italy)
+- Bundesliga (Germany)
+- Ligue 1 (France)
+- Eredivisie (Netherlands)
+- Primeira Liga (Portugal)
+
+
+================================================================================
+                         BEST PRACTICES
+================================================================================
+
+1. League Creation:
+   - Use official league names
+   - Provide high-quality logo images
+   - Use consistent country names
+
+2. League Updates:
+   - Only update necessary fields
+   - Verify changes don't break club associations
+   - Update logo URLs if images are moved
+
+3. League Deletion:
+   - Check for clubs attached to league first
+   - Move clubs to different league before deleting
+   - Consider soft delete instead of hard delete
+
+4. Logo URLs:
+   - Use HTTPS URLs
+   - Host images on reliable CDN
+   - Use consistent image dimensions
+   - Optimize images for web (PNG or SVG recommended)
+
+5. Country Names:
+   - Use consistent naming (e.g., "England" not "UK")
+   - Use full country names, not abbreviations
+   - Consider using ISO country codes in future
+
+
+================================================================================
+                         TROUBLESHOOTING
+================================================================================
+
+Problem: "Authorization header required"
+Solution: Include Authorization header with Bearer token from login
+
+Problem: "Admin access required"
+Solution: Ensure you're logged in as admin or super_admin
+
+Problem: "Invalid ID"
+Solution: Verify the league ID is a valid 24-character MongoDB ObjectID
+
+Problem: "League not found"
+Solution: Check if league exists using GET /api/leagues
+
+Problem: Cannot delete league
+Solution: Check if clubs are attached to this league, update them first
+
+Problem: Token expired
+Solution: Login again to get a new access token
+
+
+================================================================================
+                         QUICK REFERENCE
+================================================================================
+
+PUBLIC ENDPOINTS (No Auth):
+GET    /api/leagues           List all leagues
+GET    /api/leagues/:id       Get league details
+
+ADMIN ENDPOINTS (Auth Required):
+POST   /api/admin/leagues           Create league
+PUT    /api/admin/leagues/:id       Update league
+DELETE /api/admin/leagues/:id       Delete league
+
+RELATED ENDPOINTS:
+GET    /api/clubs                   List all clubs (grouped by league)
+POST   /api/admin/clubs             Create club (requires league_id)
+
+
+================================================================================
+                         TESTING CHECKLIST
+================================================================================
+
+[ ] Can retrieve all leagues (public)
+[ ] Can retrieve single league by ID (public)
+[ ] Admin can create new league
+[ ] Admin can update league information
+[ ] Admin can delete league
+[ ] Regular users cannot create/update/delete leagues
+[ ] League logo URLs are accessible
+[ ] Clubs can be attached to leagues
+[ ] League data displays correctly in mobile app
+
+
+================================================================================
+
+For more information:
+- See mobiledocumentation.txt for mobile app integration
+- See SUPER_ADMIN_DOCUMENTATION.md for admin management
+- See CREATE_ADMIN_ENDPOINT.txt for creating admins
+
+================================================================================

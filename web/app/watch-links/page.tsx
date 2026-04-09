@@ -100,8 +100,10 @@ export default function WatchLinksManagementPage() {
                         ))}
                     </div>
                 ) : filteredLinks && filteredLinks.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <>
+                        {/* Desktop Table View - Hidden on Mobile */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-gray-50/50">
                                     <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Channel / Service</th>
@@ -166,6 +168,59 @@ export default function WatchLinksManagementPage() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Card View - Visible on Mobile Only */}
+                    <div className="md:hidden p-4 space-y-4">
+                        {filteredLinks.map((link: WatchLink) => (
+                            <div key={link.id} className="bg-gray-50/50 rounded-3xl border border-gray-100 overflow-hidden">
+                                <div className="flex items-center gap-4 p-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-white border border-gray-100 flex items-center justify-center p-2 shadow-sm shrink-0">
+                                        {link.logo_url ? (
+                                            <Image src={link.logo_url} alt={link.name} width={48} height={48} className="object-contain" />
+                                        ) : (
+                                            <MdTv size={28} className="text-gray-300" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-base font-black text-[#132A5B] truncate">{link.name}</h3>
+                                        <span className={`inline-block mt-1 px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${link.type.toLowerCase().includes('live') ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+                                            }`}>
+                                            {link.type}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="px-4 pb-3">
+                                    <a
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs font-bold text-gray-400 hover:text-[#00A3E0] flex items-center gap-1 transition-colors truncate"
+                                    >
+                                        <span className="truncate">{link.url}</span>
+                                        <MdOpenInNew size={14} className="flex-shrink-0" />
+                                    </a>
+                                </div>
+                                <div className="flex border-t border-gray-100">
+                                    <button
+                                        onClick={() => handleEdit(link)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-3 text-[#00A3E0] font-bold text-sm hover:bg-blue-50 transition-colors"
+                                    >
+                                        <MdEdit size={18} />
+                                        <span>Edit</span>
+                                    </button>
+                                    <div className="w-px bg-gray-100" />
+                                    <button
+                                        onClick={() => handleDelete(link.id)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-3 text-red-500 font-bold text-sm hover:bg-red-50 transition-colors"
+                                    >
+                                        <MdDelete size={18} />
+                                        <span>Delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
                 ) : (
                     <div className="p-20 text-center flex flex-col items-center justify-center">
                         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-200">

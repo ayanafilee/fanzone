@@ -118,7 +118,8 @@ export default function LeaguesManagementPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Desktop Table View - Hidden on Mobile */}
+            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                     [...Array(6)].map((_, i) => (
                         <div key={i} className="h-64 bg-white rounded-[2.5rem] animate-pulse border border-gray-100" />
@@ -159,6 +160,47 @@ export default function LeaguesManagementPage() {
                                 <MdPublic size={16} className="text-[#00A3E0]" />
                                 <span className="text-xs font-black text-gray-500 uppercase tracking-widest">{league.country}</span>
                             </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Mobile Card View - Visible on Mobile Only */}
+            <div className="md:hidden space-y-4">
+                {isLoading ? (
+                    [...Array(3)].map((_, i) => (
+                        <div key={i} className="h-48 bg-white rounded-3xl animate-pulse border border-gray-100" />
+                    ))
+                ) : filteredLeagues?.map((league: League) => (
+                    <div key={league.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="flex items-center gap-4 p-4">
+                            <div className="relative w-20 h-20 flex-shrink-0 bg-gray-50 rounded-2xl flex items-center justify-center">
+                                <Image src={league.logo_url} alt={league.name} fill className="object-contain p-2" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-lg font-black text-[#132A5B] tracking-tight truncate">{league.name}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <MdPublic size={14} className="text-[#00A3E0] flex-shrink-0" />
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider truncate">{league.country}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex border-t border-gray-100">
+                            <button
+                                onClick={() => handleOpenModal(league)}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 text-[#00A3E0] font-bold text-sm hover:bg-blue-50 transition-colors"
+                            >
+                                <MdEdit size={18} />
+                                <span>Edit</span>
+                            </button>
+                            <div className="w-px bg-gray-100" />
+                            <button
+                                onClick={() => handleDelete(league.id)}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 text-red-500 font-bold text-sm hover:bg-red-50 transition-colors"
+                            >
+                                <MdDelete size={18} />
+                                <span>Delete</span>
+                            </button>
                         </div>
                     </div>
                 ))}
